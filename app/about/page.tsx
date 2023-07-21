@@ -3,7 +3,7 @@ import ArrowForwardIcon from "@mui/icons-material/ArrowForward";
 
 export default function About() {
   return (
-    <main className="flex min-h-screen flex-col items-center justify-between p-24 bg-black text-white">
+    <main className="flex min-h-screen flex-col items-center justify-between p-24 bg-gradient-to-br from-gray-900 to-black text-white">
       {/* SVG representation of protein-ligand docking */}
       <Link href="/">
         <svg
@@ -40,19 +40,6 @@ export default function About() {
           <br />
           DOCKING?
         </h1>
-        <span className="text-md text-center">
-          Developed by John Seong
-          <br />
-          in collaboration with{" "}
-          <a
-            rel="noopener noreferrer"
-            target="_blank"
-            className="text-blue-400 hover:underline"
-            href="https://en.snu.ac.kr"
-          >
-            SNU
-          </a>
-        </span>
       </div>
 
         <p className="m-0 max-w-[30ch] text-xl leading-relaxed mt-10 opacity-75">
