@@ -31,7 +31,7 @@ export default function Home() {
 
       {/* Title */}
       <div className="flex flex-col space-y-2">
-        <h1 className="text-5xl font-thin text-center">LCBC Dock</h1>
+        <h1 className="text-5xl font-semibold text-center"><span className="bg-blue-400 text-black rounded-lg px-2">LCBC</span> DOCK</h1>
         <span className="text-md text-center">Developed by John Seong<br />in collaboration with <a rel="noopener noreferrer" target="_blank" className="text-blue-400 hover:underline" href="https://en.snu.ac.kr">SNU</a></span>
       </div>
 
