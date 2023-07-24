@@ -1,5 +1,5 @@
 # FOR BACK-END DEPLOYMENT... (FLASK)
-FROM python:3.10.4-slim
+FROM python:3.10.4-slim as build-step
 WORKDIR /
 WORKDIR /workdir
 COPY api ./api
@@ -7,7 +7,7 @@ WORKDIR /workdir/api
 RUN pip3 install -r ./requirements.txt
 
 # FOR FRONT-END DEPLOYMENT... (REACT)
-FROM node:16-alpine as build-step
+FROM node:16-alpine
 # Don't forget "--from"! It acts as a bridge that connects two seperate stages
 COPY --from=build-step workdir ./workdir
 WORKDIR /workdir
