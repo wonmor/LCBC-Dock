@@ -1,0 +1,10 @@
+# FOR BACK-END DEPLOYMENT... (FLASK)
+FROM python:3.10.4-slim as build-step
+WORKDIR /
+WORKDIR /workdir
+COPY api ./api
+COPY requirements.txt ./
+WORKDIR /workdir/api
+RUN pip3 install -r ./requirements.txt
+EXPOSE 8000
+CMD ["uvicorn", "app.index:app", "--host=localhost" , "--reload" , "--port", "8000"]
