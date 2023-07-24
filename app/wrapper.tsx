@@ -37,5 +37,5 @@ export function MolStarWrapper() {
     };
   }, []);
 
-  return <div ref={parent} style={{ position: "absolute", width: 640, height: 480 }}/>;
+  return <div ref={parent} style={{ position: "absolute", width: "75%", height: "75%", filter: "invert(1)" }}/>;
 }
