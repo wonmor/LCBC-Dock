@@ -6,6 +6,8 @@ COPY api ./api
 COPY requirements.txt ./
 WORKDIR /workdir/api
 RUN pip3 install -r ./requirements.txt
+EXPOSE 8000
+CMD ["uvicorn", "app.index:app", "--host=0.0.0.0" , "--reload" , "--port", "8000"]
 
 # FOR FRONT-END DEPLOYMENT... (REACT)
 FROM node:16-alpine
@@ -23,7 +25,6 @@ COPY next.config.js ./
 COPY app ./app
 WORKDIR /workdir/app
 RUN npm install
-RUN npm run fastapi-dev
 RUN npm run build
 EXPOSE 3000
 CMD ["npm", "run", "start"]
