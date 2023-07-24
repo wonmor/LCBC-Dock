@@ -7,7 +7,7 @@ COPY requirements.txt ./
 WORKDIR /workdir/api
 RUN pip3 install -r ./requirements.txt
 EXPOSE 8000
-CMD ["uvicorn", "app.index:app", "--host=0.0.0.0" , "--reload" , "--port", "8000"]
+CMD ["uvicorn", "app.index:app", "--host=localhost" , "--reload" , "--port", "8000"]
 
 # FOR FRONT-END DEPLOYMENT... (REACT)
 FROM node:16-alpine
