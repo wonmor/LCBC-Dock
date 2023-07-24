@@ -1,8 +1,22 @@
+"use client";
+
 import Link from "next/link";
 
+import { Accept, useDropzone } from "react-dropzone";
+
 export default function Docking() {
+  const { getRootProps, getInputProps, isDragActive } = useDropzone({
+    accept: ".pdb" as unknown as Accept,
+    onDrop: (acceptedFiles: any) => {
+      // Do something with the files
+      console.log("accepted!");
+    },
+  });
+
   return (
-    <main className="flex flex-col items-center justify-center min-h-screen p-24 bg-gradient-to-br from-gray-900 to-black text-white">
+    <main
+      className="flex flex-col items-center justify-center min-h-screen p-24 bg-gradient-to-br from-gray-900 to-black text-white"
+    >
       {/* SVG representation of protein-ligand docking */}
       <Link href="/">
         <svg
@@ -33,7 +47,17 @@ export default function Docking() {
 
       {/* Title */}
       <div className="text-center">
-        <h1 className="text-6xl font-thin mb-6">COMING SOON</h1>
+        <h1 className="text-6xl font-thin mb-6">PROTEIN GOES HERE</h1>
+      </div>
+
+      {/* Dropzone */}
+      <div className="border-2 rounded-xl p-60 text-center text-xl" style={{ cursor: "pointer" }} {...getRootProps()}>
+        <input {...getInputProps()} />
+        {
+          isDragActive ?
+            <p>Drop the pdb file here...</p> :
+            <p>Drag and drop a .pdb file here,<br />or click to select a file</p>
+        }
       </div>
     </main>
   );
