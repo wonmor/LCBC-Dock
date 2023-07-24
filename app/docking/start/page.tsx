@@ -9,26 +9,25 @@ import { debounce } from "lodash";
 
 export default function Docking() {
   const [selectedOption, setSelectedOption] = useState(null);
-  const [options, setOptions] = useState([]);
 
-  // Debounce the API call with a delay of 500ms
-  const debouncedSearch = debounce(async (inputValue) => {
-    try {
-      const response = await axios.get(`http://localhost:8000/search/${inputValue}`);
-      console.log(response.data)
-      setOptions(response.data);
-    } catch (error) {
-      console.error(`Error searching PDB: ${error}`);
+  // Return a promise that resolves after a delay and after fetching the data
+  const loadOptions = (inputValue, callback) => {
+    if (!inputValue || inputValue.trim() === "") {
+      callback([]);
+      return;
     }
-  }, 500);
 
-  const loadOptions = (inputValue) => {
-    if (inputValue && inputValue.trim() !== "") {
-      debouncedSearch(inputValue.trim());
-    } else {
-      setOptions([]); // Clear options when search input is empty
-    }
+    setTimeout(async () => {
+      try {
+        const response = await axios.get(`http://localhost:8000/search/${inputValue}`);
+        const options = response.data.map(result => ({ value: result, label: result }));
+        callback(options);
+      } catch (error) {
+        console.error(`Error searching PDB: ${error}`);
+      }
+    }, 500);
   };
+
 
   const handleChange = (selectedOption) => {
     setSelectedOption(selectedOption);
@@ -70,14 +69,12 @@ export default function Docking() {
       <h1 className="text-6xl font-thin mb-6">PROTEIN GOES HERE</h1>
     </div>
 
-      <AsyncSelect
-        cacheOptions
-        defaultOptions
-        loadOptions={loadOptions}
-        onInputChange={(inputValue) => inputValue.trim()}
-        onChange={handleChange}
-        options={options.map((result) => ({ value: result, label: result }))} // Map data for the AsyncSelect component
-      />
+    <AsyncSelect
+      cacheOptions
+      loadOptions={loadOptions}
+      onChange={handleChange}
+      defaultOptions
+    />
     </main>
   );
 }
