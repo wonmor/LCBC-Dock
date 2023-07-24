@@ -24,6 +24,7 @@
     "concurrently": "^8.0.1",
     "eslint": "8.41.0",
     "eslint-config-next": "13.4.4",
+    "lodash": "^4.17.21",
     "molstar": "^3.38.1",
     "next": "13.4.4",
     "postcss": "8.4.23",
@@ -38,5 +39,8 @@
     "tsparticles-engine": "^2.11.0",
     "tsparticles-slim": "^2.11.0",
     "typescript": "5.0.4"
+  },
+  "devDependencies": {
+    "@types/lodash": "^4.14.195"
   }
 }
