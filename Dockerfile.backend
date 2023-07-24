@@ -1,10 +1,17 @@
-# FOR BACK-END DEPLOYMENT... (FLASK)
-FROM python:3.10.4-slim as build-step
-WORKDIR /
-WORKDIR /workdir
-COPY api ./api
-COPY requirements.txt ./
-WORKDIR /workdir/api
-RUN pip3 install -r ./requirements.txt
+FROM python:3.9
+
+# Set the working directory within the container
+WORKDIR /app
+
+# Copy the API files and requirements.txt into the container's working directory
+COPY api/index.py ./
+COPY api/requirements.txt ./
+
+# Install the required dependencies from requirements.txt
+RUN pip3 install --no-cache-dir -r requirements.txt
+
+# Expose the port that the Flask app will be running on (usually 8000 by default)
 EXPOSE 8000
-CMD ["uvicorn", "workdir.api.index:app", "--host=0.0.0.0" , "--reload" , "--port", "8000"]
+
+CMD uvicorn --host=0.0.0.0 --port 8000 index:app
+
