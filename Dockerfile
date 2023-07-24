@@ -3,6 +3,7 @@ FROM python:3.10.4-slim as build-step
 WORKDIR /
 WORKDIR /workdir
 COPY api ./api
+COPY requirements.txt ./
 WORKDIR /workdir/api
 RUN pip3 install -r ./requirements.txt
 
@@ -12,6 +13,12 @@ FROM node:16-alpine
 COPY --from=build-step workdir ./workdir
 WORKDIR /workdir
 ENV PATH /workdir/app/node_modules/.bin:$PATH
+COPY package.json ./
+COPY package-lock.json ./
+COPY postcss.config.js ./
+COPY tailwind.config.js ./
+COPY tsconfig.json ./
+COPY next.config.js ./
 COPY app ./app
 WORKDIR /workdir/app
 RUN npm install
