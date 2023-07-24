@@ -1,22 +1,68 @@
 "use client";
 
 import Link from "next/link";
+import AsyncSelect from "react-select/async";
+import axios from "axios";
 
-import { Accept, useDropzone } from "react-dropzone";
+import { MolStarWrapper } from "@/app/wrapper";
+import { useState } from "react";
 
 export default function Docking() {
-  const { getRootProps, getInputProps, isDragActive } = useDropzone({
-    accept: ".pdb" as unknown as Accept,
-    onDrop: (acceptedFiles: any) => {
-      // Do something with the files
-      console.log("accepted!");
-    },
-  });
+  const [selectedOption, setSelectedOption] = useState(null);
+  const [options, setOptions] = useState([]);
+
+  // Function to get PDB data and display it
+  const getPdbData = async (pdbId: string) => {
+    try {
+      const response = await axios.get(
+        `https://files.rcsb.org/view/${pdbId}.pdb`
+      );
+    } catch (error) {
+      console.error(`Error fetching PDB data: ${error}`);
+    }
+  };
+
+  const loadOptions = async (inputValue: string) => {
+    try {
+      if (inputValue && inputValue.trim() !== "") {
+        const response = await axios.post(
+          "https://search.rcsb.org/rcsbsearch/v1/query",
+          {
+            query: {
+              type: "terminal",
+              service: "text",
+              parameters: {
+                value: inputValue.trim(),
+              },
+            },
+            request_options: {
+              return_all_hits: true,
+            },
+            request_info: {
+              do_sequence: false,
+              do_taxonomy: false,
+            },
+          }
+        );
+
+        // Transform the response to get the options for the Select component
+        return response.data.result_set.map((result: any) => ({
+          value: result.identifier,
+          label: result.identifier,
+        }));
+      }
+    } catch (error) {
+      console.error(`Error searching PDB: ${error}`);
+    }
+  };
+
+  const handleChange = (selectedOption: any) => {
+    setSelectedOption(selectedOption);
+    getPdbData(selectedOption.value);
+  };
 
   return (
-    <main
-      className="flex flex-col items-center justify-center min-h-screen p-24 bg-gradient-to-br from-gray-900 to-black text-white"
-    >
+    <main className="flex flex-col items-center justify-center min-h-screen p-24 bg-gradient-to-br from-gray-900 to-black text-white">
       {/* SVG representation of protein-ligand docking */}
       <Link href="/">
         <svg
@@ -50,15 +96,16 @@ export default function Docking() {
         <h1 className="text-6xl font-thin mb-6">PROTEIN GOES HERE</h1>
       </div>
 
-      {/* Dropzone */}
-      <div className="border-2 rounded-xl px-20 py-10 text-center text-xl" style={{ cursor: "pointer" }} {...getRootProps()}>
-        <input {...getInputProps()} />
-        {
-          isDragActive ?
-            <p>Drop the pdb file here...</p> :
-            <p><span className="text-blue-300">Drag and drop a .pdb file here,</span><br />or click to select a file</p>
-        }
-      </div>
+      {/* Search Bar */}
+      <AsyncSelect
+        cacheOptions
+        defaultOptions
+        loadOptions={loadOptions}
+        onInputChange={(inputValue) => inputValue.trim()}
+        onChange={handleChange}
+      />
+
+      <MolStarWrapper />
     </main>
   );
 }
