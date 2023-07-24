@@ -51,12 +51,12 @@ export default function Docking() {
       </div>
 
       {/* Dropzone */}
-      <div className="border-2 rounded-xl p-60 text-center text-xl" style={{ cursor: "pointer" }} {...getRootProps()}>
+      <div className="border-2 rounded-xl px-20 py-10 text-center text-xl" style={{ cursor: "pointer" }} {...getRootProps()}>
         <input {...getInputProps()} />
         {
           isDragActive ?
             <p>Drop the pdb file here...</p> :
-            <p>Drag and drop a .pdb file here,<br />or click to select a file</p>
+            <p><span className="text-blue-300">Drag and drop a .pdb file here,</span><br />or click to select a file</p>
         }
       </div>
     </main>
