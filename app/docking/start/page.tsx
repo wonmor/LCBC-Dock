@@ -20,7 +20,7 @@ const Docking: FC = () => {
 
     setTimeout(async () => {
       try {
-        const response = await axios.get(`http://localhost:8000/search/${inputValue}`);
+        const response = await axios.get(`${process.env.NODE_ENV === "development" ? "http://localhost:8000" : "https://api.lcbcdock.com"}/search/${inputValue}`);
         const options = response.data.map((result: string) => ({
           value: result,
           label: result,
