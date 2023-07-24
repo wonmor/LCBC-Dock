@@ -14,7 +14,6 @@ app.add_middleware(
     allow_headers=["*"],
 )
 
-
 async def fetch_search_results(search_term: str) -> List[str]:
     url = "https://search.rcsb.org/rcsbsearch/v2/query"
     json_data = {
@@ -49,3 +48,7 @@ async def search_proteins(search_term: str):
         return await fetch_search_results(search_term)
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e))
+
+@app.get("/")
+async def root():
+    return {"message": "LCBC Dock Backend is running!"}
