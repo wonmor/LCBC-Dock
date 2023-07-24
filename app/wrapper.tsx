@@ -20,7 +20,7 @@ export function MolStarWrapper() {
         window.molstar = await createPluginUI(parent.current as HTMLDivElement);
 
         const data = await window.molstar.builders.data.download(
-          { url: "https://files.rcsb.org/download/3PTB.pdb" }, /* replace with your URL */
+          { url: `https://files.rcsb.org/download/1LOL.pdb` }, /* replace with your URL */
           { state: { isGhost: true } }
         );
         const trajectory =
