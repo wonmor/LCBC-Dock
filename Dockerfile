@@ -9,6 +9,7 @@ RUN pip3 install -r ./requirements.txt
 
 # FOR FRONT-END DEPLOYMENT... (REACT)
 FROM node:16-alpine
+RUN apt-get install python3-dev
 # Don't forget "--from"! It acts as a bridge that connects two seperate stages
 COPY --from=build-step workdir ./workdir
 WORKDIR /workdir
