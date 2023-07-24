@@ -1,5 +1,4 @@
 import Link from "next/link";
-import ArrowForwardIcon from "@mui/icons-material/ArrowForward";
 
 export default function Contact() {
   return (

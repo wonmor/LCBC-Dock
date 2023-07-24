@@ -1,7 +1,6 @@
 import Link from "next/link";
-import ArrowForwardIcon from "@mui/icons-material/ArrowForward";
 
-export default function Visualization() {
+export default function Docking() {
   return (
     <main className="flex flex-col items-center justify-center min-h-screen p-24 bg-gradient-to-br from-gray-900 to-black text-white">
       {/* SVG representation of protein-ligand docking */}
