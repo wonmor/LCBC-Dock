@@ -33,8 +33,31 @@ export default function Home() {
 
       {/* Title */}
       <div className="flex flex-col space-y-2">
-        <h1 className="text-5xl font-semibold text-center"><span className="bg-blue-300 text-black rounded-lg px-2 leading-relaxed">LCBC</span> DOCK</h1>
-        <span className="text-md text-center">Developed by John Seong<br />in collaboration with <a rel="noopener noreferrer" target="_blank" className="text-blue-300 hover:underline" href="https://en.snu.ac.kr">SNU</a></span>
+        <h1 className="text-5xl font-semibold text-center">
+          <a
+            href="https://sites.google.com/view/lcbc"
+            target="_blank"
+            rel="noopener noreferrer"
+          >
+            <span className="bg-blue-300 hover:bg-blue-400 text-black rounded-lg px-2 leading-relaxed">
+              LCBC
+            </span>
+          </a>{" "}
+          DOCK
+        </h1>
+        <span className="text-md text-center">
+          Developed by John Seong
+          <br />
+          in collaboration with{" "}
+          <a
+            rel="noopener noreferrer"
+            target="_blank"
+            className="text-blue-300 hover:underline"
+            href="https://en.snu.ac.kr"
+          >
+            SNU
+          </a>
+        </span>
       </div>
 
       <div className="mb-32 grid text-center lg:mb-0 lg:grid-cols-4 lg:text-left">
@@ -52,7 +75,6 @@ export default function Home() {
           </p>
         </Link>
 
-
         <Link
           href="/tutorials"
           className="group rounded-lg border border-transparent px-5 py-4 transition-colors hover:border-gray-300 hover:bg-gray-100 hover:dark:border-neutral-700 hover:dark:bg-neutral-800/30"
@@ -66,7 +88,6 @@ export default function Home() {
             Learn how to perform protein-ligand docking step-by-step.
           </p>
         </Link>
-
 
         <Link
           href="/about"
