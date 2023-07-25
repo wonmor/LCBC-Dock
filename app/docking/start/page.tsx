@@ -103,7 +103,7 @@ const Docking: FC = () => {
       </div>
 
       {proteinState && (
-        <div className="mt-8">
+        <div className="mt-40">
           <MolStarWrapper value={proteinState} />
         </div>
       )}
