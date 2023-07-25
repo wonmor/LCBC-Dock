@@ -1,11 +1,11 @@
 "use client"
 
-import { FC, useState, useEffect } from "react";
-import { useSearchParams } from "next/navigation";
-import { MolStarWrapper } from "@/app/wrapper";
 import axios from "axios";
 import ProgressBar from "@/app/progressBar";
-import { RotatingLines } from 'react-loader-spinner'; //Importing the loader/spinner library
+
+import { FC, useState, useEffect } from "react";
+import { useSearchParams } from "next/navigation";
+import { RotatingTriangles }from 'react-loader-spinner'; //Importing the loader/spinner library
 
 const Marinate: FC = () => {
   const searchParams = useSearchParams();
@@ -86,9 +86,9 @@ const Marinate: FC = () => {
             </h1>
           </div>
 
-          <div id="wrapper">
+          <div id="wrapper" className="text-center flex items-center justify-center">
             {/*Show spinner while loading the data*/}
-            {loading && <RotatingLines />}
+            {loading && <RotatingTriangles />}
             
             {/*Display PDB file data once it is fetched*/}
             {!loading && proteinData && 

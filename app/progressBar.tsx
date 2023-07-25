@@ -16,14 +16,15 @@ export default function ProgressBar(props: {
       className="fixed bottom-0"
       style={{ left: "50%", transform: "translate(-50%, -50%)" }}
     >
-      <div className="flex flex-row gap-2">
+      <div className="flex flex-col md:flex-row gap-2">
         {props.backLink && props.backLinkParams && (
           <Link
+            style={{ width: "fit-content" }}
             href={{
               pathname: props.backLink as string,
               query: props.backLinkParams,
             }}
-            className="flex flex-col md:flex-row gap-4 items-center justify-center p-3 scale-75 text-gray-900 text-center bg-white rounded-3xl"
+            className="self-start md:self-center flex flex-row gap-4 items-center justify-center p-3 scale-75 text-gray-900 text-center bg-white rounded-3xl"
           >
             <ArrowBackIcon />
             <span className="text-lg md:text-xl">BACK</span>
@@ -63,11 +64,12 @@ export default function ProgressBar(props: {
         </div>
         {props.nextLink && props.nextLinkParams && (
           <Link
+            style={{ width: "fit-content" }}
             href={{
               pathname: props.nextLink as string,
               query: props.nextLinkParams,
             }}
-            className="flex flex-row gap-4 items-center justify-center p-3 scale-75 text-gray-900 text-center bg-white rounded-3xl"
+            className="self-end md:self-center flex flex-row gap-4 items-center justify-center p-3 scale-75 text-gray-900 text-center bg-white rounded-3xl"
           >
             <span className="text-lg md:text-xl">NEXT</span>
             <ArrowForwardIcon />
