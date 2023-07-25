@@ -1,19 +1,23 @@
 "use client";
 
 import { FC, useState } from "react";
+import { MolStarWrapper } from "@/app/wrapper";
 
 import axios from "axios";
 import AsyncSelect from "react-select/async";
 import Link from "next/link";
-import { MolStarWrapper } from "@/app/wrapper";
 
 const Docking: FC = () => {
   const [proteinState, setProteinState] = useState(null);
 
   const scrolltoHash = function (element_id: string) {
-    const element = document.getElementById(element_id)
-    element?.scrollIntoView({ behavior: "smooth", block: "end", inline: "nearest" });
-  }
+    const element = document.getElementById(element_id);
+    element?.scrollIntoView({
+      behavior: "smooth",
+      block: "end",
+      inline: "nearest",
+    });
+  };
 
   const loadOptions = (
     inputValue: string,
@@ -79,39 +83,50 @@ const Docking: FC = () => {
         </svg>
       </Link>
 
-      {/* Title */}
-      <div className="text-center">
-        <h1 className="text-6xl font-thin mb-6">
-          SEARCH
-          <br />
+      {!proteinState ? (
+        <div className="text-center">
+          <h1 className="text-6xl font-thin mb-6">
+            SEARCH
+            <br />
+            <span className="font-semibold">PROTEIN</span>
+          </h1>
+        </div>
+      ) : (
+        <div className="text-center">
+          <h1 className="text-6xl font-thin mb-6">
           <span className="font-semibold">PROTEIN</span>
-        </h1>
-      </div>
+            <br />
+            {proteinState.toUpperCase()}
+          </h1>
+        </div>
+      )}
 
-      <div style={{ filter: "invert(1)", zIndex: 40 }}>
-        <AsyncSelect
-          cacheOptions
-          placeholder="Enter a PDB ID"
-          loadOptions={loadOptions}
-          onChange={handleChange}
-          defaultOptions
-          styles={{
-            option: (provided) => ({
-              ...provided,
-              color: "black",
-              cursor: "pointer",
-            }),
-            singleValue: (provided) => ({
-              ...provided,
-              color: "black",
-              cursor: "pointer",
-            }),
-          }}
-        />
-      </div>
+      {!proteinState && (
+        <div style={{ filter: "invert(1)", zIndex: 40 }}>
+          <AsyncSelect
+            cacheOptions
+            placeholder="Enter a PDB ID"
+            loadOptions={loadOptions}
+            onChange={handleChange}
+            defaultOptions
+            styles={{
+              option: (provided) => ({
+                ...provided,
+                color: "black",
+                cursor: "pointer",
+              }),
+              singleValue: (provided) => ({
+                ...provided,
+                color: "black",
+                cursor: "pointer",
+              }),
+            }}
+          />
+        </div>
+      )}
 
       {proteinState && (
-        <div id="wrapper" className="mt-10">
+        <div id="wrapper">
           <MolStarWrapper value={proteinState} />
         </div>
       )}
