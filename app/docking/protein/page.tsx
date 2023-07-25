@@ -66,7 +66,7 @@ const Docking: FC = () => {
       ) : (
         <div className="text-center">
           <h1 className="text-6xl font-thin mb-6">
-          <span className="font-semibold">PROTEIN</span>
+            <span className="font-semibold">PROTEIN</span>
             <br />
             {proteinState.toUpperCase()}
           </h1>
@@ -74,26 +74,31 @@ const Docking: FC = () => {
       )}
 
       {!proteinState && (
-        <div style={{ filter: "invert(1)", zIndex: 40 }}>
-          <AsyncSelect
-            cacheOptions
-            placeholder="Enter a PDB ID"
-            loadOptions={loadOptions}
-            onChange={handleChange}
-            defaultOptions
-            styles={{
-              option: (provided) => ({
-                ...provided,
-                color: "black",
-                cursor: "pointer",
-              }),
-              singleValue: (provided) => ({
-                ...provided,
-                color: "black",
-                cursor: "pointer",
-              }),
-            }}
-          />
+        <div className="flex flex-col gap-4">
+          <div style={{ filter: "invert(1)", zIndex: 40 }}>
+            <AsyncSelect
+              cacheOptions
+              placeholder="Enter a PDB ID"
+              loadOptions={loadOptions}
+              onChange={handleChange}
+              defaultOptions
+              styles={{
+                option: (provided) => ({
+                  ...provided,
+                  color: "black",
+                  cursor: "pointer",
+                }),
+                singleValue: (provided) => ({
+                  ...provided,
+                  color: "black",
+                  cursor: "pointer",
+                }),
+              }}
+            />
+          </div>
+          <span className="text-md text-center">
+            <span className="bg-gray-700 p-1 mr-2 rounded-md">TIP</span>Do not hide the keyboard while searching
+          </span>
         </div>
       )}
 
@@ -102,7 +107,15 @@ const Docking: FC = () => {
           <MolStarWrapper value={proteinState} />
         </div>
       )}
-      <ProgressBar pointer={1} nextLink={(proteinState ? "/docking/marinate" : null) as string} />
+      <ProgressBar
+        pointer={1}
+        nextLink={(proteinState ? "/docking/marinate" : null) as string}
+        nextLinkParams={
+          (proteinState ? { proteinState: proteinState } : null) as {
+            [key: string]: string;
+          }
+        }
+      />
     </main>
   );
 };

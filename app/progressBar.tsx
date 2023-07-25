@@ -1,9 +1,13 @@
 import Link from "next/link";
+import ArrowBackIcon from "@mui/icons-material/ArrowBack";
+import ArrowForwardIcon from "@mui/icons-material/ArrowForward";
 
 export default function ProgressBar(props: {
   pointer: number;
   backLink?: String;
+  backLinkParams?: { [key: string]: string };
   nextLink?: String;
+  nextLinkParams?: { [key: string]: string };
 }) {
   const { pointer } = props;
 
@@ -12,12 +16,16 @@ export default function ProgressBar(props: {
       className="fixed bottom-0"
       style={{ left: "50%", transform: "translate(-50%, -50%)" }}
     >
-      <div className="flex flex-row gap-4">
-        {props.backLink && (
+      <div className="flex flex-row gap-2">
+        {props.backLink && props.backLinkParams && (
           <Link
-            href={props.backLink as string}
-            className="flex items-center justify-center p-3 opacity-75 text-gray-900 text-center bg-white rounded-3xl"
+            href={{
+              pathname: props.backLink as string,
+              query: props.backLinkParams,
+            }}
+            className="flex flex-row gap-4 items-center justify-center p-3 scale-75 text-gray-900 text-center bg-white rounded-3xl"
           >
+            <ArrowBackIcon />
             <span className="text-lg md:text-xl">BACK</span>
           </Link>
         )}
@@ -53,12 +61,16 @@ export default function ProgressBar(props: {
             </div>
           </div>
         </div>
-        {props.nextLink && (
+        {props.nextLink && props.nextLinkParams && (
           <Link
-            href={props.nextLink as string}
-            className="flex items-center justify-center p-3 opacity-75 text-gray-900 text-center bg-white rounded-3xl"
+            href={{
+              pathname: props.nextLink as string,
+              query: props.nextLinkParams,
+            }}
+            className="flex flex-row gap-4 items-center justify-center p-3 scale-75 text-gray-900 text-center bg-white rounded-3xl"
           >
             <span className="text-lg md:text-xl">NEXT</span>
+            <ArrowForwardIcon />
           </Link>
         )}
       </div>

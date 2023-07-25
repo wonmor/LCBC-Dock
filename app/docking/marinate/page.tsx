@@ -1,6 +1,7 @@
 "use client";
 
-import { FC, useState } from "react";
+import { FC } from "react";
+import { useSearchParams } from "next/navigation";
 import { MolStarWrapper } from "@/app/wrapper";
 
 import axios from "axios";
@@ -8,7 +9,9 @@ import AsyncSelect from "react-select/async";
 import ProgressBar from "@/app/progressBar";
 
 const Marinate: FC = () => {
-  const [proteinState, setProteinState] = useState(null) as any;
+  const searchParams = useSearchParams();
+
+  const proteinState = searchParams.get("proteinState") ?? null;
 
   const scrolltoHash = function (element_id: string) {
     const element = document.getElementById(element_id);
@@ -48,59 +51,22 @@ const Marinate: FC = () => {
     }, 500);
   };
 
-  const handleChange = (selectedOption: any) => {
-    setProteinState(selectedOption.value);
-    scrolltoHash("wrapper");
-  };
-
   return (
     <main className="pb-40">
-      {!proteinState ? (
-        <div className="text-center">
-          <h1 className="text-6xl font-thin mb-6">
-            MARINATE
-            <br />
-            <span className="font-semibold">PROTEIN</span>
-          </h1>
-        </div>
-      ) : (
-        <div className="text-center">
-          <h1 className="text-6xl font-thin mb-6">
-          <span className="font-semibold">PROTEIN</span>
-            <br />
-            {proteinState.toUpperCase()}
-          </h1>
-        </div>
-      )}
-
-      {!proteinState && (
-        <div style={{ filter: "invert(1)", zIndex: 40 }}>
-          <AsyncSelect
-            cacheOptions
-            placeholder="Enter a PDB ID"
-            loadOptions={loadOptions}
-            onChange={handleChange}
-            defaultOptions
-            styles={{
-              option: (provided) => ({
-                ...provided,
-                color: "black",
-                cursor: "pointer",
-              }),
-              singleValue: (provided) => ({
-                ...provided,
-                color: "black",
-                cursor: "pointer",
-              }),
-            }}
-          />
-        </div>
-      )}
-
       {proteinState && (
-        <div id="wrapper">
-          <MolStarWrapper value={proteinState} />
-        </div>
+        <>
+          <div className="text-center">
+            <h1 className="text-6xl font-thin mb-6">
+              MARINATE
+              <br />
+              <span className="font-semibold">{proteinState}</span>
+            </h1>
+          </div>
+
+          <div id="wrapper">
+            <MolStarWrapper value={proteinState} />
+          </div>
+        </>
       )}
       <ProgressBar pointer={1} />
     </main>
