@@ -26,7 +26,6 @@ const Background = () => {
             init={particlesInit}
             loaded={particlesLoaded}
             options={{
-
                 fpsLimit: 120,
                 interactivity: {
                     events: {

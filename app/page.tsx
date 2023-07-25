@@ -1,5 +1,6 @@
 import Link from "next/link";
 import ArrowForwardIcon from "@mui/icons-material/ArrowForward";
+import Footer from "./footer";
 
 export default function Home() {
   return (
@@ -91,6 +92,8 @@ export default function Home() {
           </p>
         </Link>
       </div>
+
+      <Footer destination="/docking/start" message="Click here to begin" />
     </main>
   );
 }
