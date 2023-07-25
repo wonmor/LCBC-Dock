@@ -5,7 +5,6 @@ import { useSearchParams } from "next/navigation";
 import { MolStarWrapper } from "@/app/wrapper";
 
 import axios from "axios";
-import AsyncSelect from "react-select/async";
 import ProgressBar from "@/app/progressBar";
 
 const Marinate: FC = () => {
