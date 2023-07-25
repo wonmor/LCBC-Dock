@@ -97,7 +97,8 @@ const Docking: FC = () => {
             />
           </div>
           <span className="text-md text-center">
-            <span className="bg-gray-700 p-1 mr-2 rounded-md">TIP</span>Do not hide the keyboard while searching
+            <span className="bg-gray-700 p-1 mr-2 rounded-md">TIP</span>Do not
+            hide the keyboard while searching
           </span>
         </div>
       )}
@@ -107,6 +108,7 @@ const Docking: FC = () => {
           <MolStarWrapper value={proteinState} />
         </div>
       )}
+      
       <ProgressBar
         pointer={1}
         nextLink={(proteinState ? "/docking/marinate" : null) as string}
