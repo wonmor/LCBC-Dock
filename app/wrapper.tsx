@@ -39,5 +39,5 @@ export function MolStarWrapper(props: { value: string }) {
     };
   }, []);
 
-  return<div ref={parent} style={{ width: "75%", height: "75%", filter: "invert(1)" }}/>
+  return<div ref={parent} style={{ position: "absolute", top: "180%", left: 0, right: 0, margin: "0 auto", width: "75%", height: "75%", filter: "invert(1)" }}/>
 }
