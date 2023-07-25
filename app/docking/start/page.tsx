@@ -1,18 +1,19 @@
 "use client";
 
 import { FC, useState } from "react";
-import { useRouter } from 'next/navigation'
 
 import axios from "axios";
 import AsyncSelect from "react-select/async";
 import Link from "next/link";
+import { MolStarWrapper } from "@/app/wrapper";
 
 const Docking: FC = () => {
-  const [selectedOption, setSelectedOption] = useState<any>(null);
-  
-  const router = useRouter()
+  const [proteinState, setProteinState] = useState(null);
 
-  const loadOptions = (inputValue: string, callback: (options: any) => void) => {
+  const loadOptions = (
+    inputValue: string,
+    callback: (options: any) => void
+  ) => {
     if (!inputValue || inputValue.trim() === "") {
       callback([]);
       return;
@@ -20,7 +21,13 @@ const Docking: FC = () => {
 
     setTimeout(async () => {
       try {
-        const response = await axios.get(`${process.env.NODE_ENV === "development" ? "http://localhost:8000" : "https://api.lcbcdock.com"}/search/${inputValue}`);
+        const response = await axios.get(
+          `${
+            process.env.NODE_ENV === "development"
+              ? "http://localhost:8000"
+              : "https://api.lcbcdock.com"
+          }/search/${inputValue}`
+        );
         const options = response.data.map((result: string) => ({
           value: result,
           label: result,
@@ -33,9 +40,7 @@ const Docking: FC = () => {
   };
 
   const handleChange = (selectedOption: any) => {
-    setSelectedOption(selectedOption);
-
-    router.push('/docking/viewer');
+    setProteinState(selectedOption.value);
   };
 
   return (
@@ -70,27 +75,40 @@ const Docking: FC = () => {
 
       {/* Title */}
       <div className="text-center">
-        <h1 className="text-6xl font-thin mb-6">SEARCH PROTEIN</h1>
+        <h1 className="text-6xl font-thin mb-6">
+          SEARCH
+          <br />
+          <span className="font-semibold">PROTEIN</span>
+        </h1>
       </div>
 
-      <AsyncSelect
-        cacheOptions
-        loadOptions={loadOptions}
-        onChange={handleChange}
-        defaultOptions
-        styles={{
-          option: (provided) => ({
-            ...provided,
-            color: 'black'
-          }),
-          singleValue: (provided) => ({
-            ...provided,
-            color: 'black'
-          })
-        }}
-      />
+      <div style={{ filter: "invert(1)" }}>
+        <AsyncSelect
+          cacheOptions
+          placeholder="Enter a PDB ID"
+          loadOptions={loadOptions}
+          onChange={handleChange}
+          defaultOptions
+          styles={{
+            option: (provided) => ({
+              ...provided,
+              color: "black",
+            }),
+            singleValue: (provided) => ({
+              ...provided,
+              color: "black",
+            }),
+          }}
+        />
+      </div>
+
+      {proteinState && (
+        <div className="mt-8">
+          <MolStarWrapper value={proteinState} />
+        </div>
+      )}
     </main>
   );
-}
+};
 
 export default Docking;

@@ -1,3 +1,5 @@
+"use client";
+
 import { useEffect, createRef } from "react";
 import { createPluginUI } from "molstar/lib/mol-plugin-ui";
 import { PluginUIContext } from "molstar/lib/mol-plugin-ui/context";
@@ -12,7 +14,7 @@ declare global {
   }
 }
 
-export function MolStarWrapper() {
+export function MolStarWrapper(props: { value: string }) {
   const parent = createRef<HTMLDivElement>();
 
   useEffect(() => {
@@ -20,7 +22,7 @@ export function MolStarWrapper() {
         window.molstar = await createPluginUI(parent.current as HTMLDivElement);
 
         const data = await window.molstar.builders.data.download(
-          { url: `https://files.rcsb.org/download/1LOL.pdb` }, /* replace with your URL */
+          { url: `https://files.rcsb.org/download/${props.value}.pdb` }, /* replace with your URL */
           { state: { isGhost: true } }
         );
         const trajectory =
@@ -37,5 +39,5 @@ export function MolStarWrapper() {
     };
   }, []);
 
-  return <div ref={parent} style={{ position: "absolute", width: "75%", height: "75%", filter: "invert(1)" }}/>;
+  return<div ref={parent} style={{ width: "75%", height: "75%", filter: "invert(1)" }}/>
 }
