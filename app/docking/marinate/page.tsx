@@ -42,9 +42,9 @@ const Marinate: FC = () => {
         <>
           <div className="text-center">
             <h1 className="text-6xl font-thin mb-6">
-              MARINATE
+              <span className="font-semibold">MARINATE</span>
               <br />
-              <span className="font-semibold">{proteinState}</span>
+              {proteinState}
             </h1>
           </div>
 
