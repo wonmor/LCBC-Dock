@@ -1,5 +1,4 @@
 import { useEffect, createRef } from "react";
-import { PluginContext } from "molstar/lib/mol-plugin/context";
 import { PluginSpec } from "molstar/lib/mol-plugin/spec";
 import { PluginUIContext } from "molstar/lib/mol-plugin-ui/context";
 import { createPluginUI } from "molstar/lib/mol-plugin-ui";

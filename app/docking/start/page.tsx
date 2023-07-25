@@ -5,6 +5,7 @@ import { MolStarWrapper } from "@/app/wrapper";
 
 import axios from "axios";
 import AsyncSelect from "react-select/async";
+import ProgressBar from "@/app/progressBar";
 
 const Docking: FC = () => {
   const [proteinState, setProteinState] = useState(null) as any;
@@ -53,7 +54,7 @@ const Docking: FC = () => {
   };
 
   return (
-    <main>
+    <main className="pb-40">
       {!proteinState ? (
         <div className="text-center">
           <h1 className="text-6xl font-thin mb-6">
@@ -101,6 +102,7 @@ const Docking: FC = () => {
           <MolStarWrapper value={proteinState} />
         </div>
       )}
+      <ProgressBar pointer={1} />
     </main>
   );
 };
