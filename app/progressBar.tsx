@@ -23,7 +23,7 @@ export default function ProgressBar(props: {
               pathname: props.backLink as string,
               query: props.backLinkParams,
             }}
-            className="flex flex-row gap-4 items-center justify-center p-3 scale-75 text-gray-900 text-center bg-white rounded-3xl"
+            className="flex flex-col md:flex-row gap-4 items-center justify-center p-3 scale-75 text-gray-900 text-center bg-white rounded-3xl"
           >
             <ArrowBackIcon />
             <span className="text-lg md:text-xl">BACK</span>
