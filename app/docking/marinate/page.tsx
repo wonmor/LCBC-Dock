@@ -7,7 +7,7 @@ import axios from "axios";
 import AsyncSelect from "react-select/async";
 import ProgressBar from "@/app/progressBar";
 
-const Docking: FC = () => {
+const Marinate: FC = () => {
   const [proteinState, setProteinState] = useState(null) as any;
 
   const scrolltoHash = function (element_id: string) {
@@ -58,7 +58,7 @@ const Docking: FC = () => {
       {!proteinState ? (
         <div className="text-center">
           <h1 className="text-6xl font-thin mb-6">
-            SEARCH
+            MARINATE
             <br />
             <span className="font-semibold">PROTEIN</span>
           </h1>
@@ -102,9 +102,9 @@ const Docking: FC = () => {
           <MolStarWrapper value={proteinState} />
         </div>
       )}
-      <ProgressBar pointer={1} nextLink={(proteinState ? "/docking/marinate" : null) as string} />
+      <ProgressBar pointer={1} />
     </main>
   );
 };
 
-export default Docking;
+export default Marinate;

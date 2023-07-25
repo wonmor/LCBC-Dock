@@ -1,3 +1,5 @@
+import Link from "next/link";
+
 export default function ProgressBar(props: {
   pointer: number;
   backLink?: String;
@@ -11,6 +13,14 @@ export default function ProgressBar(props: {
       style={{ left: "50%", transform: "translate(-50%, -50%)" }}
     >
       <div className="flex flex-row gap-4">
+        {props.backLink && (
+          <Link
+            href={props.backLink as string}
+            className="flex items-center justify-center p-3 opacity-75 text-gray-900 text-center bg-white rounded-3xl"
+          >
+            <span className="text-lg md:text-xl">BACK</span>
+          </Link>
+        )}
         <div className="p-3 opacity-75 text-gray-900 text-center bg-white rounded-3xl">
           <div className="scale-90 sm:scale-100 flex overflow-hidden rounded-xl">
             <div
@@ -43,6 +53,14 @@ export default function ProgressBar(props: {
             </div>
           </div>
         </div>
+        {props.nextLink && (
+          <Link
+            href={props.nextLink as string}
+            className="flex items-center justify-center p-3 opacity-75 text-gray-900 text-center bg-white rounded-3xl"
+          >
+            <span className="text-lg md:text-xl">NEXT</span>
+          </Link>
+        )}
       </div>
     </div>
   );
