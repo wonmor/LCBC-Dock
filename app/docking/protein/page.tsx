@@ -7,8 +7,6 @@ import axios from "axios";
 import AsyncSelect from "react-select/async";
 import ProgressBar from "@/app/progressBar";
 
-// HOW TO REMOVE H2O FROM A PDB FILE...
-
 const Docking: FC = () => {
   const [proteinState, setProteinState] = useState(null) as any;
 

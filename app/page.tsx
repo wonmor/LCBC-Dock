@@ -36,7 +36,7 @@ export default function Home() {
 
       <div className="mb-32 grid text-center lg:mb-0 lg:grid-cols-4 lg:text-left">
         <Link
-          href="/docking/start"
+          href="/docking/protein"
           className="group rounded-lg border border-transparent px-5 py-4 transition-colors hover:border-gray-300 hover:bg-gray-100 hover:dark:border-neutral-700 hover:dark:bg-neutral-800 hover:dark:bg-opacity-30"
         >
           <div className="mb-3 flex flex-row spacing-2">
@@ -93,7 +93,7 @@ export default function Home() {
         </Link>
       </div>
 
-      <Footer destination="/login" message="Click here to login" />
+      <Footer destination="/docking/protein" message="Click here to begin" />
     </main>
   );
 }
