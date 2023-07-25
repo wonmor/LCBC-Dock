@@ -8,7 +8,7 @@ import AsyncSelect from "react-select/async";
 import Link from "next/link";
 
 const Docking: FC = () => {
-  const [proteinState, setProteinState] = useState(null);
+  const [proteinState, setProteinState] = useState(null) as any;
 
   const scrolltoHash = function (element_id: string) {
     const element = document.getElementById(element_id);
