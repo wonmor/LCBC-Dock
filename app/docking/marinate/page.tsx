@@ -68,7 +68,15 @@ const Marinate: FC = () => {
           </div>
         </>
       )}
-      <ProgressBar pointer={1} />
+      <ProgressBar
+        pointer={2}
+        backLink={(proteinState ? "/docking/protein" : null) as string}
+        backLinkParams={
+          {} as {
+            [key: string]: string;
+          }
+        }
+      />
     </main>
   );
 };

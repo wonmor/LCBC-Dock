@@ -33,21 +33,21 @@ export default function ProgressBar(props: {
           <div className="scale-90 sm:scale-100 flex overflow-hidden rounded-xl">
             <div
               className={`flex-1 p-2 ${
-                pointer >= 1 ? "bg-transparent" : "bg-gray-300"
+                pointer === 1 ? "bg-transparent" : "bg-gray-300"
               }`}
             >
               PROTEIN
             </div>
             <div
               className={`flex-1 p-2 ${
-                pointer >= 2 ? "bg-transparent" : "bg-gray-300"
+                pointer === 2 ? "bg-transparent" : "bg-gray-300"
               }`}
             >
               MARINATE
             </div>
             <div
               className={`flex-1 p-2 ${
-                pointer >= 3 ? "bg-transparent" : "bg-gray-300"
+                pointer === 3 ? "bg-transparent" : "bg-gray-300"
               }`}
             >
               LIGAND
