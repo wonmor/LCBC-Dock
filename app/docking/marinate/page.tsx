@@ -5,7 +5,7 @@ import ProgressBar from "@/app/progressBar";
 
 import { FC, useState, useEffect } from "react";
 import { useSearchParams } from "next/navigation";
-import { RotatingTriangles }from 'react-loader-spinner'; //Importing the loader/spinner library
+import { RotatingTriangles } from 'react-loader-spinner'; //Importing the loader/spinner library
 
 const Marinate: FC = () => {
   const searchParams = useSearchParams();
