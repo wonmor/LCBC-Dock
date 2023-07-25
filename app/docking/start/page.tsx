@@ -88,7 +88,7 @@ const Docking: FC = () => {
         </h1>
       </div>
 
-      <div style={{ filter: "invert(1)" }}>
+      <div style={{ filter: "invert(1)", zIndex: 40 }}>
         <AsyncSelect
           cacheOptions
           placeholder="Enter a PDB ID"
@@ -111,7 +111,7 @@ const Docking: FC = () => {
       </div>
 
       {proteinState && (
-        <div id="wrapper" className="mt-40">
+        <div id="wrapper" className="mt-10">
           <MolStarWrapper value={proteinState} />
         </div>
       )}
