@@ -10,6 +10,11 @@ import { MolStarWrapper } from "@/app/wrapper";
 const Docking: FC = () => {
   const [proteinState, setProteinState] = useState(null);
 
+  const scrolltoHash = function (element_id: string) {
+    const element = document.getElementById(element_id)
+    element?.scrollIntoView({ behavior: "smooth", block: "end", inline: "nearest" });
+  }
+
   const loadOptions = (
     inputValue: string,
     callback: (options: any) => void
@@ -41,6 +46,7 @@ const Docking: FC = () => {
 
   const handleChange = (selectedOption: any) => {
     setProteinState(selectedOption.value);
+    scrolltoHash("wrapper");
   };
 
   return (
@@ -93,17 +99,19 @@ const Docking: FC = () => {
             option: (provided) => ({
               ...provided,
               color: "black",
+              cursor: "pointer",
             }),
             singleValue: (provided) => ({
               ...provided,
               color: "black",
+              cursor: "pointer",
             }),
           }}
         />
       </div>
 
       {proteinState && (
-        <div className="mt-40">
+        <div id="wrapper" className="mt-40">
           <MolStarWrapper value={proteinState} />
         </div>
       )}
