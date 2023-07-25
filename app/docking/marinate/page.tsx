@@ -15,44 +15,6 @@ const Marinate: FC = () => {
   const [proteinData, setProteinData] = useState(null); //State to store the fetched PDB file data
   const [loading, setLoading] = useState(false); //State to control the spinner
 
-  const scrolltoHash = function (element_id: string) {
-    const element = document.getElementById(element_id);
-    element?.scrollIntoView({
-      behavior: "smooth",
-      block: "end",
-      inline: "nearest",
-    });
-  };
-
-  const loadOptions = (
-    inputValue: string,
-    callback: (options: any) => void
-  ) => {
-    if (!inputValue || inputValue.trim() === "") {
-      callback([]);
-      return;
-    }
-
-    setTimeout(async () => {
-      try {
-        const response = await axios.get(
-          `${
-            process.env.NODE_ENV === "development"
-              ? "http://localhost:8000"
-              : "https://api.lcbcdock.com"
-          }/search/${inputValue}`
-        );
-        const options = response.data.map((result: string) => ({
-          value: result,
-          label: result,
-        }));
-        callback(options);
-      } catch (error) {
-        console.error(`Error searching PDB: ${error}`);
-      }
-    }, 500);
-  };
-
   // useEffect to fetch the PDB file data once the component is loaded
   useEffect(() => {
     const fetchData = async () => {
