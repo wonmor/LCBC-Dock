@@ -1,11 +1,9 @@
-"use client";
-
 import { useEffect, createRef } from "react";
-import { createPluginUI } from "molstar/lib/mol-plugin-ui";
+import { PluginContext } from "molstar/lib/mol-plugin/context";
+import { PluginSpec } from "molstar/lib/mol-plugin/spec";
 import { PluginUIContext } from "molstar/lib/mol-plugin-ui/context";
-/*  Might require extra configuration,
-see https://webpack.js.org/loaders/sass-loader/ for example.
-create-react-app should support this natively. */
+import { createPluginUI } from "molstar/lib/mol-plugin-ui";
+
 import "molstar/lib/mol-plugin-ui/skin/light.scss";
 
 declare global {
@@ -19,10 +17,22 @@ export function MolStarWrapper(props: { value: string }) {
 
   useEffect(() => {
     async function init() {
-        window.molstar = await createPluginUI(parent.current as HTMLDivElement);
+        const spec: PluginSpec = {
+            actions: [],
+            behaviors: [],
+            layout: {
+                initial: {
+                    isExpanded: false,
+                    showControls: false,
+                } as any
+            },
+            animations: []
+        }
+
+        window.molstar = await createPluginUI(parent.current as HTMLDivElement, spec);
 
         const data = await window.molstar.builders.data.download(
-          { url: `https://files.rcsb.org/download/${props.value}.pdb` }, /* replace with your URL */
+          { url: `https://files.rcsb.org/download/${props.value}.pdb` },
           { state: { isGhost: true } }
         );
         const trajectory =
