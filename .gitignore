@@ -36,3 +36,5 @@ next-env.d.ts
 
 __pycache__/
 api/__pycache__/
+
+package-lock.json
