@@ -1,7 +1,10 @@
-from fastapi import FastAPI, HTTPException
+from fastapi import FastAPI, HTTPException, UploadFile, File
 from fastapi.middleware.cors import CORSMiddleware
 import httpx
 from typing import List
+from Bio.PDB import PDBParser, PDBIO
+from io import StringIO
+from tempfile import NamedTemporaryFile
 
 app = FastAPI()
 
@@ -41,6 +44,26 @@ async def fetch_search_results(search_term: str) -> List[str]:
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e))
 
+# Function to check if an atom is not a water or a hydrogen atom
+def is_not_water_or_hetatom(residue):
+    return residue.get_resname() != "HOH" and not residue.id[0].startswith("H")
+
+@app.post("/remove_water_hetatoms/")
+async def remove_water_hetatoms(pdb_file: UploadFile = File(...)):
+    # Read the structure from the uploaded file
+    parser = PDBParser()
+    structure = parser.get_structure("my_protein", StringIO(await pdb_file.read().decode()))
+
+    # Initialize PDBIO object
+    io = PDBIO()
+    io.set_structure(structure)
+
+    # Create a temporary file to save the modified structure
+    with NamedTemporaryFile(delete=False, suffix=".pdb") as tmp_file:
+        # Save the structure to a new PDB file, excluding water and hetatoms
+        io.save(tmp_file.name, select=is_not_water_or_hetatom)
+        # Read the contents of the temporary file and return as response
+        return {"filename": pdb_file.filename, "content": open(tmp_file.name).read()}
 
 @app.get("/search/{search_term}")
 async def search_proteins(search_term: str):
