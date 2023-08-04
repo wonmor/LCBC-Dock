@@ -1,53 +1,55 @@
-"use client";
-
-import axios from "axios";
+import axios, { AxiosResponse } from 'axios';
 import ProgressBar from "@/app/progressBar";
-
 import { useEffect, useState } from "react";
-import { diffLines } from "diff"; // Import diffLines function
+import { diffLines, Change } from "diff";
+;
 import { useSearchParams } from "next/navigation";
 import { RotatingTriangles } from "react-loader-spinner";
 
+interface PdbResponse {
+  content: string;
+}
+
 // Function to convert PDB data to FormData
-function pdbDataToFormData(pdbData: any) {
+function pdbDataToFormData(pdbData: string): FormData {
   const blob = new Blob([pdbData], { type: "text/plain" });
   const formData = new FormData();
   formData.append("pdb_file", blob);
   return formData;
 }
 
-const Marinate = () => {
+const Marinate: React.FC = () => {
   const searchParams = useSearchParams();
-
   const proteinState = searchParams.get("proteinState") ?? null;
-
-  const [proteinData, setProteinData] = useState(null);
-  const [processedProteinData, setProcessedProteinData] = useState(null);
-  const [diff, setDiff] = useState(null);
-  const [loading, setLoading] = useState(false);
+  
+  const [proteinData, setProteinData] = useState<string | null>(null);
+  const [processedProteinData, setProcessedProteinData] = useState<string | null>(null);
+  const [diff, setDiff] = useState<Change[] | null>(null);
+  const [loading, setLoading] = useState<boolean>(false);
 
   useEffect(() => {
     const fetchData = async () => {
       setLoading(true);
       try {
-        const response = await axios.get(
+        const response: AxiosResponse<string> = await axios.get(
           `https://files.rcsb.org/download/${proteinState}.pdb`
         );
         setProteinData(response.data);
 
-        const serverUrl =
+        const serverUrl: string =
           process.env.NODE_ENV === "development"
             ? "http://localhost:8000/remove_water_hetatoms/"
             : "https://api.lcbcdock.com/remove_water_hetatoms/";
 
-        const formData = pdbDataToFormData(response.data);
-        const processedResponse = await axios.post(serverUrl, formData);
-        const processedData = processedResponse.data.content;
+        const formData: FormData = pdbDataToFormData(response.data);
+        const processedResponse: AxiosResponse<PdbResponse> = await axios.post(serverUrl, formData);
+        const processedData: string = processedResponse.data.content;
         setProcessedProteinData(processedData);
 
-        const computedDiff = diffLines(response.data, processedData);
+        const computedDiff: Change[] = diffLines(response.data, processedData);
+
         setDiff(computedDiff);
-      } catch (error) {
+      } catch (error: any) {
         console.error(`Error fetching PDB file: ${error}`);
       } finally {
         setLoading(false);
@@ -61,51 +63,51 @@ const Marinate = () => {
 
   return (
     <main className="pb-40">
-      {proteinState && (
-        <>
-          <div className="text-center">
-            <h1 className="text-6xl font-thin mb-6">
-              <span className="font-semibold">MARINATE</span>
-              <br />
-              {proteinState}
-            </h1>
-          </div>
+    {proteinState && (
+      <>
+        <div className="text-center">
+          <h1 className="text-6xl font-thin mb-6">
+            <span className="font-semibold">MARINATE</span>
+            <br />
+            {proteinState}
+          </h1>
+        </div>
 
-          <div
-            id="wrapper"
-            className="text-center flex items-center justify-center"
-          >
-            {loading && <RotatingTriangles />}
+        <div
+          id="wrapper"
+          className="text-center flex items-center justify-center"
+        >
+          {loading && <RotatingTriangles />}
 
-            {/*Display PDB file data once it is fetched*/}
-            {!loading && proteinData && diff && (
-              <div className="pdb-data">
-                <pre>
-                  {diff.map(({ value, removed }, i) =>
-                    removed ? (
-                      <span key={i} style={{ color: "red" }}>
-                        {value}
-                      </span>
-                    ) : (
-                      value
-                    )
-                  )}
-                </pre>
-              </div>
-            )}
-          </div>
-        </>
-      )}
-      <ProgressBar
-        pointer={2}
-        backLink={(proteinState ? "/docking/protein" : null) as string}
-        backLinkParams={
-          {} as {
-            [key: string]: string;
-          }
+          {/*Display PDB file data once it is fetched*/}
+          {!loading && proteinData && diff && (
+            <div className="pdb-data">
+              <pre>
+                {diff.map(({ value, removed }, i) =>
+                  removed ? (
+                    <span key={i} style={{ color: "red" }}>
+                      {value}
+                    </span>
+                  ) : (
+                    value
+                  )
+                )}
+              </pre>
+            </div>
+          )}
+        </div>
+      </>
+    )}
+    <ProgressBar
+      pointer={2}
+      backLink={(proteinState ? "/docking/protein" : null) as string}
+      backLinkParams={
+        {} as {
+          [key: string]: string;
         }
-      />
-    </main>
+      }
+    />
+  </main>
   );
 };
 
