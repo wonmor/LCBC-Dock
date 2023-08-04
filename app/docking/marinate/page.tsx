@@ -69,7 +69,7 @@ const Marinate: React.FC = () => {
       <>
         <div className="text-center">
           <h1 className="text-6xl font-thin mb-6">
-            <span className="font-semibold">MARINATE</span>
+            <span className="font-semibold">PREPARE</span>
             <br />
             {proteinState}
           </h1>
