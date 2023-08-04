@@ -1,33 +1,56 @@
-"use client"
+"use client";
 
 import axios from "axios";
 import ProgressBar from "@/app/progressBar";
 
-import { FC, useState, useEffect } from "react";
+import { useEffect, useState } from "react";
+import { diffLines } from "diff"; // Import diffLines function
 import { useSearchParams } from "next/navigation";
-import { RotatingTriangles } from 'react-loader-spinner'; //Importing the loader/spinner library
+import { RotatingTriangles } from "react-loader-spinner";
 
-const Marinate: FC = () => {
+// Function to convert PDB data to FormData
+function pdbDataToFormData(pdbData) {
+  const blob = new Blob([pdbData], { type: "text/plain" });
+  const formData = new FormData();
+  formData.append("pdb_file", blob);
+  return formData;
+}
+
+const Marinate = () => {
   const searchParams = useSearchParams();
 
   const proteinState = searchParams.get("proteinState") ?? null;
 
-  const [proteinData, setProteinData] = useState(null); //State to store the fetched PDB file data
-  const [loading, setLoading] = useState(false); //State to control the spinner
+  const [proteinData, setProteinData] = useState(null);
+  const [processedProteinData, setProcessedProteinData] = useState(null);
+  const [diff, setDiff] = useState(null);
+  const [loading, setLoading] = useState(false);
 
-  // useEffect to fetch the PDB file data once the component is loaded
   useEffect(() => {
     const fetchData = async () => {
-      setLoading(true); //Set loading to true to show the spinner
+      setLoading(true);
       try {
         const response = await axios.get(
           `https://files.rcsb.org/download/${proteinState}.pdb`
         );
         setProteinData(response.data);
+
+        const serverUrl =
+          process.env.NODE_ENV === "development"
+            ? "http://localhost:8000/remove_water_hetatoms/"
+            : "https://api.lcbcdock.com/remove_water_hetatoms/";
+
+        const formData = pdbDataToFormData(response.data);
+        const processedResponse = await axios.post(serverUrl, formData);
+        const processedData = processedResponse.data.content;
+        setProcessedProteinData(processedData);
+
+        const computedDiff = diffLines(response.data, processedData);
+        setDiff(computedDiff);
       } catch (error) {
         console.error(`Error fetching PDB file: ${error}`);
       } finally {
-        setLoading(false); //Hide the spinner after data is fetched
+        setLoading(false);
       }
     };
 
@@ -48,16 +71,28 @@ const Marinate: FC = () => {
             </h1>
           </div>
 
-          <div id="wrapper" className="text-center flex items-center justify-center">
-            {/*Show spinner while loading the data*/}
+          <div
+            id="wrapper"
+            className="text-center flex items-center justify-center"
+          >
             {loading && <RotatingTriangles />}
-            
+
             {/*Display PDB file data once it is fetched*/}
-            {!loading && proteinData && 
+            {!loading && proteinData && diff && (
               <div className="pdb-data">
-                <pre>{proteinData}</pre>
+                <pre>
+                  {diff.map(({ value, removed }, i) =>
+                    removed ? (
+                      <span key={i} style={{ color: "red" }}>
+                        {value}
+                      </span>
+                    ) : (
+                      value
+                    )
+                  )}
+                </pre>
               </div>
-            }
+            )}
           </div>
         </>
       )}
