@@ -67,12 +67,16 @@ const Marinate: React.FC = () => {
     <main className="pb-40">
     {proteinState && (
       <>
-        <div className="text-center">
+        <div className="text-center mb-5">
           <h1 className="text-6xl font-thin mb-6">
             <span className="font-semibold">PREPARE</span>
             <br />
             {proteinState}
           </h1>
+
+          <p className="text-xl">
+            Water molcules and heteroatoms have been removed.<br />Lines highlighted in <span className="text-rose-300">red</span> are the part that were deleted.
+          </p>
         </div>
 
         <div
@@ -87,7 +91,7 @@ const Marinate: React.FC = () => {
               <pre>
                 {diff.map(({ value, removed }, i) =>
                   removed ? (
-                    <span key={i} style={{ color: "red" }}>
+                    <span key={i} className="text-rose-300">
                       {value}
                     </span>
                   ) : (
