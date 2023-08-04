@@ -1,10 +1,12 @@
 "use client";
 
-import axios, { AxiosResponse } from 'axios';
+import axios, { AxiosResponse } from "axios";
+
 import ProgressBar from "@/app/progressBar";
+import Minimap from "react-simple-minimap";
+
 import { useEffect, useState } from "react";
 import { diffLines, Change } from "diff";
-;
 import { useSearchParams } from "next/navigation";
 import { RotatingTriangles } from "react-loader-spinner";
 
@@ -23,9 +25,11 @@ function pdbDataToFormData(pdbData: string): FormData {
 const Marinate: React.FC = () => {
   const searchParams = useSearchParams();
   const proteinState = searchParams.get("proteinState") ?? null;
-  
+
   const [proteinData, setProteinData] = useState<string | null>(null);
-  const [processedProteinData, setProcessedProteinData] = useState<string | null>(null);
+  const [processedProteinData, setProcessedProteinData] = useState<
+    string | null
+  >(null);
   const [diff, setDiff] = useState<Change[] | null>(null);
   const [loading, setLoading] = useState<boolean>(false);
 
@@ -44,7 +48,10 @@ const Marinate: React.FC = () => {
             : "https://api.lcbcdock.com/remove_water_hetatoms/";
 
         const formData: FormData = pdbDataToFormData(response.data);
-        const processedResponse: AxiosResponse<PdbResponse> = await axios.post(serverUrl, formData);
+        const processedResponse: AxiosResponse<PdbResponse> = await axios.post(
+          serverUrl,
+          formData
+        );
         const processedData: string = processedResponse.data.content;
         setProcessedProteinData(processedData);
 
@@ -63,57 +70,71 @@ const Marinate: React.FC = () => {
     }
   }, [proteinState]);
 
-  return (
-    <main className="pb-40">
-    {proteinState && (
-      <>
-        <div className="text-center mb-5">
-          <h1 className="text-6xl font-thin mb-6">
-            <span className="font-semibold">PREPARE</span>
-            <br />
-            {proteinState}
-          </h1>
+  const pageContent = () => {
+    return (
+      <div className="pb-40">
+        {proteinState && (
+          <>
+            <div className="text-center mb-5">
+              <h1 className="text-6xl font-thin mb-6">
+                <span className="font-semibold">PREPARE</span>
+                <br />
+                {proteinState}
+              </h1>
 
-          <p className="text-xl">
-            Water molcules and heteroatoms have been removed.<br />Lines highlighted in <span className="text-rose-300">red</span> are the part that were deleted.
-          </p>
-        </div>
-
-        <div
-          id="wrapper"
-          className="text-center flex items-center justify-center"
-        >
-          {loading && <RotatingTriangles />}
-
-          {/*Display PDB file data once it is fetched*/}
-          {!loading && proteinData && diff && (
-            <div className="pdb-data">
-              <pre>
-                {diff.map(({ value, removed }, i) =>
-                  removed ? (
-                    <span key={i} className="text-rose-300">
-                      {value}
-                    </span>
-                  ) : (
-                    value
-                  )
-                )}
-              </pre>
+              <p className="text-xl">
+                Water molcules and heteroatoms have been removed.
+                <br />
+                Lines highlighted in <span className="text-rose-300">
+                  red
+                </span>{" "}
+                are the parts that were deleted.
+              </p>
             </div>
-          )}
-        </div>
-      </>
-    )}
-    <ProgressBar
-      pointer={2}
-      backLink={(proteinState ? "/docking/protein" : null) as string}
-      backLinkParams={
-        {} as {
-          [key: string]: string;
-        }
-      }
-    />
-  </main>
+
+            <div
+              id="wrapper"
+              className="text-center flex items-center justify-center"
+            >
+              {loading && <RotatingTriangles />}
+
+              {/*Display PDB file data once it is fetched*/}
+              {!loading && proteinData && diff && (
+                <div className="pdb-data">
+                  <pre>
+                    {diff.map(({ value, removed }, i) =>
+                      removed ? (
+                        <span key={i} className="text-rose-300">
+                          {value}
+                        </span>
+                      ) : (
+                        value
+                      )
+                    )}
+                  </pre>
+                </div>
+              )}
+            </div>
+          </>
+        )}
+        <ProgressBar
+          pointer={2}
+          backLink={(proteinState ? "/docking/protein" : null) as string}
+          backLinkParams={
+            {} as {
+              [key: string]: string;
+            }
+          }
+        />
+      </div>
+    );
+  };
+
+  return (
+    <main>
+      <Minimap of={pageContent()} />
+      {pageContent()}
+    </main>
   );
 };
 

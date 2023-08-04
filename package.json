@@ -40,6 +40,7 @@
     "react-persist": "^1.0.2",
     "react-redux": "^8.1.1",
     "react-select": "^5.7.4",
+    "react-simple-minimap": "^1.0.1",
     "redux": "^4.2.1",
     "sass": "^1.64.1",
     "tailwindcss": "3.3.2",
