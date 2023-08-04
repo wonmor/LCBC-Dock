@@ -17,6 +17,12 @@ app.add_middleware(
     allow_headers=["*"],
 )
 
+from Bio.PDB import Select
+
+class NotWaterOrHetatm(Select):
+    def accept_residue(self, residue):
+        return residue.get_resname() != "HOH" and not residue.id[0].startswith("H")
+
 async def fetch_search_results(search_term: str) -> List[str]:
     url = "https://search.rcsb.org/rcsbsearch/v2/query"
     json_data = {
@@ -52,7 +58,7 @@ def is_not_water_or_hetatom(residue):
 async def remove_water_hetatoms(pdb_file: UploadFile = File(...)):
     # Read the structure from the uploaded file
     parser = PDBParser()
-    structure = parser.get_structure("my_protein", StringIO(await pdb_file.read().decode()))
+    structure = parser.get_structure("my_protein", StringIO((await pdb_file.read()).decode()))
 
     # Initialize PDBIO object
     io = PDBIO()
@@ -61,7 +67,8 @@ async def remove_water_hetatoms(pdb_file: UploadFile = File(...)):
     # Create a temporary file to save the modified structure
     with NamedTemporaryFile(delete=False, suffix=".pdb") as tmp_file:
         # Save the structure to a new PDB file, excluding water and hetatoms
-        io.save(tmp_file.name, select=is_not_water_or_hetatom)
+        io.save(tmp_file.name, select=NotWaterOrHetatm())
+
         # Read the contents of the temporary file and return as response
         return {"filename": pdb_file.filename, "content": open(tmp_file.name).read()}
 
