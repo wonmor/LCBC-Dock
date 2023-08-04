@@ -9,7 +9,7 @@ import { useSearchParams } from "next/navigation";
 import { RotatingTriangles } from "react-loader-spinner";
 
 // Function to convert PDB data to FormData
-function pdbDataToFormData(pdbData) {
+function pdbDataToFormData(pdbData: any) {
   const blob = new Blob([pdbData], { type: "text/plain" });
   const formData = new FormData();
   formData.append("pdb_file", blob);
