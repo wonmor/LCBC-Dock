@@ -1,3 +1,5 @@
+"use client";
+
 import axios, { AxiosResponse } from 'axios';
 import ProgressBar from "@/app/progressBar";
 import { useEffect, useState } from "react";
