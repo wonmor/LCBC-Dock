@@ -105,6 +105,12 @@ const Marinate: React.FC = () => {
                 </span>{" "}
                 are the parts that were deleted.
               </p>
+
+              <br />
+
+              <p className="text-xl text-gray-400">
+                It has also gone through protonation state changes —<br />now pH 7.4 — with partial charges added.
+              </p>
             </div>
 
             <div
