@@ -52,21 +52,17 @@ async def fetch_search_results(search_term: str) -> List[str]:
 
 @app.post("/remove_water_hetatoms/")
 async def remove_water_hetatoms(pdb_file: UploadFile = File(...)):
+    pdb_content = (await pdb_file.read()).decode()
+
+    # Count the number of HETATM lines that don't correspond to water molecules
+    hetatom_count = sum(1 for line in pdb_content.splitlines() if line.startswith("HETATM") and "HOH" not in line)
+    
     # Read the structure from the uploaded file
     parser = PDBParser()
-    structure = parser.get_structure("my_protein", StringIO((await pdb_file.read()).decode()))
+    structure = parser.get_structure("my_protein", StringIO(pdb_content))
 
-    # Count removed residues
-    water_molecule_count = 0
-    hetatom_count = 0
-
-    for model in structure:
-        for chain in model:
-            for residue in chain:
-                if residue.get_resname() == "HOH":
-                    water_molecule_count += 1
-                elif residue.id[0].startswith("H"):
-                    hetatom_count += 1
+    # Count removed water residues
+    water_molecule_count = sum(1 for model in structure for chain in model for residue in chain if residue.get_resname() == "HOH")
 
     # Initialize PDBIO object
     io = PDBIO()
@@ -84,6 +80,7 @@ async def remove_water_hetatoms(pdb_file: UploadFile = File(...)):
             "water_molecule_count": water_molecule_count,
             "hetatom_count": hetatom_count
         }
+
 
 @app.get("/search/{search_term}")
 async def search_proteins(search_term: str):
