@@ -15,4 +15,3 @@ typing_extensions==4.7.1
 uvicorn[standard]
 python-multipart
 biopython
-openbabel
