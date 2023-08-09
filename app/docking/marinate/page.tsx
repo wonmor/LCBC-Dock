@@ -49,9 +49,7 @@ const Marinate: React.FC = () => {
         setProteinData(response.data);
 
         const serverUrl: string =
-          process.env.NODE_ENV === "development"
-            ? "http://localhost:8000/remove_water_hetatoms/"
-            : "https://api.lcbcdock.com/remove_water_hetatoms/";
+          "https://electronvisual.org/api/remove-water-hetatoms/";
 
         const formData: FormData = pdbDataToFormData(response.data);
         const processedResponse: AxiosResponse<PdbResponse> = await axios.post(
