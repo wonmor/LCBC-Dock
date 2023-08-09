@@ -21,7 +21,7 @@ from Bio.PDB import Select
 
 class NotWaterOrHetatm(Select):
     def accept_residue(self, residue):
-        return residue.get_resname() != "HOH" and not residue.id[0].startswith("H")
+        return residue.get_resname() != "HOH"
 
 async def fetch_search_results(search_term: str) -> List[str]:
     url = "https://search.rcsb.org/rcsbsearch/v2/query"
@@ -49,10 +49,6 @@ async def fetch_search_results(search_term: str) -> List[str]:
         return []
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e))
-
-# Function to check if an atom is not a water or a hydrogen atom
-def is_not_water_or_hetatom(residue):
-    return residue.get_resname() != "HOH" and not residue.id[0].startswith("H")
 
 @app.post("/remove_water_hetatoms/")
 async def remove_water_hetatoms(pdb_file: UploadFile = File(...)):
