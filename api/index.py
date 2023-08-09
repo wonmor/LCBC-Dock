@@ -21,7 +21,7 @@ from Bio.PDB import Select
 
 class NotWaterOrHetatm(Select):
     def accept_residue(self, residue):
-        return residue.get_resname() != "HOH"
+        return residue.get_resname() != "HOH" and not residue.id[0].startswith("H")
 
 async def fetch_search_results(search_term: str) -> List[str]:
     url = "https://search.rcsb.org/rcsbsearch/v2/query"
@@ -52,38 +52,39 @@ async def fetch_search_results(search_term: str) -> List[str]:
 
 @app.post("/remove_water_hetatoms/")
 async def remove_water_hetatoms(pdb_file: UploadFile = File(...)):
-    # Read the structure from the uploaded file
-    parser = PDBParser()
-    structure = parser.get_structure("my_protein", StringIO((await pdb_file.read()).decode()))
+    # Read the content from the uploaded file
+    pdb_content = (await pdb_file.read()).decode()
 
-    # Count removed residues
+    # Split the content into lines
+    lines = pdb_content.split("\n")
+
+    # Filter out lines containing "HETATM"
+    hetatom_lines = [line for line in lines if line.startswith("HETATM")]
+    filtered_lines = [line for line in lines if not line.startswith("HETATM")]
+
+    hetatom_count = len(hetatom_lines)
+
+    # For counting water molecules, we can still use the BioPython method
+    parser = PDBParser()
+    structure = parser.get_structure("my_protein", StringIO(pdb_content))
     water_molecule_count = 0
-    hetatom_count = 0
 
     for model in structure:
         for chain in model:
             for residue in chain:
                 if residue.get_resname() == "HOH":
                     water_molecule_count += 1
-                elif residue.id[0].startswith("H"):
-                    hetatom_count += 1
 
-    # Initialize PDBIO object
-    io = PDBIO()
-    io.set_structure(structure)
+    # Join the filtered lines back into a single string
+    filtered_content = "\n".join(filtered_lines)
 
-    # Create a temporary file to save the modified structure
-    with NamedTemporaryFile(delete=False, suffix=".pdb") as tmp_file:
-        # Save the structure to a new PDB file, excluding water and hetatoms
-        io.save(tmp_file.name, select=NotWaterOrHetatm())
+    return {
+        "filename": pdb_file.filename,
+        "content": filtered_content,
+        "water_molecule_count": water_molecule_count,
+        "hetatom_count": hetatom_count
+    }
 
-        # Read the contents of the temporary file and return as response
-        return {
-            "filename": pdb_file.filename,
-            "content": open(tmp_file.name).read(),
-            "water_molecule_count": water_molecule_count,
-            "hetatom_count": hetatom_count
-        }
 
 @app.get("/search/{search_term}")
 async def search_proteins(search_term: str):
