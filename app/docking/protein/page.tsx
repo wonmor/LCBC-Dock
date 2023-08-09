@@ -100,6 +100,10 @@ const Docking: FC = () => {
             <span className="bg-gray-700 p-1 mr-2 rounded-md">TIP</span>Do not
             hide the keyboard while searching
           </span>
+
+          <span className="text-md text-center">
+            <span className="bg-blue-300 text-black font-semibold p-1 mr-2 rounded-md">EXAMPLE</span>Try entering 4HG7
+          </span>
         </div>
       )}
 

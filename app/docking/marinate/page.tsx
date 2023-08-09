@@ -132,7 +132,9 @@ const Marinate: React.FC = () => {
 
   return (
     <main>
-      <Minimap of={pageContent()} />
+      <div className="hidden md:block">
+      <Minimap className="fill-width-available" of={pageContent()} />
+      </div>
       {pageContent()}
     </main>
   );
