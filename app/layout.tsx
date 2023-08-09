@@ -21,7 +21,7 @@ export default function RootLayout({
   return (
     <html lang="en">
       <body className={outfit.className}>
-        <div className="flex min-h-screen flex-col items-center justify-between p-24 bg-gradient-to-br from-gray-900 to-black text-white">
+        <div className="flex min-h-screen flex-col items-center justify-between p-24 bg-black text-white">
           <Background />
           <Link href="/">
             <svg
