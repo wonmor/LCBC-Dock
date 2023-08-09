@@ -12,6 +12,8 @@ import { RotatingTriangles } from "react-loader-spinner";
 
 interface PdbResponse {
   content: string;
+  water_molecule_count: number;
+  hetatom_count: number;
 }
 
 // Function to convert PDB data to FormData
@@ -26,6 +28,10 @@ const Marinate: React.FC = () => {
   const searchParams = useSearchParams();
   const proteinState = searchParams.get("proteinState") ?? null;
 
+  const [waterMoleculeCount, setWaterMoleculeCount] = useState<number | null>(
+    null
+  );
+  const [hetatomCount, setHetatomCount] = useState<number | null>(null);
   const [proteinData, setProteinData] = useState<string | null>(null);
   const [processedProteinData, setProcessedProteinData] = useState<
     string | null
@@ -54,6 +60,8 @@ const Marinate: React.FC = () => {
         );
         const processedData: string = processedResponse.data.content;
         setProcessedProteinData(processedData);
+        setWaterMoleculeCount(processedResponse.data.water_molecule_count);
+        setHetatomCount(processedResponse.data.hetatom_count);
 
         const computedDiff: Change[] = diffLines(response.data, processedData);
 
@@ -83,7 +91,16 @@ const Marinate: React.FC = () => {
               </h1>
 
               <p className="text-xl">
-                Water molcules and heteroatoms have been removed.
+                {waterMoleculeCount && hetatomCount ? (
+                  <>
+                    <span className="text-blue-200">{waterMoleculeCount}</span>{" "}
+                    water molecules and
+                    <span className="text-blue-200"> {hetatomCount}</span>{" "}
+                    heteroatoms have been removed.
+                  </>
+                ) : (
+                  "Water molecules and heteroatoms have been removed."
+                )}
                 <br />
                 Lines highlighted in <span className="text-rose-300">
                   red
@@ -133,7 +150,7 @@ const Marinate: React.FC = () => {
   return (
     <main>
       <div className="fill-width-available hidden md:block">
-      <Minimap of={pageContent()} />
+        <Minimap of={pageContent()} />
       </div>
       {pageContent()}
     </main>
