@@ -3,20 +3,6 @@ FROM python:3.9
 # Set the working directory within the container
 WORKDIR /app
 
-RUN apt-get update && apt-get install -y build-essential apt-utils python3-dev wget gfortran git libeigen3-dev libboost-all-dev libopenblas-dev libxc-dev libstdc++6 libscalapack-mpi-dev libfftw3-dev cmake swig libxml2-dev zlib1g-dev libcairo2-dev
-
-# To check if the directory openbabel-openbabel-3-1-1 exists and to not run wget and tar if it does exist, you can use a shell conditional in the Dockerfile as follows:
-RUN if [ ! -d "/app/openbabel-openbabel-3-1-1" ]; then \
-    wget https://github.com/openbabel/openbabel/archive/refs/tags/openbabel-3-1-1.tar.gz && \
-    tar -zxvf openbabel-3-1-1.tar.gz && \
-    cd openbabel-openbabel-3-1-1 && \
-    mkdir build && \
-    cmake . -Bbuild -DPYTHON_BINDINGS=ON -DRUN_SWIG=ON; \
-    fi
-
-RUN cd openbabel-openbabel-3-1-1/build && \
-    make install
-
 # Copy the API files and requirements.txt into the container's working directory
 COPY api/index.py ./
 COPY api/requirements.txt ./
