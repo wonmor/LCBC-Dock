@@ -109,7 +109,8 @@ const Marinate: React.FC = () => {
               <br />
 
               <p className="text-xl text-gray-400">
-                It has also gone through protonation state changes —<br />now pH 7.4 — with partial charges added.
+                It has also gone through protonation state changes —<br />
+                now pH 7.4 — with partial charges added.
               </p>
             </div>
 
@@ -123,15 +124,23 @@ const Marinate: React.FC = () => {
               {!loading && proteinData && diff && (
                 <div className="pdb-data">
                   <pre>
-                    {diff.map(({ value, removed }, i) =>
-                      removed ? (
-                        <span key={i} className="text-rose-300">
-                          {value}
-                        </span>
-                      ) : (
-                        value
-                      )
-                    )}
+                    {diff.map(({ value, added, removed }, i) => {
+                      if (removed) {
+                        return (
+                          <span key={i} className="text-rose-300">
+                            {value}
+                          </span>
+                        );
+                      } else if (added) {
+                        return (
+                          <span key={i} className="text-green-300">
+                            {value}
+                          </span>
+                        ); // newly added lines are highlighted in green
+                      } else {
+                        return value;
+                      }
+                    })}
                   </pre>
                 </div>
               )}
