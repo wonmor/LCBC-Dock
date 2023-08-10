@@ -108,7 +108,7 @@ const Marinate: React.FC = () => {
 
               <br />
 
-              <p className="text-xl text-gray-400">
+              <p className="text-xl text-green-300">
                 It has also gone through protonation state changes —<br />
                 now pH 7.4 — with partial charges added.
               </p>
