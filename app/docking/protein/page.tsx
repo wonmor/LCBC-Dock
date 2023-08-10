@@ -7,7 +7,7 @@ import axios from "axios";
 import AsyncSelect from "react-select/async";
 import ProgressBar from "@/app/progressBar";
 
-const Docking: FC = () => {
+const Protein: FC = () => {
   const [proteinState, setProteinState] = useState(null) as any;
 
   const scrolltoHash = function (element_id: string) {
@@ -126,4 +126,4 @@ const Docking: FC = () => {
   );
 };
 
-export default Docking;
+export default Protein;

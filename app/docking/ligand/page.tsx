@@ -7,7 +7,7 @@ import axios from "axios";
 import AsyncSelect from "react-select/async";
 import ProgressBar from "@/app/progressBar";
 
-const Docking: FC = () => {
+const Ligand: FC = () => {
   const [proteinState, setProteinState] = useState(null) as any;
 
   const scrolltoHash = function (element_id: string) {
@@ -55,54 +55,21 @@ const Docking: FC = () => {
 
   return (
     <main className="pb-40">
-      {!proteinState ? (
-        <div className="text-center">
+     <div className="text-center">
           <h1 className="text-6xl font-thin mb-6">
             SEARCH
             <br />
-            <span className="font-semibold">PROTEIN</span>
+            <span className="font-semibold">LIGAND</span>
           </h1>
         </div>
-      ) : (
-        <div className="text-center">
-          <h1 className="text-6xl font-thin mb-6">
-            <span className="font-semibold">PROTEIN</span>
-            <br />
-            {proteinState.toUpperCase()}
-          </h1>
-        </div>
-      )}
 
       {!proteinState && (
         <div className="flex flex-col gap-4">
-          <div style={{ filter: "invert(1)", zIndex: 40 }}>
-            <AsyncSelect
-              cacheOptions
-              placeholder="Enter a PDB ID"
-              loadOptions={loadOptions}
-              onChange={handleChange}
-              defaultOptions
-              styles={{
-                option: (provided) => ({
-                  ...provided,
-                  color: "black",
-                  cursor: "pointer",
-                }),
-                singleValue: (provided) => ({
-                  ...provided,
-                  color: "black",
-                  cursor: "pointer",
-                }),
-              }}
-            />
-          </div>
-          <span className="text-md text-center">
-            <span className="bg-gray-700 p-1 mr-2 rounded-md">TIP</span>Do not
-            hide the keyboard while searching
-          </span>
+        
+
 
           <span className="text-md text-center">
-            <span className="bg-blue-300 text-black font-semibold p-1 mr-2 rounded-md">EXAMPLE</span>Try entering 4HG7
+            <span className="bg-blue-300 text-black font-semibold p-1 mr-2 rounded-md">EXAMPLE</span>Try entering nutlin-3A
           </span>
         </div>
       )}
@@ -114,9 +81,9 @@ const Docking: FC = () => {
       )}
       
       <ProgressBar
-        pointer={1}
-        nextLink={(proteinState ? "/docking/marinate" : null) as string}
-        nextLinkParams={
+        pointer={3}
+        backLink={(proteinState ? "/docking/marinate" : null) as string}
+        backLinkParams={
           (proteinState ? { proteinState: proteinState } : null) as {
             [key: string]: string;
           }
@@ -126,4 +93,4 @@ const Docking: FC = () => {
   );
 };
 
-export default Docking;
+export default Ligand;
