@@ -91,19 +91,14 @@ const Marinate: React.FC = () => {
               <p className="text-xl">
                 {waterMoleculeCount && hetatomCount ? (
                   <>
-                    <span className="text-blue-200">{waterMoleculeCount}</span>{" "}
+                    <span className="text-rose-300">{waterMoleculeCount}</span>{" "}
                     water molecules and
-                    <span className="text-blue-200"> {hetatomCount}</span>{" "}
+                    <span className="text-rose-300"> {hetatomCount}</span>{" "}
                     heteroatoms have been removed.
                   </>
                 ) : (
                   "Water molecules and heteroatoms have been removed."
                 )}
-                <br />
-                Lines highlighted in <span className="text-rose-300">
-                  red
-                </span>{" "}
-                are the parts that were deleted.
               </p>
 
               <br />
