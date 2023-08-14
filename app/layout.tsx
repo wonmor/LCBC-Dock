@@ -1,5 +1,6 @@
 import Background from "./background";
 import Link from "next/link";
+import Script from "next/script";
 import React from "react";
 
 import { Outfit } from "next/font/google";

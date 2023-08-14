@@ -4,7 +4,6 @@ import { FC, useState } from "react";
 import { MolStarWrapper } from "@/app/wrapper";
 
 import axios from "axios";
-import AsyncSelect from "react-select/async";
 import ProgressBar from "@/app/progressBar";
 
 const Ligand: FC = () => {
@@ -65,7 +64,6 @@ const Ligand: FC = () => {
 
       {!proteinState && (
         <div className="flex flex-col gap-4">
-        
 
 
           <span className="text-md text-center">
