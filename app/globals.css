@@ -2,9 +2,6 @@
 @tailwind components;
 @tailwind utilities;
 
-@import '../public/ChemDoodleWeb-9.5.0/install/ChemDoodleWeb.css';
-@import '../public/ChemDoodleWeb-9.5.0/install/uis/jquery-ui-1.11.4.css';
-
 .pdb-data pre {
   white-space: pre-wrap;   /* CSS 2.1 */
   white-space: -moz-pre-wrap; /* For old Mozilla */
