@@ -4,9 +4,9 @@ import axios, { AxiosResponse } from "axios";
 
 import ProgressBar from "@/app/progressBar";
 import Minimap from "react-simple-minimap";
+import CloudDoneIcon from '@mui/icons-material/CloudDone';
 
 import { useEffect, useState } from "react";
-import { diffLines, Change } from "diff";
 import { useSearchParams } from "next/navigation";
 import { RotatingTriangles } from "react-loader-spinner";
 
@@ -36,7 +36,6 @@ const Marinate: React.FC = () => {
   const [processedProteinData, setProcessedProteinData] = useState<
     string | null
   >(null);
-  const [diff, setDiff] = useState<Change[] | null>(null);
   const [loading, setLoading] = useState<boolean>(false);
 
   useEffect(() => {
@@ -57,15 +56,18 @@ const Marinate: React.FC = () => {
           formData
         );
         const processedData: string = processedResponse.data.content;
+
+        console.log("Processed data: ", processedData);
+
         setProcessedProteinData(processedData);
         setWaterMoleculeCount(processedResponse.data.water_molecule_count);
         setHetatomCount(processedResponse.data.hetatom_count);
 
-        const computedDiff: Change[] = diffLines(response.data, processedData);
-
-        setDiff(computedDiff);
+        setLoading(false);
+        
       } catch (error: any) {
         console.error(`Error fetching PDB file: ${error}`);
+        
       } finally {
         setLoading(false);
       }
@@ -113,30 +115,13 @@ const Marinate: React.FC = () => {
               id="wrapper"
               className="text-center flex items-center justify-center"
             >
-              {loading && <RotatingTriangles />}
+              {loading && <div className="flex flex-col justify-center items-center text-center"><RotatingTriangles /><p>Fixing the PDB,<br />this might take a while...</p></div>}
 
               {/*Display PDB file data once it is fetched*/}
-              {!loading && proteinData && diff && (
-                <div className="pdb-data">
-                  <pre>
-                    {diff.map(({ value, added, removed }, i) => {
-                      if (removed) {
-                        return (
-                          <span key={i} className="text-rose-300">
-                            {value}
-                          </span>
-                        );
-                      } else if (added) {
-                        return (
-                          <span key={i} className="text-green-300">
-                            {value}
-                          </span>
-                        ); // newly added lines are highlighted in green
-                      } else {
-                        return value;
-                      }
-                    })}
-                  </pre>
+              {!loading && processedProteinData && (
+                <div className="pdb-data flex flex-col gap-4">
+                  <CloudDoneIcon className="text-green-300" fontSize="large" />
+                  <pre>{processedProteinData}</pre>
                 </div>
               )}
             </div>
