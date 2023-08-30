@@ -4,7 +4,7 @@ import axios, { AxiosResponse } from "axios";
 
 import ProgressBar from "@/app/progressBar";
 import Minimap from "react-simple-minimap";
-import CloudDoneIcon from '@mui/icons-material/CloudDone';
+import CloudDoneIcon from "@mui/icons-material/CloudDone";
 
 import { useEffect, useState } from "react";
 import { useSearchParams } from "next/navigation";
@@ -64,10 +64,8 @@ const Marinate: React.FC = () => {
         setHetatomCount(processedResponse.data.hetatom_count);
 
         setLoading(false);
-        
       } catch (error: any) {
         console.error(`Error fetching PDB file: ${error}`);
-        
       } finally {
         setLoading(false);
       }
@@ -115,7 +113,16 @@ const Marinate: React.FC = () => {
               id="wrapper"
               className="text-center flex items-center justify-center"
             >
-              {loading && <div className="flex flex-col justify-center items-center text-center"><RotatingTriangles /><p>Fixing the PDB,<br />this might take a while...</p></div>}
+              {loading && (
+                <div className="flex flex-col justify-center items-center text-center">
+                  <RotatingTriangles />
+                  <p>
+                    Fixing the PDB,
+                    <br />
+                    this might take a while...
+                  </p>
+                </div>
+              )}
 
               {/*Display PDB file data once it is fetched*/}
               {!loading && processedProteinData && (
@@ -127,21 +134,33 @@ const Marinate: React.FC = () => {
             </div>
           </>
         )}
-        <ProgressBar
-          pointer={2}
-          backLink={(proteinState ? "/docking/protein" : null) as string}
-          backLinkParams={
-            {} as {
-              [key: string]: string;
+        {!loading && processedProteinData ? (
+          <ProgressBar
+            pointer={2}
+            backLink={(proteinState ? "/docking/protein" : null) as string}
+            backLinkParams={
+              {} as {
+                [key: string]: string;
+              }
             }
-          }
-          nextLink={(proteinState ? "/docking/ligand" : null) as string}
-          nextLinkParams={
-            (proteinState ? { proteinState: proteinState } : null) as {
-              [key: string]: string;
+            nextLink={(proteinState ? "/docking/ligand" : null) as string}
+            nextLinkParams={
+              (proteinState ? { proteinState: proteinState } : null) as {
+                [key: string]: string;
+              }
             }
-          }
-        />
+          />
+        ) : (
+          <ProgressBar
+            pointer={2}
+            backLink={(proteinState ? "/docking/protein" : null) as string}
+            backLinkParams={
+              {} as {
+                [key: string]: string;
+              }
+            }
+          />
+        )}
       </div>
     );
   };
