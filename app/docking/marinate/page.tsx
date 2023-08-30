@@ -126,8 +126,8 @@ const Marinate: React.FC = () => {
 
               {/*Display PDB file data once it is fetched*/}
               {!loading && processedProteinData && (
-                <div className="pdb-data flex flex-col gap-4">
-                  <CloudDoneIcon className="text-green-300" fontSize="large" />
+                <div className="pdb-data flex flex-col justify-center items-center gap-4">
+                  <CloudDoneIcon className="text-green-300" style={{ fontSize: "100" }} />
                   <pre>{processedProteinData}</pre>
                 </div>
               )}

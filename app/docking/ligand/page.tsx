@@ -64,7 +64,7 @@ const Ligand: FC = () => {
 
       {!proteinState && (
         <div className="flex flex-col gap-4">
-
+          <iframe src="https://electronvisual.org/?searchbar=true&fullscreen=true" width="480" height="480" className="mx-auto" allowFullScreen></iframe>
 
           <span className="text-md text-center">
             <span className="bg-blue-300 text-black font-semibold p-1 mr-2 rounded-md">EXAMPLE</span>Try entering nutlin-3A
