@@ -4,7 +4,7 @@
 
 **LCBC Dock** is an online molecular docking platform that brings the power of [AutoDock Vina](https://vina.scripps.edu/) to your browser. Search proteins and ligands from public databases, configure docking parameters, submit jobs to a processing queue, and visualize docked poses — all without installing anything locally.
 
-### [https://lcbcdock.com](https://lcbcdock.com) &nbsp;|&nbsp; [Documentation](https://johnseong.github.io/LCBC-Dock/)
+### [https://lcbc-client.apps.johnseong.com](https://lcbc-client.apps.johnseong.com) &nbsp;|&nbsp; [Documentation](https://johnseong.github.io/LCBC-Dock/)
 
 Developed by **John Seong** in collaboration with [Seoul National University](https://en.snu.ac.kr).
 

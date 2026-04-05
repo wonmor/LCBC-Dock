@@ -238,7 +238,7 @@
     <h1>LCBC <span>DOCK</span></h1>
     <p class="tagline">AutoDock Vina, reimagined for the web.</p>
     <div class="badges">
-        <a href="https://lcbcdock.com" class="btn-primary">Launch App</a>
+        <a href="https://lcbc-client.apps.johnseong.com" class="btn-primary">Launch App</a>
         <a href="https://github.com/johnseong/LCBC-Dock" class="btn-secondary">GitHub</a>
     </div>
 </header>
@@ -496,7 +496,7 @@ npm run fastapi-dev   # Backend on :8000</code></pre>
             <tr><td>SMTP_USER</td><td>SMTP username / email</td><td>—</td></tr>
             <tr><td>SMTP_PASS</td><td>SMTP password or app password</td><td>—</td></tr>
             <tr><td>FROM_EMAIL</td><td>Sender address for notifications</td><td>noreply@lcbcdock.com</td></tr>
-            <tr><td>BASE_URL</td><td>Public URL (for email links)</td><td>https://lcbcdock.com</td></tr>
+            <tr><td>BASE_URL</td><td>Public URL (for email links)</td><td>https://lcbc-client.apps.johnseong.com</td></tr>
             <tr><td>LCBC_DB_PATH</td><td>SQLite database file path</td><td>lcbc_dock.db</td></tr>
             <tr><td>VINA_PATH</td><td>AutoDock Vina executable path</td><td>vina</td></tr>
         </tbody>
@@ -522,7 +522,7 @@ npm run fastapi-dev   # Backend on :8000</code></pre>
 docker run -p 8000:8000 \
   -e SMTP_USER=your@email.com \
   -e SMTP_PASS=your-app-password \
-  -e BASE_URL=https://lcbcdock.com \
+  -e BASE_URL=https://lcbc-client.apps.johnseong.com \
   -v lcbc-data:/app/data \
   lcbc-dock-api</code></pre>
     <p>The <code>-v lcbc-data:/app/data</code> flag persists the SQLite database across container restarts.</p>
