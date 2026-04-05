@@ -22,7 +22,7 @@ app = FastAPI(title="LCBC Dock API", version="2.0.0")
 
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["*", "https://www.lcbcdock.com", "https://lcbcdock.com"],
+    allow_origins=["*", "https://lcbc-client.apps.johnseong.com", "https://lcbc-helper.apps.johnseong.com"],
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],

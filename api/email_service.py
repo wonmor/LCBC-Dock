@@ -11,7 +11,7 @@ SMTP_PORT = int(os.environ.get("SMTP_PORT", "587"))
 SMTP_USER = os.environ.get("SMTP_USER", "")
 SMTP_PASS = os.environ.get("SMTP_PASS", "")
 FROM_EMAIL = os.environ.get("FROM_EMAIL", "noreply@lcbcdock.com")
-BASE_URL = os.environ.get("BASE_URL", "https://lcbcdock.com")
+BASE_URL = os.environ.get("BASE_URL", "https://lcbc-client.apps.johnseong.com")
 
 
 def send_completion_email(to_email: str, job_id: str, protein_pdb_id: str,
