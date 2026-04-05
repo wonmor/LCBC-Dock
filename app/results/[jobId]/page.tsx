@@ -1,12 +1,9 @@
 "use client";
 
-import { FC, useState, useEffect, useRef, createRef } from "react";
+import { FC, useState, useEffect } from "react";
 import { useParams } from "next/navigation";
-import axios from "axios";
 import Link from "next/link";
-import { RotatingTriangles } from "react-loader-spinner";
-import DownloadIcon from "@mui/icons-material/Download";
-import ArrowBackIcon from "@mui/icons-material/ArrowBack";
+import axios from "axios";
 
 const API_BASE =
   process.env.NODE_ENV === "development"
@@ -16,330 +13,128 @@ const API_BASE =
 interface Pose {
   model: number;
   affinity: number;
-  pdbqt: string;
 }
 
-interface DockingResults {
-  job_id: string;
-  protein_pdb_id: string;
-  ligand_cid: number;
-  ligand_name: string;
-  best_affinity: number;
-  num_poses: number;
-  poses: Pose[];
-  docked_pdb: string;
-  output_pdbqt: string;
-}
-
-const ResultsViewer: FC = () => {
+const Results: FC = () => {
   const params = useParams();
   const jobId = params.jobId as string;
 
-  const [results, setResults] = useState<DockingResults | null>(null);
-  const [selectedPose, setSelectedPose] = useState(0);
+  const [results, setResults] = useState<any>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
-  const [viewerReady, setViewerReady] = useState(false);
-  const viewerRef = createRef<HTMLDivElement>();
-  const pluginRef = useRef<any>(null);
 
   useEffect(() => {
     if (!jobId) return;
-
     axios
       .get(`${API_BASE}/api/results/${jobId}`)
-      .then((resp) => {
-        setResults(resp.data);
-        setLoading(false);
-      })
-      .catch((err) => {
-        setError(
-          err.response?.data?.detail || "Could not load results."
-        );
-        setLoading(false);
-      });
+      .then((r) => setResults(r.data))
+      .catch((e) => setError(e.response?.data?.detail || "Could not load results."))
+      .finally(() => setLoading(false));
   }, [jobId]);
-
-  // Initialize Mol* viewer when results are loaded
-  useEffect(() => {
-    if (!results || !viewerRef.current || viewerReady) return;
-
-    async function initViewer() {
-      try {
-        const { PluginSpec } = await import("molstar/lib/mol-plugin/spec");
-        const { createPluginUI } = await import("molstar/lib/mol-plugin-ui");
-
-        const spec: any = {
-          actions: [],
-          behaviors: [],
-          layout: {
-            initial: {
-              isExpanded: false,
-              showControls: true,
-            },
-          },
-          animations: [],
-        };
-
-        const plugin = await createPluginUI(
-          viewerRef.current as HTMLDivElement,
-          spec
-        );
-        pluginRef.current = plugin;
-
-        // Load protein structure
-        const proteinData = await plugin.builders.data.download(
-          {
-            url: `https://files.rcsb.org/download/${results!.protein_pdb_id}.pdb`,
-          },
-          { state: { isGhost: true } }
-        );
-        const proteinTraj =
-          await plugin.builders.structure.parseTrajectory(
-            proteinData,
-            "pdb"
-          );
-        await plugin.builders.structure.hierarchy.applyPreset(
-          proteinTraj,
-          "default"
-        );
-
-        // Load docked ligand PDB if available
-        if (results!.docked_pdb) {
-          const blob = new Blob([results!.docked_pdb], {
-            type: "text/plain",
-          });
-          const url = URL.createObjectURL(blob);
-
-          const ligandData = await plugin.builders.data.download(
-            { url },
-            { state: { isGhost: true } }
-          );
-          const ligandTraj =
-            await plugin.builders.structure.parseTrajectory(
-              ligandData,
-              "pdb"
-            );
-          await plugin.builders.structure.hierarchy.applyPreset(
-            ligandTraj,
-            "default"
-          );
-
-          URL.revokeObjectURL(url);
-        }
-
-        setViewerReady(true);
-      } catch (e) {
-        console.error("Failed to initialize Mol* viewer:", e);
-      }
-    }
-
-    initViewer();
-
-    return () => {
-      if (pluginRef.current) {
-        pluginRef.current.dispose();
-        pluginRef.current = null;
-      }
-    };
-  }, [results]);
-
-  const handleDownloadPDBQT = () => {
-    window.open(
-      `${API_BASE}/api/results/${jobId}/download/pdbqt`,
-      "_blank"
-    );
-  };
-
-  const handleDownloadPDB = () => {
-    window.open(
-      `${API_BASE}/api/results/${jobId}/download/pdb`,
-      "_blank"
-    );
-  };
 
   if (loading) {
     return (
-      <main className="pb-40">
-        <div className="flex flex-col items-center gap-4">
-          <RotatingTriangles />
-          <p>Loading docking results...</p>
-        </div>
-      </main>
+      <div className="flex flex-col items-center min-h-screen px-6 pt-24">
+        <div className="w-6 h-6 border-2 border-white/20 border-t-white rounded-full animate-spin" />
+      </div>
     );
   }
 
   if (error) {
     return (
-      <main className="pb-40">
-        <div className="text-center">
-          <h1 className="text-6xl font-thin mb-6">
-            <span className="font-semibold">RESULTS</span>
-          </h1>
-          <div className="max-w-lg mx-auto bg-red-900/50 border border-red-500 rounded-xl p-4 text-red-300">
-            {error}
-          </div>
-          <Link
-            href={`/dashboard?jobId=${jobId}`}
-            className="inline-block mt-4 text-blue-300 hover:text-blue-400"
-          >
-            <ArrowBackIcon className="mr-1" />
-            Back to Dashboard
-          </Link>
-        </div>
-      </main>
+      <div className="flex flex-col items-center min-h-screen px-6 pt-24 text-center">
+        <h1 className="text-4xl font-extralight mb-4">Results</h1>
+        <p className="text-xs text-red-400">{error}</p>
+        <Link href={`/dashboard?jobId=${jobId}`} className="text-xs text-gray-500 mt-4 hover:text-white">
+          Back to Dashboard
+        </Link>
+      </div>
     );
   }
 
   if (!results) return null;
 
   return (
-    <main className="pb-40">
-      <div className="text-center mb-6">
-        <h1 className="text-5xl font-thin mb-2">
-          DOCKING <span className="font-semibold">RESULTS</span>
-        </h1>
-        <p className="text-lg opacity-75">
-          {results.protein_pdb_id.toUpperCase()} + {results.ligand_name}
+    <div className="flex flex-col items-center min-h-screen px-6 pt-24 pb-12">
+      <div className="w-full max-w-lg">
+        <h1 className="text-4xl font-extralight text-center mb-1">Results</h1>
+        <p className="text-xs text-gray-500 text-center mb-10">
+          {results.protein_pdb_id?.toUpperCase()} + {results.ligand_name}
         </p>
-      </div>
 
-      {/* 3D Viewer */}
-      <div className="w-full mb-6">
-        <div
-          ref={viewerRef}
-          style={{
-            position: "relative",
-            width: "100%",
-            height: "500px",
-            borderRadius: "16px",
-            overflow: "hidden",
-            background: "#1a1a1a",
-          }}
-        />
-        {!viewerReady && (
-          <div className="flex items-center justify-center mt-2">
-            <RotatingTriangles width="40" height="40" />
-            <span className="ml-2 text-sm text-gray-400">
-              Loading 3D viewer...
-            </span>
-          </div>
-        )}
-      </div>
+        {/* 3D viewer via RCSB */}
+        <div className="w-full aspect-square bg-white/5 rounded-2xl overflow-hidden mb-6">
+          <iframe
+            src={`https://www.rcsb.org/3d-view/${results.protein_pdb_id}`}
+            className="w-full h-full border-0"
+            title="Protein 3D View"
+          />
+        </div>
 
-      {/* Binding Affinity Summary */}
-      <div className="max-w-2xl mx-auto flex flex-col gap-6">
-        <div className="bg-gray-900 rounded-2xl p-6">
-          <h2 className="text-lg font-semibold mb-4 text-green-300">
-            Binding Affinities
-          </h2>
-          <div className="grid grid-cols-2 gap-4 mb-4">
-            <div>
-              <span className="text-gray-400 text-sm">Best Affinity</span>
-              <p className="text-3xl font-semibold text-green-300">
-                {results.best_affinity} kcal/mol
-              </p>
-            </div>
-            <div>
-              <span className="text-gray-400 text-sm">Total Poses</span>
-              <p className="text-3xl font-semibold">{results.num_poses}</p>
-            </div>
-          </div>
+        {/* Best affinity */}
+        <div className="border border-white/10 rounded-2xl p-6 text-center mb-4">
+          <p className="text-3xl font-light text-green-400">{results.best_affinity} kcal/mol</p>
+          <p className="text-[10px] text-gray-500 mt-1">Best binding affinity</p>
+        </div>
 
-          {/* Poses Table */}
-          <div className="overflow-x-auto">
-            <table className="w-full text-sm">
+        {/* Poses table */}
+        {results.poses?.length > 0 && (
+          <div className="border border-white/10 rounded-2xl overflow-hidden mb-4">
+            <table className="w-full text-xs">
               <thead>
-                <tr className="text-gray-400 border-b border-gray-700">
-                  <th className="text-left py-2">Pose</th>
-                  <th className="text-left py-2">Affinity (kcal/mol)</th>
-                  <th className="text-left py-2">Rank</th>
+                <tr className="border-b border-white/5 text-gray-500">
+                  <th className="text-left px-4 py-2">Pose</th>
+                  <th className="text-right px-4 py-2">Affinity (kcal/mol)</th>
                 </tr>
               </thead>
               <tbody>
-                {results.poses.map((pose, i) => (
-                  <tr
-                    key={pose.model}
-                    className={`border-b border-gray-800 cursor-pointer transition-colors
-                      ${
-                        selectedPose === i
-                          ? "bg-blue-900/30"
-                          : "hover:bg-gray-800"
-                      }`}
-                    onClick={() => setSelectedPose(i)}
-                  >
-                    <td className="py-2 font-mono">Model {pose.model}</td>
-                    <td
-                      className={`py-2 font-semibold ${
-                        i === 0 ? "text-green-300" : ""
-                      }`}
-                    >
-                      {pose.affinity}
-                    </td>
-                    <td className="py-2">
-                      {i === 0 ? (
-                        <span className="bg-green-400 text-black text-xs px-2 py-0.5 rounded-full font-semibold">
+                {results.poses.map((pose: Pose, i: number) => (
+                  <tr key={pose.model} className="border-b border-white/5 last:border-0">
+                    <td className="px-4 py-2 font-mono">
+                      Model {pose.model}
+                      {i === 0 && (
+                        <span className="ml-2 bg-green-400/20 text-green-400 text-[9px] px-1.5 py-0.5 rounded-full">
                           BEST
                         </span>
-                      ) : (
-                        `#${i + 1}`
                       )}
+                    </td>
+                    <td className={`px-4 py-2 text-right ${i === 0 ? "text-green-400" : ""}`}>
+                      {pose.affinity}
                     </td>
                   </tr>
                 ))}
               </tbody>
             </table>
           </div>
-        </div>
+        )}
 
-        {/* Download Options */}
-        <div className="bg-gray-900 rounded-2xl p-6">
-          <h2 className="text-lg font-semibold mb-4 text-blue-300">
-            Download Results
-          </h2>
-          <div className="flex flex-col sm:flex-row gap-3">
-            <button
-              onClick={handleDownloadPDB}
-              className="flex-1 flex items-center justify-center gap-2 bg-blue-400 hover:bg-blue-500
-                         text-black font-semibold py-3 rounded-xl transition-colors"
-            >
-              <DownloadIcon />
-              Download PDB
-            </button>
-            <button
-              onClick={handleDownloadPDBQT}
-              className="flex-1 flex items-center justify-center gap-2 bg-gray-700 hover:bg-gray-600
-                         text-white font-semibold py-3 rounded-xl transition-colors"
-            >
-              <DownloadIcon />
-              Download PDBQT
-            </button>
-          </div>
-          <p className="text-xs text-gray-500 mt-3 text-center">
-            PDB format works with most visualization tools. PDBQT includes
-            partial charges and atom types.
-          </p>
-        </div>
-
-        {/* Navigation */}
-        <div className="flex flex-col sm:flex-row gap-3 justify-center">
-          <Link
-            href={`/dashboard?jobId=${jobId}`}
-            className="flex items-center justify-center gap-2 text-gray-400 hover:text-white transition-colors"
+        {/* Downloads */}
+        <div className="flex gap-2">
+          <a
+            href={`${API_BASE}/api/results/${jobId}/download/pdb`}
+            className="flex-1 text-center bg-white text-black text-xs font-medium py-2.5 rounded-full hover:bg-gray-200 transition-colors"
           >
-            <ArrowBackIcon fontSize="small" />
-            Back to Dashboard
+            Download PDB
+          </a>
+          <a
+            href={`${API_BASE}/api/results/${jobId}/download/pdbqt`}
+            className="flex-1 text-center bg-white/10 text-white text-xs font-medium py-2.5 rounded-full hover:bg-white/20 transition-colors"
+          >
+            Download PDBQT
+          </a>
+        </div>
+
+        <div className="flex justify-center gap-4 mt-6 text-xs">
+          <Link href={`/dashboard?jobId=${jobId}`} className="text-gray-500 hover:text-white transition-colors">
+            Dashboard
           </Link>
-          <Link
-            href="/docking/protein"
-            className="flex items-center justify-center gap-2 text-blue-300 hover:text-blue-400 transition-colors"
-          >
-            Start New Docking
+          <Link href="/docking/protein" className="text-gray-500 hover:text-white transition-colors">
+            New Docking
           </Link>
         </div>
       </div>
-    </main>
+    </div>
   );
 };
 
-export default ResultsViewer;
+export default Results;

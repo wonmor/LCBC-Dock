@@ -1,238 +1,240 @@
 "use client";
 
-import { FC, useState, useCallback } from "react";
+import { FC, useState, useRef } from "react";
 import { useSearchParams } from "next/navigation";
+import Link from "next/link";
 import axios from "axios";
-import AsyncSelect from "react-select/async";
-import ProgressBar from "@/app/progressBar";
-import debounce from "lodash/debounce";
 
-const API_BASE =
-  process.env.NODE_ENV === "development"
-    ? "http://localhost:8000"
-    : "https://api.lcbcdock.com";
-
-interface LigandResult {
+interface Molecule {
   cid: number;
   name: string;
-  molecular_formula: string;
-  molecular_weight: number;
-  iupac_name?: string;
-  canonical_smiles?: string;
-}
-
-interface LigandDetail extends LigandResult {
-  synonyms?: string[];
-  image_url?: string;
-  sdf_url?: string;
+  formula: string;
+  weight: number;
+  smiles: string;
 }
 
 const Ligand: FC = () => {
   const searchParams = useSearchParams();
-  const proteinState = searchParams.get("proteinState") ?? null;
+  const proteinState = searchParams.get("proteinState") ?? "";
 
-  const [selectedLigand, setSelectedLigand] = useState<LigandDetail | null>(
-    null
-  );
+  const [query, setQuery] = useState("");
+  const [results, setResults] = useState<Molecule[]>([]);
+  const [selected, setSelected] = useState<Molecule | null>(null);
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState<string | null>(null);
+  const debounceRef = useRef<NodeJS.Timeout | null>(null);
 
-  const loadOptions = useCallback(
-    debounce(
-      (inputValue: string, callback: (options: any) => void) => {
-        if (!inputValue || inputValue.trim().length < 2) {
-          callback([]);
+  const searchPubChem = async (term: string) => {
+    if (!term || term.trim().length < 2) {
+      setResults([]);
+      return;
+    }
+
+    setLoading(true);
+    setError(null);
+
+    try {
+      // Try direct name lookup first
+      const resp = await axios.get(
+        `https://pubchem.ncbi.nlm.nih.gov/rest/pug/compound/name/${encodeURIComponent(term)}/property/MolecularFormula,MolecularWeight,CanonicalSMILES,CID/JSON`,
+        { timeout: 10000 }
+      );
+
+      const props = resp.data?.PropertyTable?.Properties ?? [];
+      setResults(
+        props.slice(0, 8).map((p: any) => ({
+          cid: p.CID,
+          name: term,
+          formula: p.MolecularFormula || "",
+          weight: p.MolecularWeight || 0,
+          smiles: p.CanonicalSMILES || "",
+        }))
+      );
+    } catch {
+      // Fallback: autocomplete
+      try {
+        const acResp = await axios.get(
+          `https://pubchem.ncbi.nlm.nih.gov/rest/autocomplete/compound/${encodeURIComponent(term)}/json?limit=8`,
+          { timeout: 10000 }
+        );
+
+        const suggestions =
+          acResp.data?.dictionary_terms?.compound ?? [];
+
+        if (suggestions.length === 0) {
+          setResults([]);
+          setError("No molecules found.");
+          setLoading(false);
           return;
         }
 
-        axios
-          .get(`${API_BASE}/api/ligands/search`, {
-            params: { q: inputValue },
-          })
-          .then((response) => {
-            const options = response.data.map((r: LigandResult) => ({
-              value: r,
-              label: `${r.name} (CID: ${r.cid}) — ${r.molecular_formula}`,
-            }));
-            callback(options);
-          })
-          .catch((error) => {
-            console.error("Error searching ligands:", error);
-            callback([]);
-          });
-      },
-      400
-    ),
-    []
-  );
+        // Fetch details for the first suggestion
+        const detailResp = await axios.get(
+          `https://pubchem.ncbi.nlm.nih.gov/rest/pug/compound/name/${encodeURIComponent(suggestions[0])}/property/MolecularFormula,MolecularWeight,CanonicalSMILES,CID/JSON`,
+          { timeout: 10000 }
+        );
 
-  const handleChange = async (selectedOption: any) => {
-    const ligand = selectedOption.value as LigandResult;
-
-    try {
-      const detailResp = await axios.get(
-        `${API_BASE}/api/ligands/${ligand.cid}`
-      );
-      setSelectedLigand(detailResp.data);
-    } catch {
-      setSelectedLigand({
-        ...ligand,
-        image_url: `https://pubchem.ncbi.nlm.nih.gov/rest/pug/compound/cid/${ligand.cid}/PNG`,
-        sdf_url: `https://pubchem.ncbi.nlm.nih.gov/rest/pug/compound/cid/${ligand.cid}/SDF?record_type=3d`,
-      });
+        const props = detailResp.data?.PropertyTable?.Properties ?? [];
+        setResults(
+          props.slice(0, 8).map((p: any) => ({
+            cid: p.CID,
+            name: suggestions[0],
+            formula: p.MolecularFormula || "",
+            weight: p.MolecularWeight || 0,
+            smiles: p.CanonicalSMILES || "",
+          }))
+        );
+      } catch {
+        setError("Search failed. Try a different term.");
+        setResults([]);
+      }
+    } finally {
+      setLoading(false);
     }
   };
 
+  const handleInput = (value: string) => {
+    setQuery(value);
+    if (debounceRef.current) clearTimeout(debounceRef.current);
+    debounceRef.current = setTimeout(() => searchPubChem(value), 500);
+  };
+
   return (
-    <main className="pb-40">
-      <div className="text-center">
-        <h1 className="text-6xl font-thin mb-6">
-          {selectedLigand ? (
-            <>
-              <span className="font-semibold">LIGAND</span>
-              <br />
-              {selectedLigand.name.toUpperCase()}
-            </>
-          ) : (
-            <>
-              SEARCH
-              <br />
-              <span className="font-semibold">LIGAND</span>
-            </>
-          )}
+    <div className="flex flex-col items-center min-h-screen px-6 pt-24 pb-32">
+      <div className="w-full max-w-md">
+        <h1 className="text-4xl font-extralight text-center mb-1">
+          {selected ? selected.name : "Ligand"}
         </h1>
-      </div>
+        <p className="text-center text-xs text-gray-500 mb-8">
+          {selected
+            ? `CID ${selected.cid} \u00B7 ${selected.formula}`
+            : "Search PubChem \u2014 100M+ compounds"}
+        </p>
 
-      {!selectedLigand && (
-        <div className="flex flex-col gap-4">
-          <div style={{ filter: "invert(1)", zIndex: 40 }}>
-            <AsyncSelect
-              cacheOptions
-              placeholder="Search molecules (e.g. aspirin, caffeine, nutlin-3a)..."
-              loadOptions={loadOptions}
-              onChange={handleChange}
-              styles={{
-                option: (provided) => ({
-                  ...provided,
-                  color: "black",
-                  cursor: "pointer",
-                }),
-                singleValue: (provided) => ({
-                  ...provided,
-                  color: "black",
-                  cursor: "pointer",
-                }),
-              }}
+        {!selected && (
+          <>
+            <input
+              type="text"
+              value={query}
+              onChange={(e) => handleInput(e.target.value)}
+              placeholder="Search by name (e.g. aspirin, caffeine, nutlin-3a)"
+              className="w-full bg-white/5 border border-white/10 rounded-xl px-4 py-3 text-sm
+                         placeholder-gray-600 focus:outline-none focus:border-white/30 transition-colors"
+              autoFocus
             />
-          </div>
-          <span className="text-md text-center">
-            <span className="bg-gray-700 p-1 mr-2 rounded-md">TIP</span>
-            Search by molecule name, SMILES, or common drug name
-          </span>
-          <span className="text-md text-center">
-            <span className="bg-blue-300 text-black font-semibold p-1 mr-2 rounded-md">
-              EXAMPLE
-            </span>
-            Try entering aspirin, caffeine, or nutlin-3a
-          </span>
-          <p className="text-center text-sm opacity-50 mt-2">
-            Powered by PubChem — over 100 million compounds
-          </p>
-        </div>
-      )}
 
-      {selectedLigand && (
-        <div className="flex flex-col items-center gap-6 mt-4">
-          {/* 2D Structure Image */}
-          <div className="bg-white rounded-2xl p-4">
-            <img
-              src={selectedLigand.image_url}
-              alt={selectedLigand.name}
-              className="max-w-[300px] max-h-[300px]"
-              onError={(e) => {
-                (e.target as HTMLImageElement).style.display = "none";
-              }}
-            />
-          </div>
+            {loading && (
+              <p className="text-xs text-gray-500 text-center mt-4">Searching PubChem...</p>
+            )}
 
-          {/* Molecule Info Card */}
-          <div className="bg-gray-900 rounded-2xl p-6 w-full max-w-lg">
-            <div className="grid grid-cols-2 gap-4">
-              <div>
-                <span className="text-gray-400 text-sm">PubChem CID</span>
-                <p className="text-lg font-mono">{selectedLigand.cid}</p>
+            {error && (
+              <p className="text-xs text-red-400 text-center mt-4">{error}</p>
+            )}
+
+            {results.length > 0 && (
+              <div className="mt-3 border border-white/10 rounded-xl overflow-hidden">
+                {results.map((mol) => (
+                  <button
+                    key={mol.cid}
+                    onClick={() => setSelected(mol)}
+                    className="w-full text-left px-4 py-3 hover:bg-white/5
+                               border-b border-white/5 last:border-0 transition-colors"
+                  >
+                    <span className="text-sm">{mol.name}</span>
+                    <span className="text-xs text-gray-500 ml-2">
+                      CID {mol.cid} &middot; {mol.formula}
+                    </span>
+                  </button>
+                ))}
               </div>
-              <div>
-                <span className="text-gray-400 text-sm">Molecular Formula</span>
-                <p className="text-lg">{selectedLigand.molecular_formula}</p>
-              </div>
-              <div>
-                <span className="text-gray-400 text-sm">Molecular Weight</span>
-                <p className="text-lg">
-                  {selectedLigand.molecular_weight?.toFixed(2)} g/mol
-                </p>
-              </div>
-              <div>
-                <span className="text-gray-400 text-sm">IUPAC Name</span>
-                <p className="text-sm break-words">
-                  {selectedLigand.iupac_name || "N/A"}
-                </p>
-              </div>
+            )}
+          </>
+        )}
+
+        {selected && (
+          <div className="flex flex-col gap-4">
+            {/* 2D structure from PubChem */}
+            <div className="bg-white rounded-2xl p-4 flex justify-center">
+              <img
+                src={`https://pubchem.ncbi.nlm.nih.gov/rest/pug/compound/cid/${selected.cid}/PNG?image_size=300x300`}
+                alt={selected.name}
+                className="max-w-[280px]"
+                onError={(e) => {
+                  (e.target as HTMLImageElement).style.display = "none";
+                }}
+              />
             </div>
 
-            {selectedLigand.canonical_smiles && (
-              <div className="mt-4">
-                <span className="text-gray-400 text-sm">SMILES</span>
-                <p className="text-xs font-mono bg-gray-800 p-2 rounded mt-1 break-all">
-                  {selectedLigand.canonical_smiles}
-                </p>
-              </div>
-            )}
-
-            {selectedLigand.synonyms && selectedLigand.synonyms.length > 1 && (
-              <div className="mt-4">
-                <span className="text-gray-400 text-sm">Also known as</span>
-                <div className="flex flex-wrap gap-2 mt-1">
-                  {selectedLigand.synonyms.slice(1, 6).map((s, i) => (
-                    <span
-                      key={i}
-                      className="bg-gray-800 text-xs px-2 py-1 rounded"
-                    >
-                      {s}
-                    </span>
-                  ))}
+            <div className="border border-white/10 rounded-2xl p-5 space-y-3">
+              <div className="grid grid-cols-2 gap-3 text-xs">
+                <div>
+                  <span className="text-gray-500">Formula</span>
+                  <p className="text-sm mt-0.5">{selected.formula}</p>
+                </div>
+                <div>
+                  <span className="text-gray-500">Weight</span>
+                  <p className="text-sm mt-0.5">{selected.weight.toFixed(2)} g/mol</p>
                 </div>
               </div>
+              {selected.smiles && (
+                <div className="text-xs">
+                  <span className="text-gray-500">SMILES</span>
+                  <p className="font-mono text-[10px] bg-white/5 rounded-lg p-2 mt-1 break-all">
+                    {selected.smiles}
+                  </p>
+                </div>
+              )}
+            </div>
+
+            <button
+              onClick={() => {
+                setSelected(null);
+                setQuery("");
+              }}
+              className="text-xs text-gray-500 hover:text-white transition-colors text-center"
+            >
+              Search again
+            </button>
+          </div>
+        )}
+      </div>
+
+      {/* Bottom bar */}
+      <div className="fixed bottom-0 left-0 right-0 bg-black/80 backdrop-blur-md border-t border-white/5">
+        <div className="max-w-md mx-auto px-6 py-4 flex items-center justify-between">
+          <div className="flex gap-1">
+            {["Protein", "Prepare", "Ligand", "Dock"].map((step, i) => (
+              <span
+                key={step}
+                className={`text-[10px] px-2 py-1 rounded-full ${
+                  i === 2
+                    ? "bg-white text-black"
+                    : "bg-white/5 text-gray-500"
+                }`}
+              >
+                {step}
+              </span>
+            ))}
+          </div>
+          <div className="flex gap-2">
+            <Link
+              href={`/docking/marinate?proteinState=${proteinState}`}
+              className="text-xs text-gray-500 hover:text-white px-3 py-2 transition-colors"
+            >
+              Back
+            </Link>
+            {selected && proteinState && (
+              <Link
+                href={`/docking/cook?proteinState=${proteinState}&ligandCid=${selected.cid}&ligandName=${encodeURIComponent(selected.name)}`}
+                className="bg-white text-black text-xs font-medium px-4 py-2 rounded-full hover:bg-gray-200 transition-colors"
+              >
+                Next
+              </Link>
             )}
           </div>
-
-          <button
-            onClick={() => setSelectedLigand(null)}
-            className="text-blue-300 hover:text-blue-400 transition-colors text-sm"
-          >
-            Search for a different ligand
-          </button>
         </div>
-      )}
-
-      <ProgressBar
-        pointer={3}
-        backLink="/docking/marinate"
-        backLinkParams={
-          proteinState ? { proteinState: proteinState } : ({} as any)
-        }
-        nextLink={
-          selectedLigand && proteinState ? "/docking/cook" : (null as any)
-        }
-        nextLinkParams={
-          selectedLigand && proteinState
-            ? {
-                proteinState: proteinState,
-                ligandCid: String(selectedLigand.cid),
-                ligandName: selectedLigand.name,
-              }
-            : (null as any)
-        }
-      />
-    </main>
+      </div>
+    </div>
   );
 };
 

@@ -1,113 +1,50 @@
 import Link from "next/link";
-import ArrowForwardIcon from "@mui/icons-material/ArrowForward";
-import Footer from "./footer";
 
 export default function Home() {
   return (
-    <main>
-      {/* Title */}
-      <div className="flex flex-col space-y-2">
-        <h1 className="text-5xl font-semibold text-center">
-          <a
-            href="https://sites.google.com/view/lcbc"
-            target="_blank"
-            rel="noopener noreferrer"
-          >
-            <span className="bg-blue-300 hover:bg-blue-400 text-black rounded-lg px-2 leading-relaxed">
-              LCBC
-            </span>
-          </a>{" "}
-          DOCK
+    <div className="flex flex-col items-center justify-center min-h-screen px-6">
+      <div className="text-center max-w-2xl">
+        <h1 className="text-6xl sm:text-8xl font-extralight tracking-tight mb-4">
+          LCBC <span className="font-semibold">DOCK</span>
         </h1>
-        <span className="text-md text-center">
-          Developed by John Seong
+        <p className="text-gray-400 text-lg mb-12">
+          Molecular docking in your browser.
           <br />
-          in collaboration with{" "}
-          <a
-            rel="noopener noreferrer"
-            target="_blank"
-            className="text-blue-300 hover:underline"
-            href="https://en.snu.ac.kr"
-          >
-            SNU
-          </a>
-        </span>
-      </div>
+          Powered by AutoDock Vina.
+        </p>
 
-      <div className="mb-32 grid text-center lg:mb-0 lg:grid-cols-5 lg:text-left">
         <Link
           href="/docking/protein"
-          className="group rounded-lg border border-transparent px-5 py-4 transition-colors hover:border-gray-300 hover:bg-gray-100 hover:dark:border-neutral-700 hover:dark:bg-neutral-800 hover:dark:bg-opacity-30"
+          className="inline-block bg-white text-black px-8 py-3 rounded-full text-sm font-medium hover:bg-gray-200 transition-colors mb-16"
         >
-          <div className="mb-3 flex flex-row spacing-2">
-            <h2 className="text-2xl text-blue-300">Start Docking</h2>
-
-            <ArrowForwardIcon className="text-blue-300 m-auto ml-2 inline-block transition-transform group-hover:translate-x-1 motion-reduce:transform-none" />
-          </div>
-          <p className="text-blue-300 m-0 max-w-[30ch] text-sm opacity-50">
-            Explore protein-ligand interactions, step-by-step.
-          </p>
+          Start Docking
         </Link>
 
-        <Link
-          href="/dashboard"
-          className="group rounded-lg border border-transparent px-5 py-4 transition-colors hover:border-gray-300 hover:bg-gray-100 hover:dark:border-neutral-700 hover:dark:bg-neutral-800/30"
-        >
-          <div className="mb-3 flex flex-row spacing-2">
-            <h2 className="text-2xl text-green-300">Dashboard</h2>
-
-            <ArrowForwardIcon className="text-green-300 m-auto ml-2 inline-block transition-transform group-hover:translate-x-1 motion-reduce:transform-none" />
+        <div className="grid grid-cols-1 sm:grid-cols-3 gap-6 text-left">
+          <div className="border border-white/10 rounded-2xl p-5">
+            <h3 className="text-sm font-medium mb-2">Search</h3>
+            <p className="text-xs text-gray-500 leading-relaxed">
+              200K+ proteins from RCSB PDB. 100M+ molecules from PubChem.
+            </p>
           </div>
-          <p className="text-green-300 m-0 max-w-[30ch] text-sm opacity-50">
-            Track your docking jobs and view results.
-          </p>
-        </Link>
-
-        <Link
-          href="/about"
-          className="group rounded-lg border border-transparent px-5 py-4 transition-colors hover:border-gray-300 hover:bg-gray-100 hover:dark:border-neutral-700 hover:dark:bg-neutral-800/30"
-        >
-          <div className="mb-3 flex flex-row spacing-2">
-            <h2 className="text-2xl">About</h2>
-
-            <ArrowForwardIcon className="m-auto ml-2 inline-block transition-transform group-hover:translate-x-1 motion-reduce:transform-none" />
+          <div className="border border-white/10 rounded-2xl p-5">
+            <h3 className="text-sm font-medium mb-2">Dock</h3>
+            <p className="text-xs text-gray-500 leading-relaxed">
+              Configure grid box, submit to queue, get email when done.
+            </p>
           </div>
-
-          <p className="m-0 max-w-[30ch] text-sm opacity-50">
-            Learn more about the protein-ligand docking process.
-          </p>
-        </Link>
-
-        <Link
-          href="/tutorials"
-          className="group rounded-lg border border-transparent px-5 py-4 transition-colors hover:border-gray-300 hover:bg-gray-100 hover:dark:border-neutral-700 hover:dark:bg-neutral-800/30"
-        >
-          <div className="mb-3 flex flex-row spacing-2">
-            <h2 className="text-2xl">Tutorials</h2>
-
-            <ArrowForwardIcon className="m-auto ml-2 inline-block transition-transform group-hover:translate-x-1 motion-reduce:transform-none" />
+          <div className="border border-white/10 rounded-2xl p-5">
+            <h3 className="text-sm font-medium mb-2">View</h3>
+            <p className="text-xs text-gray-500 leading-relaxed">
+              Interactive 3D viewer. Download PDB or PDBQT results.
+            </p>
           </div>
-          <p className="m-0 max-w-[30ch] text-sm opacity-50">
-            Learn how to perform protein-ligand docking step-by-step.
-          </p>
-        </Link>
-
-        <Link
-          href="/contact"
-          className="group rounded-lg border border-transparent px-5 py-4 transition-colors hover:border-gray-300 hover:bg-gray-100 hover:dark:border-neutral-700 hover:dark:bg-neutral-800/30"
-        >
-          <div className="mb-3 flex flex-row spacing-2">
-            <h2 className="text-2xl">Contact</h2>
-
-            <ArrowForwardIcon className="m-auto ml-2 inline-block transition-transform group-hover:translate-x-1 motion-reduce:transform-none" />
-          </div>
-          <p className="m-0 max-w-[30ch] text-sm opacity-50">
-            Get in touch with us for any inquiries.
-          </p>
-        </Link>
+        </div>
       </div>
 
-      <Footer destination="/docking/protein" message="Click here to begin" />
-    </main>
+      <footer className="absolute bottom-6 text-xs text-gray-600">
+        Built by John Seong &middot; Seoul National University
+      </footer>
+    </div>
   );
 }

@@ -2,46 +2,20 @@
 
 import { FC, useState, useEffect, useRef } from "react";
 import { useSearchParams, useRouter } from "next/navigation";
-import axios from "axios";
 import Link from "next/link";
-import { RotatingTriangles } from "react-loader-spinner";
-import CheckCircleIcon from "@mui/icons-material/CheckCircle";
-import ErrorIcon from "@mui/icons-material/Error";
+import axios from "axios";
 
 const API_BASE =
   process.env.NODE_ENV === "development"
     ? "http://localhost:8000"
     : "https://api.lcbcdock.com";
 
-interface JobInfo {
-  job_id: string;
-  status: string;
-  protein_pdb_id: string;
-  ligand_cid: number;
-  ligand_name: string;
-  email?: string;
-  created_at: string;
-  completed_at?: string;
-  error_message?: string;
-  best_affinity?: number;
-  num_poses?: number;
-  queue_position?: number;
-}
-
-const statusLabels: Record<string, string> = {
+const statusLabel: Record<string, string> = {
   queued: "In Queue",
-  preparing: "Preparing Molecules",
-  docking: "Running AutoDock Vina",
-  completed: "Completed",
+  preparing: "Preparing",
+  docking: "Docking",
+  completed: "Done",
   failed: "Failed",
-};
-
-const statusColors: Record<string, string> = {
-  queued: "text-yellow-300",
-  preparing: "text-blue-300",
-  docking: "text-purple-300",
-  completed: "text-green-300",
-  failed: "text-red-300",
 };
 
 const Dashboard: FC = () => {
@@ -49,221 +23,124 @@ const Dashboard: FC = () => {
   const router = useRouter();
   const jobId = searchParams.get("jobId") ?? "";
 
-  const [job, setJob] = useState<JobInfo | null>(null);
+  const [job, setJob] = useState<any>(null);
   const [error, setError] = useState<string | null>(null);
+  const [inputId, setInputId] = useState("");
   const intervalRef = useRef<NodeJS.Timeout | null>(null);
 
   useEffect(() => {
     if (!jobId) return;
 
-    const fetchStatus = async () => {
+    const poll = async () => {
       try {
         const resp = await axios.get(`${API_BASE}/api/jobs/${jobId}`);
         setJob(resp.data);
-
-        if (
-          resp.data.status === "completed" ||
-          resp.data.status === "failed"
-        ) {
-          if (intervalRef.current) {
-            clearInterval(intervalRef.current);
-            intervalRef.current = null;
-          }
+        if (resp.data.status === "completed" || resp.data.status === "failed") {
+          if (intervalRef.current) clearInterval(intervalRef.current);
         }
-      } catch (err: any) {
-        setError("Could not fetch job status. Please check your job ID.");
+      } catch {
+        setError("Job not found.");
       }
     };
 
-    fetchStatus();
-    intervalRef.current = setInterval(fetchStatus, 3000);
-
-    return () => {
-      if (intervalRef.current) clearInterval(intervalRef.current);
-    };
+    poll();
+    intervalRef.current = setInterval(poll, 3000);
+    return () => { if (intervalRef.current) clearInterval(intervalRef.current); };
   }, [jobId]);
 
   if (!jobId) {
     return (
-      <main className="pb-40">
-        <div className="text-center">
-          <h1 className="text-6xl font-thin mb-6">
-            <span className="font-semibold">DASHBOARD</span>
-          </h1>
-          <p className="text-gray-400 mb-8">
-            Enter a job ID to track your docking job.
-          </p>
-          <div className="max-w-md mx-auto">
-            <input
-              type="text"
-              placeholder="Paste your job ID here..."
-              className="w-full bg-gray-800 rounded-lg p-3 text-sm"
-              onKeyDown={(e) => {
-                if (e.key === "Enter") {
-                  const val = (e.target as HTMLInputElement).value.trim();
-                  if (val) router.push(`/dashboard?jobId=${val}`);
-                }
-              }}
-            />
-          </div>
+      <div className="flex flex-col items-center min-h-screen px-6 pt-24">
+        <div className="w-full max-w-md text-center">
+          <h1 className="text-4xl font-extralight mb-8">Dashboard</h1>
+          <input
+            type="text"
+            value={inputId}
+            onChange={(e) => setInputId(e.target.value)}
+            onKeyDown={(e) => {
+              if (e.key === "Enter" && inputId.trim()) {
+                router.push(`/dashboard?jobId=${inputId.trim()}`);
+              }
+            }}
+            placeholder="Paste job ID..."
+            className="w-full bg-white/5 border border-white/10 rounded-xl px-4 py-3 text-sm
+                       placeholder-gray-600 focus:outline-none focus:border-white/30"
+          />
         </div>
-      </main>
+      </div>
     );
   }
 
   return (
-    <main className="pb-40">
-      <div className="text-center mb-8">
-        <h1 className="text-6xl font-thin mb-2">
-          <span className="font-semibold">DASHBOARD</span>
-        </h1>
-        <p className="text-sm font-mono text-gray-400">
-          Job: {jobId.slice(0, 8)}...
+    <div className="flex flex-col items-center min-h-screen px-6 pt-24">
+      <div className="w-full max-w-md">
+        <h1 className="text-4xl font-extralight text-center mb-1">Dashboard</h1>
+        <p className="text-xs text-gray-500 text-center font-mono mb-10">
+          {jobId.slice(0, 8)}...
         </p>
-      </div>
 
-      {error && (
-        <div className="max-w-lg mx-auto bg-red-900/50 border border-red-500 rounded-xl p-4 text-red-300 text-center">
-          {error}
-        </div>
-      )}
+        {error && <p className="text-xs text-red-400 text-center">{error}</p>}
 
-      {!job && !error && (
-        <div className="flex flex-col items-center gap-4">
-          <RotatingTriangles />
-          <p>Loading job status...</p>
-        </div>
-      )}
-
-      {job && (
-        <div className="max-w-lg mx-auto flex flex-col gap-6">
-          {/* Status Banner */}
-          <div className="bg-gray-900 rounded-2xl p-8 text-center">
-            {job.status === "completed" ? (
-              <CheckCircleIcon
-                className="text-green-300"
-                style={{ fontSize: 80 }}
-              />
-            ) : job.status === "failed" ? (
-              <ErrorIcon className="text-red-300" style={{ fontSize: 80 }} />
-            ) : (
-              <RotatingTriangles
-                width="80"
-                height="80"
-                ariaLabel="loading"
-              />
-            )}
-
-            <h2
-              className={`text-2xl font-semibold mt-4 ${
-                statusColors[job.status] || "text-white"
-              }`}
-            >
-              {statusLabels[job.status] || job.status}
-            </h2>
-
-            {job.status === "queued" && job.queue_position && (
-              <p className="text-gray-400 mt-2">
-                Queue position: <span className="text-white font-mono">{job.queue_position}</span>
-              </p>
-            )}
-
-            {job.status === "docking" && (
-              <p className="text-gray-400 mt-2">
-                AutoDock Vina is running. This may take a few minutes...
-              </p>
-            )}
+        {!job && !error && (
+          <div className="flex justify-center">
+            <div className="w-6 h-6 border-2 border-white/20 border-t-white rounded-full animate-spin" />
           </div>
+        )}
 
-          {/* Job Details */}
-          <div className="bg-gray-900 rounded-2xl p-6">
-            <h3 className="text-lg font-semibold mb-4 text-blue-300">
-              Job Details
-            </h3>
-            <div className="grid grid-cols-2 gap-4 text-sm">
-              <div>
-                <span className="text-gray-400">Protein</span>
-                <p className="font-mono text-lg">
-                  {job.protein_pdb_id.toUpperCase()}
-                </p>
-              </div>
-              <div>
-                <span className="text-gray-400">Ligand</span>
-                <p>{job.ligand_name}</p>
-                <p className="text-xs text-gray-500">CID: {job.ligand_cid}</p>
-              </div>
-              <div>
-                <span className="text-gray-400">Submitted</span>
-                <p className="text-xs">
-                  {new Date(job.created_at).toLocaleString()}
-                </p>
-              </div>
-              {job.completed_at && (
-                <div>
-                  <span className="text-gray-400">Completed</span>
-                  <p className="text-xs">
-                    {new Date(job.completed_at).toLocaleString()}
+        {job && (
+          <div className="space-y-4">
+            <div className="border border-white/10 rounded-2xl p-6 text-center">
+              {job.status === "completed" ? (
+                <p className="text-green-400 text-lg font-light">Complete</p>
+              ) : job.status === "failed" ? (
+                <p className="text-red-400 text-lg font-light">Failed</p>
+              ) : (
+                <>
+                  <div className="w-8 h-8 border-2 border-white/20 border-t-white rounded-full animate-spin mx-auto mb-3" />
+                  <p className="text-sm text-gray-400">
+                    {statusLabel[job.status] || job.status}
                   </p>
+                </>
+              )}
+            </div>
+
+            <div className="border border-white/10 rounded-2xl p-5 space-y-3 text-xs">
+              <div className="flex justify-between">
+                <span className="text-gray-500">Protein</span>
+                <span className="font-mono">{job.protein_pdb_id?.toUpperCase()}</span>
+              </div>
+              <div className="flex justify-between">
+                <span className="text-gray-500">Ligand</span>
+                <span>{job.ligand_name}</span>
+              </div>
+              <div className="flex justify-between">
+                <span className="text-gray-500">Submitted</span>
+                <span>{new Date(job.created_at).toLocaleString()}</span>
+              </div>
+              {job.best_affinity != null && (
+                <div className="flex justify-between">
+                  <span className="text-gray-500">Best Affinity</span>
+                  <span className="text-green-400 font-medium">{job.best_affinity} kcal/mol</span>
                 </div>
               )}
             </div>
+
+            {job.status === "completed" && (
+              <Link
+                href={`/results/${jobId}`}
+                className="block w-full bg-white text-black py-3 rounded-full text-sm font-medium text-center hover:bg-gray-200 transition-colors"
+              >
+                View Results
+              </Link>
+            )}
+
+            {job.status === "failed" && job.error_message && (
+              <p className="text-xs text-red-400 text-center">{job.error_message}</p>
+            )}
           </div>
-
-          {/* Results Preview */}
-          {job.status === "completed" && (
-            <div className="bg-gray-900 rounded-2xl p-6">
-              <h3 className="text-lg font-semibold mb-4 text-green-300">
-                Results
-              </h3>
-              <div className="grid grid-cols-2 gap-4 text-sm mb-6">
-                <div>
-                  <span className="text-gray-400">Best Binding Affinity</span>
-                  <p className="text-2xl font-semibold text-green-300">
-                    {job.best_affinity} kcal/mol
-                  </p>
-                </div>
-                <div>
-                  <span className="text-gray-400">Poses Generated</span>
-                  <p className="text-2xl font-semibold">{job.num_poses}</p>
-                </div>
-              </div>
-
-              <Link
-                href={`/results/${job.job_id}`}
-                className="block w-full bg-green-400 hover:bg-green-500 text-black font-semibold
-                           py-3 rounded-xl text-center text-lg transition-colors"
-              >
-                View Docked Pose
-              </Link>
-            </div>
-          )}
-
-          {/* Error Message */}
-          {job.status === "failed" && job.error_message && (
-            <div className="bg-red-900/30 border border-red-500/50 rounded-2xl p-6">
-              <h3 className="text-lg font-semibold mb-2 text-red-300">Error</h3>
-              <p className="text-sm text-red-200 font-mono">
-                {job.error_message}
-              </p>
-              <Link
-                href="/docking/protein"
-                className="inline-block mt-4 text-blue-300 hover:text-blue-400 text-sm"
-              >
-                Try again with different parameters
-              </Link>
-            </div>
-          )}
-
-          {job.email && (
-            <p className="text-center text-xs text-gray-500">
-              {job.status === "completed" || job.status === "failed"
-                ? `A notification was sent to ${job.email}`
-                : `We'll notify ${job.email} when this job completes.`}
-            </p>
-          )}
-        </div>
-      )}
-    </main>
+        )}
+      </div>
+    </div>
   );
 };
 
