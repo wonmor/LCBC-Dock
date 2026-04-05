@@ -6,12 +6,11 @@ import Link from "next/link";
 import axios from "axios";
 
 interface Molecule {
-  cid: number | string;
+  cid: number;
   name: string;
   formula: string;
   weight: number;
   smiles: string;
-  source?: string;
 }
 
 const Ligand: FC = () => {
@@ -37,12 +36,12 @@ const Ligand: FC = () => {
     try {
       const resp = await axios.get("/api/pubchem", {
         params: { q: term },
-        timeout: 15000,
+        timeout: 20000,
       });
 
       const data: Molecule[] = resp.data ?? [];
       if (data.length === 0) {
-        setError("No molecules found. Try a different name.");
+        setError("No molecules found. Try the full name (e.g. aspirin, caffeine).");
       }
       setResults(data);
     } catch {
@@ -56,7 +55,7 @@ const Ligand: FC = () => {
   const handleInput = (value: string) => {
     setQuery(value);
     if (debounceRef.current) clearTimeout(debounceRef.current);
-    debounceRef.current = setTimeout(() => search(value), 400);
+    debounceRef.current = setTimeout(() => search(value), 500);
   };
 
   return (
@@ -67,8 +66,8 @@ const Ligand: FC = () => {
         </h1>
         <p className="text-center text-xs text-gray-500 mb-8">
           {selected
-            ? `${selected.source || "PubChem"} \u00B7 ${selected.cid} \u00B7 ${selected.formula}`
-            : "Search PubChem + ChEMBL \u2014 millions of compounds"}
+            ? `CID ${selected.cid} \u00B7 ${selected.formula}`
+            : "Search PubChem \u2014 100M+ compounds"}
         </p>
 
         {!selected && (
@@ -105,8 +104,7 @@ const Ligand: FC = () => {
                   >
                     <span className="text-sm">{mol.name}</span>
                     <span className="text-xs text-gray-500 ml-2">
-                      {mol.formula} &middot; {mol.weight.toFixed(1)} g/mol
-                      {mol.source && <span className="text-gray-600"> &middot; {mol.source}</span>}
+                      CID {mol.cid} &middot; {mol.formula} &middot; {mol.weight.toFixed(1)} g/mol
                     </span>
                   </button>
                 ))}
@@ -117,30 +115,16 @@ const Ligand: FC = () => {
 
         {selected && (
           <div className="flex flex-col gap-4">
-            {typeof selected.cid === "number" && (
-              <div className="bg-white rounded-2xl p-4 flex justify-center">
-                <img
-                  src={`https://pubchem.ncbi.nlm.nih.gov/rest/pug/compound/cid/${selected.cid}/PNG?image_size=300x300`}
-                  alt={selected.name}
-                  className="max-w-[280px]"
-                  onError={(e) => {
-                    (e.target as HTMLImageElement).style.display = "none";
-                  }}
-                />
-              </div>
-            )}
-            {typeof selected.cid === "string" && selected.source === "ChEMBL" && (
-              <div className="bg-white rounded-2xl p-4 flex justify-center">
-                <img
-                  src={`https://www.ebi.ac.uk/chembl/api/data/image/${selected.cid}.svg`}
-                  alt={selected.name}
-                  className="max-w-[280px]"
-                  onError={(e) => {
-                    (e.target as HTMLImageElement).style.display = "none";
-                  }}
-                />
-              </div>
-            )}
+            <div className="bg-white rounded-2xl p-4 flex justify-center">
+              <img
+                src={`https://pubchem.ncbi.nlm.nih.gov/rest/pug/compound/cid/${selected.cid}/PNG?image_size=300x300`}
+                alt={selected.name}
+                className="max-w-[280px]"
+                onError={(e) => {
+                  (e.target as HTMLImageElement).style.display = "none";
+                }}
+              />
+            </div>
 
             <div className="border border-white/10 rounded-2xl p-5 space-y-3">
               <div className="grid grid-cols-2 gap-3 text-xs">
