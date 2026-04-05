@@ -18,15 +18,16 @@ const Ligand: FC = () => {
   const proteinState = searchParams.get("proteinState") ?? "";
 
   const [query, setQuery] = useState("");
-  const [results, setResults] = useState<Molecule[]>([]);
+  const [suggestions, setSuggestions] = useState<string[]>([]);
   const [selected, setSelected] = useState<Molecule | null>(null);
   const [loading, setLoading] = useState(false);
+  const [loadingDetail, setLoadingDetail] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const debounceRef = useRef<NodeJS.Timeout | null>(null);
 
   const searchPubChem = async (term: string) => {
     if (!term || term.trim().length < 2) {
-      setResults([]);
+      setSuggestions([]);
       return;
     }
 
@@ -34,69 +35,65 @@ const Ligand: FC = () => {
     setError(null);
 
     try {
-      // Try direct name lookup first
+      // Use autocomplete — works with partial input, always reliable
       const resp = await axios.get(
-        `https://pubchem.ncbi.nlm.nih.gov/rest/pug/compound/name/${encodeURIComponent(term)}/property/MolecularFormula,MolecularWeight,CanonicalSMILES,CID/JSON`,
+        `https://pubchem.ncbi.nlm.nih.gov/rest/autocomplete/compound/${encodeURIComponent(term)}/json`,
+        { params: { limit: 10 }, timeout: 8000 }
+      );
+
+      const names: string[] =
+        resp.data?.dictionary_terms?.compound ?? [];
+
+      if (names.length === 0) {
+        setSuggestions([]);
+        setError("No molecules found.");
+      } else {
+        setSuggestions(names);
+      }
+    } catch {
+      setError("Search failed. Check your connection and try again.");
+      setSuggestions([]);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const handleSelect = async (name: string) => {
+    setLoadingDetail(true);
+    setError(null);
+
+    try {
+      const resp = await axios.get(
+        `https://pubchem.ncbi.nlm.nih.gov/rest/pug/compound/name/${encodeURIComponent(name)}/property/MolecularFormula,MolecularWeight,CanonicalSMILES,CID/JSON`,
         { timeout: 10000 }
       );
 
-      const props = resp.data?.PropertyTable?.Properties ?? [];
-      setResults(
-        props.slice(0, 8).map((p: any) => ({
-          cid: p.CID,
-          name: term,
-          formula: p.MolecularFormula || "",
-          weight: p.MolecularWeight || 0,
-          smiles: p.CanonicalSMILES || "",
-        }))
-      );
-    } catch {
-      // Fallback: autocomplete
-      try {
-        const acResp = await axios.get(
-          `https://pubchem.ncbi.nlm.nih.gov/rest/autocomplete/compound/${encodeURIComponent(term)}/json?limit=8`,
-          { timeout: 10000 }
-        );
-
-        const suggestions =
-          acResp.data?.dictionary_terms?.compound ?? [];
-
-        if (suggestions.length === 0) {
-          setResults([]);
-          setError("No molecules found.");
-          setLoading(false);
-          return;
-        }
-
-        // Fetch details for the first suggestion
-        const detailResp = await axios.get(
-          `https://pubchem.ncbi.nlm.nih.gov/rest/pug/compound/name/${encodeURIComponent(suggestions[0])}/property/MolecularFormula,MolecularWeight,CanonicalSMILES,CID/JSON`,
-          { timeout: 10000 }
-        );
-
-        const props = detailResp.data?.PropertyTable?.Properties ?? [];
-        setResults(
-          props.slice(0, 8).map((p: any) => ({
-            cid: p.CID,
-            name: suggestions[0],
-            formula: p.MolecularFormula || "",
-            weight: p.MolecularWeight || 0,
-            smiles: p.CanonicalSMILES || "",
-          }))
-        );
-      } catch {
-        setError("Search failed. Try a different term.");
-        setResults([]);
+      const p = resp.data?.PropertyTable?.Properties?.[0];
+      if (!p) {
+        setError("Could not load molecule details.");
+        setLoadingDetail(false);
+        return;
       }
+
+      setSelected({
+        cid: p.CID,
+        name: name,
+        formula: p.MolecularFormula || "",
+        weight: p.MolecularWeight || 0,
+        smiles: p.CanonicalSMILES || "",
+      });
+      setSuggestions([]);
+    } catch {
+      setError("Failed to load details for this molecule.");
     } finally {
-      setLoading(false);
+      setLoadingDetail(false);
     }
   };
 
   const handleInput = (value: string) => {
     setQuery(value);
     if (debounceRef.current) clearTimeout(debounceRef.current);
-    debounceRef.current = setTimeout(() => searchPubChem(value), 500);
+    debounceRef.current = setTimeout(() => searchPubChem(value), 400);
   };
 
   return (
@@ -127,26 +124,34 @@ const Ligand: FC = () => {
               <p className="text-xs text-gray-500 text-center mt-4">Searching PubChem...</p>
             )}
 
+            {loadingDetail && (
+              <div className="flex flex-col items-center mt-6">
+                <div className="w-6 h-6 border-2 border-white/20 border-t-white rounded-full animate-spin" />
+                <p className="text-xs text-gray-500 mt-2">Loading molecule...</p>
+              </div>
+            )}
+
             {error && (
               <p className="text-xs text-red-400 text-center mt-4">{error}</p>
             )}
 
-            {results.length > 0 && (
+            {suggestions.length > 0 && !loadingDetail && (
               <div className="mt-3 border border-white/10 rounded-xl overflow-hidden">
-                {results.map((mol) => (
+                {suggestions.map((name) => (
                   <button
-                    key={mol.cid}
-                    onClick={() => setSelected(mol)}
-                    className="w-full text-left px-4 py-3 hover:bg-white/5
+                    key={name}
+                    onClick={() => handleSelect(name)}
+                    className="w-full text-left px-4 py-3 text-sm hover:bg-white/5
                                border-b border-white/5 last:border-0 transition-colors"
                   >
-                    <span className="text-sm">{mol.name}</span>
-                    <span className="text-xs text-gray-500 ml-2">
-                      CID {mol.cid} &middot; {mol.formula}
-                    </span>
+                    {name}
                   </button>
                 ))}
               </div>
+            )}
+
+            {!loading && suggestions.length === 0 && query.length >= 2 && !error && !loadingDetail && (
+              <p className="text-xs text-gray-600 text-center mt-4">Type to search</p>
             )}
           </>
         )}
@@ -190,6 +195,7 @@ const Ligand: FC = () => {
               onClick={() => {
                 setSelected(null);
                 setQuery("");
+                setSuggestions([]);
               }}
               className="text-xs text-gray-500 hover:text-white transition-colors text-center"
             >
