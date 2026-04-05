@@ -1,14 +1,21 @@
 FROM node:18-alpine
-WORKDIR /workdir
-ENV PATH /workdir/node_modules/.bin:$PATH
+
+WORKDIR /app
+
 COPY package.json ./
+RUN npm install --force
+
 COPY postcss.config.js ./
 COPY tailwind.config.js ./
 COPY tsconfig.json ./
 COPY next.config.js ./
+COPY .eslintrc.json ./
 COPY app ./app
 COPY public ./public
-RUN npm install --force
+
+ENV NEXT_TELEMETRY_DISABLED=1
 RUN npm run build
+
 EXPOSE 3000
+
 CMD ["npm", "run", "start"]
