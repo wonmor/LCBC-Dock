@@ -143,11 +143,9 @@ const Marinate: React.FC = () => {
                 [key: string]: string;
               }
             }
-            nextLink={(proteinState ? "/docking/ligand" : null) as string}
+            nextLink={proteinState ? "/docking/ligand" : (null as any)}
             nextLinkParams={
-              (proteinState ? { proteinState: proteinState } : null) as {
-                [key: string]: string;
-              }
+              proteinState ? { proteinState: proteinState } : (null as any)
             }
           />
         ) : (

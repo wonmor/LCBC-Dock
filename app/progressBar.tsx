@@ -2,11 +2,18 @@ import Link from "next/link";
 import ArrowBackIcon from "@mui/icons-material/ArrowBack";
 import ArrowForwardIcon from "@mui/icons-material/ArrowForward";
 
+const steps = [
+  { label: "PROTEIN", step: 1 },
+  { label: "PREPARE", step: 2 },
+  { label: "LIGAND", step: 3 },
+  { label: "DOCK", step: 4 },
+];
+
 export default function ProgressBar(props: {
   pointer: number;
-  backLink?: String;
+  backLink?: string;
   backLinkParams?: { [key: string]: string };
-  nextLink?: String;
+  nextLink?: string;
   nextLinkParams?: { [key: string]: string };
 }) {
   const { pointer } = props;
@@ -21,7 +28,7 @@ export default function ProgressBar(props: {
           <Link
             style={{ width: "fit-content" }}
             href={{
-              pathname: props.backLink as string,
+              pathname: props.backLink,
               query: props.backLinkParams,
             }}
             className="self-start md:self-center flex flex-row gap-4 items-center justify-center p-3 scale-75 text-gray-900 text-center bg-white rounded-3xl"
@@ -32,41 +39,23 @@ export default function ProgressBar(props: {
         )}
         <div className="p-3 opacity-75 text-gray-900 text-center bg-white rounded-3xl">
           <div className="scale-90 sm:scale-100 flex overflow-hidden rounded-xl">
-            <div
-              className={`flex-1 p-2 ${
-                pointer === 1 ? "bg-transparent" : "bg-gray-300"
-              }`}
-            >
-              PROTEIN
-            </div>
-            <div
-              className={`flex-1 p-2 ${
-                pointer === 2 ? "bg-transparent" : "bg-gray-300"
-              }`}
-            >
-              MARINATE
-            </div>
-            <div
-              className={`flex-1 p-2 ${
-                pointer === 3 ? "bg-transparent" : "bg-gray-300"
-              }`}
-            >
-              LIGAND
-            </div>
-            <div
-              className={`flex-1 p-2 ${
-                pointer === 4 ? "bg-transparent" : "bg-gray-300"
-              }`}
-            >
-              COOK
-            </div>
+            {steps.map((s) => (
+              <div
+                key={s.step}
+                className={`flex-1 p-2 text-sm ${
+                  pointer === s.step ? "bg-transparent font-semibold" : "bg-gray-300"
+                } ${pointer > s.step ? "text-green-700" : ""}`}
+              >
+                {s.label}
+              </div>
+            ))}
           </div>
         </div>
         {props.nextLink && props.nextLinkParams && (
           <Link
             style={{ width: "fit-content" }}
             href={{
-              pathname: props.nextLink as string,
+              pathname: props.nextLink,
               query: props.nextLinkParams,
             }}
             className="self-end md:self-center flex flex-row gap-4 items-center justify-center p-3 scale-75 text-gray-900 text-center bg-white rounded-3xl"

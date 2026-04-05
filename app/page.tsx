@@ -34,7 +34,7 @@ export default function Home() {
         </span>
       </div>
 
-      <div className="mb-32 grid text-center lg:mb-0 lg:grid-cols-4 lg:text-left">
+      <div className="mb-32 grid text-center lg:mb-0 lg:grid-cols-5 lg:text-left">
         <Link
           href="/docking/protein"
           className="group rounded-lg border border-transparent px-5 py-4 transition-colors hover:border-gray-300 hover:bg-gray-100 hover:dark:border-neutral-700 hover:dark:bg-neutral-800 hover:dark:bg-opacity-30"
@@ -50,16 +50,16 @@ export default function Home() {
         </Link>
 
         <Link
-          href="/tutorials"
+          href="/dashboard"
           className="group rounded-lg border border-transparent px-5 py-4 transition-colors hover:border-gray-300 hover:bg-gray-100 hover:dark:border-neutral-700 hover:dark:bg-neutral-800/30"
         >
           <div className="mb-3 flex flex-row spacing-2">
-            <h2 className="text-2xl">Tutorials</h2>
+            <h2 className="text-2xl text-green-300">Dashboard</h2>
 
-            <ArrowForwardIcon className="m-auto ml-2 inline-block transition-transform group-hover:translate-x-1 motion-reduce:transform-none" />
+            <ArrowForwardIcon className="text-green-300 m-auto ml-2 inline-block transition-transform group-hover:translate-x-1 motion-reduce:transform-none" />
           </div>
-          <p className="m-0 max-w-[30ch] text-sm opacity-50">
-            Learn how to perform protein-ligand docking step-by-step.
+          <p className="text-green-300 m-0 max-w-[30ch] text-sm opacity-50">
+            Track your docking jobs and view results.
           </p>
         </Link>
 
@@ -75,6 +75,20 @@ export default function Home() {
 
           <p className="m-0 max-w-[30ch] text-sm opacity-50">
             Learn more about the protein-ligand docking process.
+          </p>
+        </Link>
+
+        <Link
+          href="/tutorials"
+          className="group rounded-lg border border-transparent px-5 py-4 transition-colors hover:border-gray-300 hover:bg-gray-100 hover:dark:border-neutral-700 hover:dark:bg-neutral-800/30"
+        >
+          <div className="mb-3 flex flex-row spacing-2">
+            <h2 className="text-2xl">Tutorials</h2>
+
+            <ArrowForwardIcon className="m-auto ml-2 inline-block transition-transform group-hover:translate-x-1 motion-reduce:transform-none" />
+          </div>
+          <p className="m-0 max-w-[30ch] text-sm opacity-50">
+            Learn how to perform protein-ligand docking step-by-step.
           </p>
         </Link>
 

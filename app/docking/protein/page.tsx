@@ -115,11 +115,9 @@ const Protein: FC = () => {
       
       <ProgressBar
         pointer={1}
-        nextLink={(proteinState ? "/docking/marinate" : null) as string}
+        nextLink={proteinState ? "/docking/marinate" : undefined}
         nextLinkParams={
-          (proteinState ? { proteinState: proteinState } : null) as {
-            [key: string]: string;
-          }
+          proteinState ? { proteinState: proteinState } : undefined
         }
       />
     </main>

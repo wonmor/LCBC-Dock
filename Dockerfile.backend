@@ -1,17 +1,28 @@
-FROM python:3.9
+FROM python:3.11
 
-# Set the working directory within the container
+# Install system dependencies: AutoDock Vina and Open Babel
+RUN apt-get update && apt-get install -y --no-install-recommends \
+    wget \
+    openbabel \
+    && rm -rf /var/lib/apt/lists/*
+
+# Install AutoDock Vina
+RUN wget -q https://github.com/ccsb-scripps/AutoDock-Vina/releases/download/v1.2.5/vina_1.2.5_linux_x86_64 \
+    -O /usr/local/bin/vina && chmod +x /usr/local/bin/vina
+
 WORKDIR /app
 
-# Copy the API files and requirements.txt into the container's working directory
-COPY api/index.py ./
-COPY api/requirements.txt ./
+# Copy the entire api package
+COPY api/ ./api/
+COPY requirements.txt ./
 
-# Install the required dependencies from requirements.txt
+# Install Python dependencies
 RUN pip3 install --no-cache-dir -r requirements.txt
 
-# Expose the port that the Flask app will be running on (usually 8000 by default)
+# Create data directory for SQLite
+RUN mkdir -p /app/data
+ENV LCBC_DB_PATH=/app/data/lcbc_dock.db
+
 EXPOSE 8000
 
-CMD uvicorn --host=0.0.0.0 --port 8000 index:app
-
+CMD ["uvicorn", "--host=0.0.0.0", "--port=8000", "api.index:app"]
