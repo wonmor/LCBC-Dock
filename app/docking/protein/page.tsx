@@ -12,7 +12,7 @@ const Protein: FC = () => {
   const [error, setError] = useState<string | null>(null);
   const debounceRef = useRef<NodeJS.Timeout | null>(null);
 
-  const searchRCSB = async (term: string) => {
+  const search = async (term: string) => {
     if (!term || term.trim().length < 2) {
       setResults([]);
       return;
@@ -22,25 +22,18 @@ const Protein: FC = () => {
     setError(null);
 
     try {
-      const resp = await axios.post(
-        "https://search.rcsb.org/rcsbsearch/v2/query",
-        {
-          query: {
-            type: "terminal",
-            service: "full_text",
-            parameters: { value: term },
-          },
-          return_type: "entry",
-          request_options: { results_content_type: ["experimental"] },
-        },
-        { timeout: 10000 }
-      );
+      const resp = await axios.get("/api/rcsb", {
+        params: { q: term },
+        timeout: 12000,
+      });
 
-      const ids =
-        resp.data?.result_set?.map((r: any) => r.identifier) ?? [];
-      setResults(ids.slice(0, 12));
+      const ids: string[] = resp.data ?? [];
+      if (ids.length === 0) {
+        setError("No proteins found. Try a PDB ID like 4HG7.");
+      }
+      setResults(ids);
     } catch {
-      setError("Search failed. Try a PDB ID like 4HG7.");
+      setError("Search failed. Please try again.");
       setResults([]);
     } finally {
       setLoading(false);
@@ -50,12 +43,7 @@ const Protein: FC = () => {
   const handleInput = (value: string) => {
     setQuery(value);
     if (debounceRef.current) clearTimeout(debounceRef.current);
-    debounceRef.current = setTimeout(() => searchRCSB(value), 400);
-  };
-
-  const handleSelect = (pdbId: string) => {
-    setSelected(pdbId);
-    setResults([]);
+    debounceRef.current = setTimeout(() => search(value), 400);
   };
 
   return (
@@ -81,19 +69,22 @@ const Protein: FC = () => {
             />
 
             {loading && (
-              <p className="text-xs text-gray-500 text-center mt-4">Searching...</p>
+              <div className="flex flex-col items-center mt-6">
+                <div className="w-5 h-5 border-2 border-white/20 border-t-white rounded-full animate-spin" />
+                <p className="text-xs text-gray-500 mt-2">Searching RCSB PDB...</p>
+              </div>
             )}
 
-            {error && (
+            {error && !loading && (
               <p className="text-xs text-red-400 text-center mt-4">{error}</p>
             )}
 
-            {results.length > 0 && (
+            {results.length > 0 && !loading && (
               <div className="mt-3 border border-white/10 rounded-xl overflow-hidden">
                 {results.map((pdbId) => (
                   <button
                     key={pdbId}
-                    onClick={() => handleSelect(pdbId)}
+                    onClick={() => setSelected(pdbId)}
                     className="w-full text-left px-4 py-3 text-sm font-mono hover:bg-white/5
                                border-b border-white/5 last:border-0 transition-colors"
                   >
@@ -101,10 +92,6 @@ const Protein: FC = () => {
                   </button>
                 ))}
               </div>
-            )}
-
-            {!loading && results.length === 0 && query.length >= 2 && !error && (
-              <p className="text-xs text-gray-600 text-center mt-4">No results</p>
             )}
           </>
         )}
@@ -123,6 +110,7 @@ const Protein: FC = () => {
               onClick={() => {
                 setSelected(null);
                 setQuery("");
+                setResults([]);
               }}
               className="text-xs text-gray-500 hover:text-white transition-colors"
             >
@@ -140,9 +128,7 @@ const Protein: FC = () => {
               <span
                 key={step}
                 className={`text-[10px] px-2 py-1 rounded-full ${
-                  i === 0
-                    ? "bg-white text-black"
-                    : "bg-white/5 text-gray-500"
+                  i === 0 ? "bg-white text-black" : "bg-white/5 text-gray-500"
                 }`}
               >
                 {step}
