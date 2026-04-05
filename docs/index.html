@@ -1,0 +1,581 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>LCBC Dock — Documentation</title>
+    <style>
+        :root {
+            --bg: #000;
+            --surface: #111;
+            --surface2: #1a1a1a;
+            --text: #e5e5e5;
+            --muted: #9ca3af;
+            --accent: #93c5fd;
+            --accent2: #86efac;
+            --border: #333;
+            --code-bg: #0d1117;
+        }
+
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+
+        body {
+            font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+            background: var(--bg);
+            color: var(--text);
+            line-height: 1.7;
+        }
+
+        a { color: var(--accent); text-decoration: none; }
+        a:hover { text-decoration: underline; }
+
+        .container { max-width: 900px; margin: 0 auto; padding: 0 24px; }
+
+        /* Hero */
+        .hero {
+            text-align: center;
+            padding: 80px 24px 60px;
+            border-bottom: 1px solid var(--border);
+        }
+        .hero h1 {
+            font-size: 3.5rem;
+            font-weight: 300;
+            margin-bottom: 8px;
+        }
+        .hero h1 span { font-weight: 700; }
+        .hero .tagline {
+            font-size: 1.25rem;
+            color: var(--muted);
+            margin-bottom: 24px;
+        }
+        .hero .badges {
+            display: flex;
+            gap: 12px;
+            justify-content: center;
+            flex-wrap: wrap;
+        }
+        .hero .badges a {
+            display: inline-block;
+            padding: 10px 24px;
+            border-radius: 12px;
+            font-weight: 600;
+            font-size: 0.95rem;
+            transition: opacity 0.2s;
+        }
+        .hero .badges a:hover { opacity: 0.85; text-decoration: none; }
+        .btn-primary { background: var(--accent); color: #000; }
+        .btn-secondary { background: var(--surface2); color: var(--text); border: 1px solid var(--border); }
+
+        /* Nav */
+        nav {
+            position: sticky;
+            top: 0;
+            background: rgba(0,0,0,0.85);
+            backdrop-filter: blur(12px);
+            border-bottom: 1px solid var(--border);
+            z-index: 100;
+            padding: 12px 0;
+        }
+        nav .container {
+            display: flex;
+            gap: 24px;
+            overflow-x: auto;
+            font-size: 0.9rem;
+        }
+        nav a { color: var(--muted); white-space: nowrap; }
+        nav a:hover { color: var(--text); text-decoration: none; }
+
+        /* Sections */
+        section { padding: 60px 0; border-bottom: 1px solid var(--border); }
+        section:last-child { border-bottom: none; }
+        section h2 {
+            font-size: 1.75rem;
+            font-weight: 600;
+            margin-bottom: 24px;
+            color: var(--accent);
+        }
+        section h3 {
+            font-size: 1.2rem;
+            font-weight: 600;
+            margin: 24px 0 12px;
+        }
+        section p, section li { color: var(--text); margin-bottom: 12px; }
+        section ul { padding-left: 20px; }
+
+        /* Cards */
+        .card-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
+            gap: 16px;
+            margin-top: 16px;
+        }
+        .card {
+            background: var(--surface);
+            border: 1px solid var(--border);
+            border-radius: 16px;
+            padding: 24px;
+        }
+        .card h4 { font-size: 1.1rem; margin-bottom: 8px; }
+        .card p { font-size: 0.9rem; color: var(--muted); margin: 0; }
+        .card .tag {
+            display: inline-block;
+            background: var(--surface2);
+            border-radius: 6px;
+            padding: 2px 8px;
+            font-size: 0.75rem;
+            color: var(--accent);
+            margin-top: 8px;
+        }
+
+        /* Workflow table */
+        .workflow-table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-top: 16px;
+        }
+        .workflow-table th, .workflow-table td {
+            text-align: left;
+            padding: 12px 16px;
+            border-bottom: 1px solid var(--border);
+            font-size: 0.9rem;
+        }
+        .workflow-table th { color: var(--muted); font-weight: 500; }
+        .workflow-table td:first-child {
+            font-family: monospace;
+            color: var(--accent);
+            font-weight: 600;
+        }
+        .step-num {
+            display: inline-block;
+            width: 28px;
+            height: 28px;
+            line-height: 28px;
+            text-align: center;
+            border-radius: 50%;
+            background: var(--surface2);
+            font-size: 0.8rem;
+            font-weight: 600;
+            margin-right: 8px;
+        }
+
+        /* Code blocks */
+        pre {
+            background: var(--code-bg);
+            border: 1px solid var(--border);
+            border-radius: 12px;
+            padding: 20px;
+            overflow-x: auto;
+            font-size: 0.85rem;
+            line-height: 1.6;
+            margin: 16px 0;
+        }
+        code {
+            font-family: 'SF Mono', 'Fira Code', monospace;
+        }
+        p code {
+            background: var(--code-bg);
+            padding: 2px 6px;
+            border-radius: 4px;
+            font-size: 0.85em;
+        }
+
+        /* API table */
+        .api-table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-top: 16px;
+            font-size: 0.85rem;
+        }
+        .api-table th, .api-table td {
+            text-align: left;
+            padding: 10px 12px;
+            border-bottom: 1px solid var(--border);
+        }
+        .api-table th { color: var(--muted); font-weight: 500; }
+        .method {
+            font-family: monospace;
+            font-weight: 600;
+            font-size: 0.8rem;
+            padding: 2px 8px;
+            border-radius: 4px;
+        }
+        .method-get { background: #064e3b; color: #6ee7b7; }
+        .method-post { background: #1e3a5f; color: #93c5fd; }
+
+        /* Env table */
+        .env-table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-top: 16px;
+            font-size: 0.85rem;
+        }
+        .env-table th, .env-table td {
+            text-align: left;
+            padding: 10px 12px;
+            border-bottom: 1px solid var(--border);
+        }
+        .env-table th { color: var(--muted); font-weight: 500; }
+        .env-table td:first-child { font-family: monospace; color: var(--accent2); }
+
+        /* Footer */
+        footer {
+            text-align: center;
+            padding: 40px 24px;
+            color: var(--muted);
+            font-size: 0.85rem;
+        }
+
+        @media (max-width: 640px) {
+            .hero h1 { font-size: 2.5rem; }
+            section { padding: 40px 0; }
+        }
+    </style>
+</head>
+<body>
+
+<!-- Hero -->
+<header class="hero">
+    <h1>LCBC <span>DOCK</span></h1>
+    <p class="tagline">AutoDock Vina, reimagined for the web.</p>
+    <div class="badges">
+        <a href="https://lcbcdock.com" class="btn-primary">Launch App</a>
+        <a href="https://github.com/johnseong/LCBC-Dock" class="btn-secondary">GitHub</a>
+    </div>
+</header>
+
+<!-- Navigation -->
+<nav>
+    <div class="container">
+        <a href="#features">Features</a>
+        <a href="#workflow">Workflow</a>
+        <a href="#quickstart">Quick Start</a>
+        <a href="#api">API Reference</a>
+        <a href="#configuration">Configuration</a>
+        <a href="#docker">Docker</a>
+        <a href="#architecture">Architecture</a>
+    </div>
+</nav>
+
+<div class="container">
+
+<!-- Features -->
+<section id="features">
+    <h2>Features</h2>
+    <div class="card-grid">
+        <div class="card">
+            <h4>Protein Search</h4>
+            <p>Search 200,000+ structures from RCSB Protein Data Bank with organism, resolution, and method metadata.</p>
+            <span class="tag">RCSB PDB</span>
+        </div>
+        <div class="card">
+            <h4>Ligand Search</h4>
+            <p>Search 100M+ compounds from PubChem by name, SMILES, or drug name. View 2D structures and properties.</p>
+            <span class="tag">PubChem</span>
+        </div>
+        <div class="card">
+            <h4>Protein Preparation</h4>
+            <p>Automatic removal of water molecules and heteroatoms. Protonation at pH 7.4 with partial charges.</p>
+            <span class="tag">Automated</span>
+        </div>
+        <div class="card">
+            <h4>AutoDock Vina</h4>
+            <p>Full docking engine with configurable grid box, exhaustiveness, energy range, and number of poses.</p>
+            <span class="tag">Vina 1.2.5</span>
+        </div>
+        <div class="card">
+            <h4>Job Queue</h4>
+            <p>Submit jobs and track progress in real time. Queue position, status updates, and completion notifications.</p>
+            <span class="tag">Background Worker</span>
+        </div>
+        <div class="card">
+            <h4>Email Notifications</h4>
+            <p>Receive styled HTML emails when docking completes or fails, with direct links to results.</p>
+            <span class="tag">SMTP</span>
+        </div>
+        <div class="card">
+            <h4>3D Viewer</h4>
+            <p>Interactive Mol* viewer for proteins, ligands, and docked poses with full rotation and zoom.</p>
+            <span class="tag">Mol*</span>
+        </div>
+        <div class="card">
+            <h4>Download Results</h4>
+            <p>Export docked poses in PDB or PDBQT format for use in PyMOL, Chimera, or other tools.</p>
+            <span class="tag">PDB / PDBQT</span>
+        </div>
+    </div>
+</section>
+
+<!-- Workflow -->
+<section id="workflow">
+    <h2>Docking Workflow</h2>
+    <p>LCBC Dock guides you through a 4-step molecular docking process:</p>
+    <table class="workflow-table">
+        <thead>
+            <tr><th>Step</th><th>Route</th><th>Description</th></tr>
+        </thead>
+        <tbody>
+            <tr>
+                <td><span class="step-num">1</span></td>
+                <td><code>/docking/protein</code></td>
+                <td>Search and select a protein from RCSB PDB. View it in 3D with Mol*.</td>
+            </tr>
+            <tr>
+                <td><span class="step-num">2</span></td>
+                <td><code>/docking/marinate</code></td>
+                <td>Prepare the protein — remove water molecules and heteroatoms, add charges.</td>
+            </tr>
+            <tr>
+                <td><span class="step-num">3</span></td>
+                <td><code>/docking/ligand</code></td>
+                <td>Search PubChem for a ligand. View molecular properties and 2D structure.</td>
+            </tr>
+            <tr>
+                <td><span class="step-num">4</span></td>
+                <td><code>/docking/cook</code></td>
+                <td>Configure docking parameters (grid box, exhaustiveness), add email, and submit.</td>
+            </tr>
+            <tr>
+                <td></td>
+                <td><code>/dashboard</code></td>
+                <td>Real-time job tracker. Auto-polls every 3 seconds for status updates.</td>
+            </tr>
+            <tr>
+                <td></td>
+                <td><code>/results/[jobId]</code></td>
+                <td>View docked pose in 3D, binding affinities table, download PDB/PDBQT.</td>
+            </tr>
+        </tbody>
+    </table>
+</section>
+
+<!-- Quick Start -->
+<section id="quickstart">
+    <h2>Quick Start</h2>
+
+    <h3>Prerequisites</h3>
+    <ul>
+        <li>Node.js 18+</li>
+        <li>Python 3.9+</li>
+        <li><a href="https://vina.scripps.edu/">AutoDock Vina</a> — <code>vina</code> binary in PATH</li>
+        <li><a href="https://openbabel.org/">Open Babel</a> — <code>obabel</code> binary in PATH</li>
+    </ul>
+
+    <h3>Installation</h3>
+<pre><code># Clone the repository
+git clone https://github.com/johnseong/LCBC-Dock.git
+cd LCBC-Dock
+
+# Install frontend dependencies
+npm install
+
+# Install backend dependencies
+pip3 install -r requirements.txt
+
+# Copy and configure environment variables
+cp .env.example .env</code></pre>
+
+    <h3>Development</h3>
+<pre><code># Start both frontend and backend concurrently
+npm run dev
+
+# Or run separately:
+npm run next-dev      # Frontend on :3000
+npm run fastapi-dev   # Backend on :8000</code></pre>
+
+    <p>Open <a href="http://localhost:3000">http://localhost:3000</a> to access the app.</p>
+</section>
+
+<!-- API Reference -->
+<section id="api">
+    <h2>API Reference</h2>
+    <p>The FastAPI backend exposes a RESTful API. Interactive docs are available at <code>/docs</code> when the backend is running.</p>
+
+    <h3>Protein Endpoints</h3>
+    <table class="api-table">
+        <thead><tr><th>Method</th><th>Endpoint</th><th>Description</th></tr></thead>
+        <tbody>
+            <tr>
+                <td><span class="method method-get">GET</span></td>
+                <td><code>/api/proteins/search?q={query}</code></td>
+                <td>Search RCSB PDB with detailed metadata</td>
+            </tr>
+            <tr>
+                <td><span class="method method-get">GET</span></td>
+                <td><code>/api/proteins/{pdb_id}</code></td>
+                <td>Get protein details (title, organism, resolution)</td>
+            </tr>
+            <tr>
+                <td><span class="method method-get">GET</span></td>
+                <td><code>/api/proteins/{pdb_id}/center</code></td>
+                <td>Compute geometric center for grid box</td>
+            </tr>
+        </tbody>
+    </table>
+
+    <h3>Ligand Endpoints</h3>
+    <table class="api-table">
+        <thead><tr><th>Method</th><th>Endpoint</th><th>Description</th></tr></thead>
+        <tbody>
+            <tr>
+                <td><span class="method method-get">GET</span></td>
+                <td><code>/api/ligands/search?q={query}</code></td>
+                <td>Search PubChem by name or SMILES</td>
+            </tr>
+            <tr>
+                <td><span class="method method-get">GET</span></td>
+                <td><code>/api/ligands/{cid}</code></td>
+                <td>Get ligand details, synonyms, image URL</td>
+            </tr>
+            <tr>
+                <td><span class="method method-get">GET</span></td>
+                <td><code>/api/ligands/{cid}/sdf</code></td>
+                <td>Download 3D SDF structure</td>
+            </tr>
+        </tbody>
+    </table>
+
+    <h3>Docking Endpoints</h3>
+    <table class="api-table">
+        <thead><tr><th>Method</th><th>Endpoint</th><th>Description</th></tr></thead>
+        <tbody>
+            <tr>
+                <td><span class="method method-post">POST</span></td>
+                <td><code>/api/dock</code></td>
+                <td>Submit a docking job</td>
+            </tr>
+            <tr>
+                <td><span class="method method-get">GET</span></td>
+                <td><code>/api/jobs/{job_id}</code></td>
+                <td>Get job status and queue position</td>
+            </tr>
+            <tr>
+                <td><span class="method method-get">GET</span></td>
+                <td><code>/api/results/{job_id}</code></td>
+                <td>Get full results with poses and affinities</td>
+            </tr>
+            <tr>
+                <td><span class="method method-get">GET</span></td>
+                <td><code>/api/results/{job_id}/download/pdb</code></td>
+                <td>Download docked output as PDB</td>
+            </tr>
+            <tr>
+                <td><span class="method method-get">GET</span></td>
+                <td><code>/api/results/{job_id}/download/pdbqt</code></td>
+                <td>Download docked output as PDBQT</td>
+            </tr>
+        </tbody>
+    </table>
+
+    <h3>POST /api/dock — Request Body</h3>
+<pre><code>{
+  "protein_pdb_id": "4HG7",
+  "ligand_cid": 11314340,
+  "ligand_name": "Nutlin-3a",
+  "center_x": 0.0,        // auto-computed if all zeros
+  "center_y": 0.0,
+  "center_z": 0.0,
+  "size_x": 20.0,         // grid box size in Angstroms
+  "size_y": 20.0,
+  "size_z": 20.0,
+  "exhaustiveness": 8,     // 1-32, higher = more thorough
+  "num_modes": 9,          // number of poses to generate
+  "energy_range": 3.0,     // kcal/mol
+  "email": "user@example.com"  // optional
+}</code></pre>
+</section>
+
+<!-- Configuration -->
+<section id="configuration">
+    <h2>Configuration</h2>
+    <p>All configuration is through environment variables. Copy <code>.env.example</code> to <code>.env</code> and update:</p>
+    <table class="env-table">
+        <thead><tr><th>Variable</th><th>Description</th><th>Default</th></tr></thead>
+        <tbody>
+            <tr><td>SMTP_HOST</td><td>SMTP server hostname</td><td>smtp.gmail.com</td></tr>
+            <tr><td>SMTP_PORT</td><td>SMTP server port</td><td>587</td></tr>
+            <tr><td>SMTP_USER</td><td>SMTP username / email</td><td>—</td></tr>
+            <tr><td>SMTP_PASS</td><td>SMTP password or app password</td><td>—</td></tr>
+            <tr><td>FROM_EMAIL</td><td>Sender address for notifications</td><td>noreply@lcbcdock.com</td></tr>
+            <tr><td>BASE_URL</td><td>Public URL (for email links)</td><td>https://lcbcdock.com</td></tr>
+            <tr><td>LCBC_DB_PATH</td><td>SQLite database file path</td><td>lcbc_dock.db</td></tr>
+            <tr><td>VINA_PATH</td><td>AutoDock Vina executable path</td><td>vina</td></tr>
+        </tbody>
+    </table>
+
+    <h3>Gmail Setup</h3>
+    <p>To use Gmail for notifications:</p>
+    <ol>
+        <li>Enable 2-Factor Authentication on your Google account</li>
+        <li>Generate an <a href="https://myaccount.google.com/apppasswords">App Password</a></li>
+        <li>Set <code>SMTP_USER</code> to your Gmail address and <code>SMTP_PASS</code> to the app password</li>
+    </ol>
+</section>
+
+<!-- Docker -->
+<section id="docker">
+    <h2>Docker Deployment</h2>
+    <p>The backend Docker image includes AutoDock Vina 1.2.5 and Open Babel pre-installed.</p>
+
+    <h3>Backend</h3>
+<pre><code>docker build -f Dockerfile.backend -t lcbc-dock-api .
+
+docker run -p 8000:8000 \
+  -e SMTP_USER=your@email.com \
+  -e SMTP_PASS=your-app-password \
+  -e BASE_URL=https://lcbcdock.com \
+  -v lcbc-data:/app/data \
+  lcbc-dock-api</code></pre>
+    <p>The <code>-v lcbc-data:/app/data</code> flag persists the SQLite database across container restarts.</p>
+
+    <h3>Frontend</h3>
+<pre><code>docker build -f Dockerfile.frontend -t lcbc-dock-web .
+docker run -p 3000:3000 lcbc-dock-web</code></pre>
+</section>
+
+<!-- Architecture -->
+<section id="architecture">
+    <h2>Architecture</h2>
+    <div class="card-grid">
+        <div class="card">
+            <h4>Frontend</h4>
+            <p>Next.js 13 with App Router, React, TypeScript, Tailwind CSS, Mol* (3D molecular viewer), Material UI icons.</p>
+        </div>
+        <div class="card">
+            <h4>Backend</h4>
+            <p>FastAPI (Python) with async endpoints. Background docking worker thread processes jobs from SQLite queue.</p>
+        </div>
+        <div class="card">
+            <h4>Docking Engine</h4>
+            <p>AutoDock Vina 1.2.5 for molecular docking. Open Babel for file format conversions (PDB, PDBQT, SDF).</p>
+        </div>
+        <div class="card">
+            <h4>Data Sources</h4>
+            <p>RCSB PDB for protein structures. PubChem for small molecule / ligand data and 3D conformers.</p>
+        </div>
+    </div>
+
+    <h3>Docking Pipeline</h3>
+    <p>When a job is submitted, the background worker:</p>
+    <ol>
+        <li>Downloads the protein PDB from RCSB</li>
+        <li>Cleans the protein (removes water, heteroatoms)</li>
+        <li>Auto-computes grid center if not specified</li>
+        <li>Converts protein to PDBQT format (via Open Babel)</li>
+        <li>Downloads the ligand 3D SDF from PubChem</li>
+        <li>Converts ligand to PDBQT format</li>
+        <li>Runs AutoDock Vina with user-specified parameters</li>
+        <li>Parses output poses and binding affinities</li>
+        <li>Converts docked output to PDB for viewer</li>
+        <li>Stores results in database and sends email notification</li>
+    </ol>
+</section>
+
+</div>
+
+<footer>
+    <p>LCBC Dock &mdash; Developed and designed by <strong>John Seong</strong> in collaboration with Seoul National University.</p>
+    <p style="margin-top: 8px;">Licensed under MIT &mdash; <a href="https://github.com/johnseong/LCBC-Dock">View on GitHub</a></p>
+</footer>
+
+</body>
+</html>
