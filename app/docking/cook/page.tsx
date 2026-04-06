@@ -7,7 +7,7 @@ import axios from "axios";
 const API_BASE =
   process.env.NODE_ENV === "development"
     ? "http://localhost:8000"
-    : "https://lcbc-helper.apps.johnseong.com";
+    : "https://lcbc-server.apps.johnseong.com";
 
 const Cook: FC = () => {
   const searchParams = useSearchParams();
