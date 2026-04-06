@@ -1,10 +1,12 @@
 # LCBC Dock
 
-> AutoDock Vina, reimagined for the web.
+> AutoDock Vina, reimagined for the web and mobile.
 
-**LCBC Dock** is an online molecular docking platform that brings the power of [AutoDock Vina](https://vina.scripps.edu/) to your browser. Search proteins and ligands from public databases, configure docking parameters, submit jobs to a processing queue, and visualize docked poses — all without installing anything locally.
+**LCBC Dock** is an online molecular docking platform that brings the power of [AutoDock Vina](https://vina.scripps.edu/) to your browser and your phone. Search proteins and ligands from public databases, configure docking parameters, submit jobs to a processing queue, and visualize docked poses — all without installing anything locally.
 
 ### [https://lcbc-client.apps.johnseong.com](https://lcbc-client.apps.johnseong.com) &nbsp;|&nbsp; [Documentation](https://johnseong.github.io/LCBC-Dock/)
+
+Available as a **web app** (Next.js) and a **mobile app** (Expo React Native for iOS & Android).
 
 Developed by **John Seong** in collaboration with [Seoul National University](https://en.snu.ac.kr).
 
@@ -18,8 +20,35 @@ Developed by **John Seong** in collaboration with [Seoul National University](ht
 - **Docking Engine** — AutoDock Vina with configurable exhaustiveness and auto-computed grid center
 - **Job Queue** — Submit docking jobs and track progress in real time (queued → preparing → docking → completed)
 - **Email Notifications** — Get notified when your docking job completes or fails
+- **Examples Gallery** — 16 curated famous dockings (Imatinib, Aspirin, Caffeine, Remdesivir, etc.) with search and category filters — tap to start docking instantly
 - **3D Viewer** — RCSB 3D viewer for proteins, interactive Mol\* viewer for docked poses
 - **Download Results** — Export docked poses in PDB or PDBQT format
+- **Mobile App** — Native iOS & Android app built with Expo React Native, same features as the web app
+
+## Examples Gallery
+
+LCBC Dock includes **16 curated famous protein-ligand dockings** with searchable categories. Tap any example to skip straight to docking with pre-filled protein and ligand.
+
+| Ligand | Protein | Category | Description |
+|--------|---------|----------|-------------|
+| Imatinib | BCR-ABL Kinase (1IEP) | Cancer | First targeted tyrosine kinase inhibitor for CML |
+| Nutlin-3a | MDM2 (4HG7) | Cancer | Reactivates p53 tumor suppressor |
+| Aspirin | COX-2 (5IKR) | Pain & Inflammation | World's most widely used drug |
+| Caffeine | Adenosine A2A (3RFM) | Neuroscience | Blocks adenosine receptors |
+| Sildenafil | PDE5 (1UDT) | Cardiovascular | Famous repurposed drug |
+| Oseltamivir | Neuraminidase (2HT8) | Antiviral | Tamiflu — frontline influenza antiviral |
+| Remdesivir | RdRp (7BV2) | Antiviral | COVID-19 RNA replication terminator |
+| Lopinavir | HIV-1 Protease (1MUI) | Antiviral | HIV protease inhibitor |
+| Paclitaxel | Tubulin (1JFF) | Cancer | Taxol — stabilizes microtubules |
+| Metformin | AMPK (4CFF) | Metabolic | Most prescribed diabetes drug |
+| Tamoxifen | Estrogen Receptor α (3ERT) | Cancer | Breast cancer SERM |
+| Donepezil | Acetylcholinesterase (2RG6) | Neuroscience | First-line Alzheimer's treatment |
+| Erlotinib | EGFR Kinase (3NYA) | Cancer | Lung cancer EGFR inhibitor |
+| Atorvastatin | HMG-CoA Reductase (3OGP) | Cardiovascular | Lipitor — best-selling drug in history |
+| Methotrexate | DHFR (2ITO) | Cancer | Antimetabolite chemotherapy |
+| Penicillin G | PBP (1PWC) | Antibiotic | Started the antibiotic revolution |
+
+Categories: **Cancer**, **Antiviral**, **Neuroscience**, **Cardiovascular**, **Pain & Inflammation**, **Metabolic**, **Antibiotic**
 
 ## Architecture
 
@@ -33,6 +62,7 @@ Developed by **John Seong** in collaboration with [Seoul National University](ht
                     │  (server-side proxies, no CORS)       │
                     │                                       │
                     │  /docking/*   → protein/ligand flow   │
+                    │  /examples    → curated docking gallery│
                     │  /dashboard   → job tracking           │
                     │  /results/*   → 3D viewer + download  │
                     └──────────────┬───────────────────────┘
@@ -53,6 +83,19 @@ Developed by **John Seong** in collaboration with [Seoul National University](ht
                     │  SQLite (/app/data/lcbc_dock.db)      │
                     │  SMTP email notifications              │
                     └──────────────────────────────────────┘
+
+                    ┌──────────────────────────────────────┐
+                    │     Mobile App (Expo React Native)    │
+                    │         iOS & Android                 │
+                    │                                       │
+                    │  Same 4-step docking workflow          │
+                    │  Examples gallery with search          │
+                    │  WebView for 3D protein visualization │
+                    │  Direct API calls (no CORS proxy)     │
+                    │                                       │
+                    │  Calls backend directly ───────────►  │
+                    │  Calls RCSB/PubChem directly          │
+                    └──────────────────────────────────────┘
 ```
 
 ## Docking Workflow
@@ -64,6 +107,7 @@ Developed by **John Seong** in collaboration with [Seoul National University](ht
 | 3 | `/docking/ligand` | Search and select a ligand from PubChem |
 | 4 | `/docking/cook` | Configure exhaustiveness, add email, and submit |
 | — | `/dashboard` | Track job status in real time (polls every 3s) |
+| — | `/examples` | Browse 16 curated famous dockings with search and category filters |
 | — | `/results/[jobId]` | View 3D docked pose, binding affinities, download files |
 
 ## Project Structure
@@ -79,12 +123,31 @@ LCBC-Dock/
 │   │   ├── marinate/page.tsx     # Step 2: Protein preparation
 │   │   ├── ligand/page.tsx       # Step 3: Ligand search
 │   │   └── cook/page.tsx         # Step 4: Docking config + submit
+│   ├── examples/page.tsx         # Curated examples gallery
 │   ├── dashboard/page.tsx        # Job tracking
 │   ├── results/[jobId]/page.tsx  # Results viewer
 │   ├── about/page.tsx
 │   ├── layout.tsx
 │   ├── page.tsx                  # Homepage
 │   └── globals.css
+├── mobile/                       # Expo React Native app (iOS & Android)
+│   ├── app/
+│   │   ├── _layout.tsx           # Stack navigator, dark theme
+│   │   ├── index.tsx             # Home screen
+│   │   ├── examples.tsx          # Examples gallery with search
+│   │   ├── dashboard.tsx         # Job tracking
+│   │   ├── about.tsx             # About screen
+│   │   ├── docking/
+│   │   │   ├── protein.tsx       # Step 1: RCSB search + 3D WebView
+│   │   │   ├── marinate.tsx      # Step 2: PDB analysis
+│   │   │   ├── ligand.tsx        # Step 3: PubChem search
+│   │   │   └── cook.tsx          # Step 4: Configure & submit
+│   │   └── results/
+│   │       └── [jobId].tsx       # Results + downloads
+│   ├── components/               # Shared UI components
+│   ├── lib/api.ts                # Direct API calls (no CORS proxy)
+│   ├── assets/                   # App icons & splash screen
+│   └── app.json                  # Expo config (iOS + Android)
 ├── api/                          # FastAPI backend
 │   ├── index.py                  # Main API (endpoints)
 │   ├── docking.py                # Vina docking engine
@@ -221,6 +284,61 @@ echo '{"schemaVersion":2,"dockerfilePath":"./Dockerfile.frontend"}' > captain-de
 
 ---
 
+## Mobile App (iOS & Android)
+
+LCBC Dock includes a standalone **Expo React Native** mobile app in the `mobile/` directory.
+
+### Key Differences from Web
+
+- **No CORS proxy needed** — mobile apps call RCSB and PubChem APIs directly
+- **WebView** for 3D protein visualization (replaces iframes)
+- **expo-web-browser** for file downloads (PDB/PDBQT)
+- **Expo Router** for file-based navigation (like Next.js App Router)
+- Uses the **same CapRover backend** — no backend changes required
+
+### Running Locally
+
+```bash
+cd mobile
+npm install
+npx expo start
+```
+
+Scan the QR code with **Expo Go** on your phone, or press `i` for iOS simulator / `a` for Android emulator.
+
+### Building for App Store / Play Store
+
+```bash
+# Install EAS CLI
+npm install -g eas-cli
+
+# Configure (first time only)
+eas build:configure
+
+# Build for both platforms
+eas build --platform all
+
+# Submit to stores
+eas submit --platform ios
+eas submit --platform android
+```
+
+Requires an [Apple Developer account](https://developer.apple.com/) ($99/yr) for iOS and a [Google Play Console](https://play.google.com/console/) ($25 one-time) for Android.
+
+### Mobile App Config
+
+The app is configured in `mobile/app.json`:
+
+| Field | Value |
+|-------|-------|
+| Bundle ID (iOS) | `com.johnseong.lcbcdock` |
+| Package (Android) | `com.johnseong.lcbcdock` |
+| Backend URL | `https://lcbc-server.apps.johnseong.com` |
+| Theme | Dark mode only |
+| Orientation | Portrait |
+
+---
+
 ## Local Development
 
 ### Prerequisites
@@ -327,12 +445,13 @@ Frontend proxy routes (same-origin, no CORS):
 
 ## Tech Stack
 
-- **Frontend**: Next.js 13 (App Router), React 18, TypeScript, Tailwind CSS
+- **Web Frontend**: Next.js 13 (App Router), React 18, TypeScript, Tailwind CSS
+- **Mobile App**: Expo SDK 52, React Native, Expo Router, WebView
 - **Backend**: FastAPI, Python 3.11, AutoDock Vina 1.2.5, Open Babel, SQLite
 - **Data Sources**: RCSB Protein Data Bank, PubChem
-- **Search Proxies**: Next.js API Routes (server-side, avoids CORS)
+- **Search Proxies**: Next.js API Routes (server-side, avoids CORS); mobile calls APIs directly
 - **Notifications**: SMTP email (Gmail compatible)
-- **Deployment**: CapRover (Docker-based PaaS)
+- **Deployment**: CapRover (Docker-based PaaS) for web; EAS Build for mobile
 
 ## License
 

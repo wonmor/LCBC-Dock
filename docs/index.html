@@ -236,18 +236,21 @@
 <!-- Hero -->
 <header class="hero">
     <h1>LCBC <span>DOCK</span></h1>
-    <p class="tagline">AutoDock Vina, reimagined for the web.</p>
+    <p class="tagline">AutoDock Vina, reimagined for the web and mobile.</p>
     <div class="badges">
-        <a href="https://lcbc-client.apps.johnseong.com" class="btn-primary">Launch App</a>
+        <a href="https://lcbc-client.apps.johnseong.com" class="btn-primary">Launch Web App</a>
         <a href="https://github.com/johnseong/LCBC-Dock" class="btn-secondary">GitHub</a>
     </div>
+    <p style="margin-top: 16px; font-size: 0.85rem; color: var(--muted);">Also available as a native iOS &amp; Android app built with Expo React Native.</p>
 </header>
 
 <!-- Navigation -->
 <nav>
     <div class="container">
         <a href="#features">Features</a>
+        <a href="#examples">Examples</a>
         <a href="#workflow">Workflow</a>
+        <a href="#mobile">Mobile App</a>
         <a href="#quickstart">Quick Start</a>
         <a href="#api">API Reference</a>
         <a href="#configuration">Configuration</a>
@@ -302,7 +305,47 @@
             <p>Export docked poses in PDB or PDBQT format for use in PyMOL, Chimera, or other tools.</p>
             <span class="tag">PDB / PDBQT</span>
         </div>
+        <div class="card">
+            <h4>Examples Gallery</h4>
+            <p>16 curated famous dockings with search and category filters. Tap to start docking instantly.</p>
+            <span class="tag">Imatinib, Aspirin, Caffeine &hellip;</span>
+        </div>
+        <div class="card">
+            <h4>Mobile App</h4>
+            <p>Native iOS &amp; Android app built with Expo React Native. Same features, same backend.</p>
+            <span class="tag">Expo SDK 52</span>
+        </div>
     </div>
+</section>
+
+<!-- Examples Gallery -->
+<section id="examples">
+    <h2>Examples Gallery</h2>
+    <p>LCBC Dock includes 16 curated famous protein-ligand dockings across 7 categories. Search, filter, and tap any example to skip straight to docking with pre-filled protein and ligand.</p>
+
+    <table class="api-table" style="margin-top: 24px;">
+        <thead><tr><th>Ligand</th><th>Protein</th><th>Category</th><th>Description</th></tr></thead>
+        <tbody>
+            <tr><td>Imatinib</td><td>BCR-ABL Kinase (1IEP)</td><td>Cancer</td><td>First targeted tyrosine kinase inhibitor for CML</td></tr>
+            <tr><td>Nutlin-3a</td><td>MDM2 (4HG7)</td><td>Cancer</td><td>Reactivates p53 tumor suppressor</td></tr>
+            <tr><td>Aspirin</td><td>COX-2 (5IKR)</td><td>Pain</td><td>World's most widely used drug</td></tr>
+            <tr><td>Caffeine</td><td>A2A Receptor (3RFM)</td><td>Neuroscience</td><td>Blocks adenosine receptors</td></tr>
+            <tr><td>Sildenafil</td><td>PDE5 (1UDT)</td><td>Cardiovascular</td><td>Famous repurposed drug</td></tr>
+            <tr><td>Oseltamivir</td><td>Neuraminidase (2HT8)</td><td>Antiviral</td><td>Tamiflu &mdash; influenza antiviral</td></tr>
+            <tr><td>Remdesivir</td><td>RdRp (7BV2)</td><td>Antiviral</td><td>COVID-19 RNA replication terminator</td></tr>
+            <tr><td>Lopinavir</td><td>HIV-1 Protease (1MUI)</td><td>Antiviral</td><td>HIV protease inhibitor</td></tr>
+            <tr><td>Paclitaxel</td><td>Tubulin (1JFF)</td><td>Cancer</td><td>Taxol &mdash; stabilizes microtubules</td></tr>
+            <tr><td>Metformin</td><td>AMPK (4CFF)</td><td>Metabolic</td><td>Most prescribed diabetes drug</td></tr>
+            <tr><td>Tamoxifen</td><td>ER&alpha; (3ERT)</td><td>Cancer</td><td>Breast cancer SERM</td></tr>
+            <tr><td>Donepezil</td><td>AChE (2RG6)</td><td>Neuroscience</td><td>First-line Alzheimer's treatment</td></tr>
+            <tr><td>Erlotinib</td><td>EGFR Kinase (3NYA)</td><td>Cancer</td><td>Lung cancer EGFR inhibitor</td></tr>
+            <tr><td>Atorvastatin</td><td>HMG-CoA (3OGP)</td><td>Cardiovascular</td><td>Lipitor &mdash; best-selling drug in history</td></tr>
+            <tr><td>Methotrexate</td><td>DHFR (2ITO)</td><td>Cancer</td><td>Antimetabolite chemotherapy</td></tr>
+            <tr><td>Penicillin G</td><td>PBP (1PWC)</td><td>Antibiotic</td><td>Started the antibiotic revolution</td></tr>
+        </tbody>
+    </table>
+
+    <p style="margin-top: 16px;">Categories: <strong>Cancer</strong>, <strong>Antiviral</strong>, <strong>Neuroscience</strong>, <strong>Cardiovascular</strong>, <strong>Pain &amp; Inflammation</strong>, <strong>Metabolic</strong>, <strong>Antibiotic</strong></p>
 </section>
 
 <!-- Workflow -->
@@ -336,6 +379,11 @@
             </tr>
             <tr>
                 <td></td>
+                <td><code>/examples</code></td>
+                <td>Browse 16 curated famous dockings with search and category filters.</td>
+            </tr>
+            <tr>
+                <td></td>
                 <td><code>/dashboard</code></td>
                 <td>Real-time job tracker. Auto-polls every 3 seconds for status updates.</td>
             </tr>
@@ -344,6 +392,63 @@
                 <td><code>/results/[jobId]</code></td>
                 <td>View docked pose in 3D, binding affinities table, download PDB/PDBQT.</td>
             </tr>
+        </tbody>
+    </table>
+</section>
+
+<!-- Mobile App -->
+<section id="mobile">
+    <h2>Mobile App (iOS &amp; Android)</h2>
+    <p>LCBC Dock includes a standalone <strong>Expo React Native</strong> mobile app in the <code>mobile/</code> directory. It provides the same 4-step docking workflow, examples gallery, and results viewer — optimized for touch.</p>
+
+    <div class="card-grid">
+        <div class="card">
+            <h4>No CORS Proxy</h4>
+            <p>Mobile apps call RCSB and PubChem APIs directly — no server-side proxy needed.</p>
+        </div>
+        <div class="card">
+            <h4>Same Backend</h4>
+            <p>Uses the same CapRover backend at <code>lcbc-server.apps.johnseong.com</code>. No changes required.</p>
+        </div>
+        <div class="card">
+            <h4>3D WebView</h4>
+            <p>Protein structures rendered in native WebView components via RCSB 3D viewer.</p>
+        </div>
+        <div class="card">
+            <h4>Expo Router</h4>
+            <p>File-based navigation matching the web app's route structure.</p>
+        </div>
+    </div>
+
+    <h3>Running Locally</h3>
+<pre><code>cd mobile
+npm install
+npx expo start</code></pre>
+    <p>Scan the QR code with <strong>Expo Go</strong> on your phone, or press <code>i</code> for iOS simulator / <code>a</code> for Android emulator.</p>
+
+    <h3>Building for App Store / Play Store</h3>
+<pre><code># Install EAS CLI
+npm install -g eas-cli
+
+# Configure (first time only)
+eas build:configure
+
+# Build for both platforms
+eas build --platform all
+
+# Submit to stores
+eas submit --platform ios
+eas submit --platform android</code></pre>
+
+    <h3>App Configuration</h3>
+    <table class="env-table">
+        <thead><tr><th>Field</th><th>Value</th></tr></thead>
+        <tbody>
+            <tr><td>Bundle ID (iOS)</td><td>com.johnseong.lcbcdock</td></tr>
+            <tr><td>Package (Android)</td><td>com.johnseong.lcbcdock</td></tr>
+            <tr><td>Backend URL</td><td>https://lcbc-server.apps.johnseong.com</td></tr>
+            <tr><td>Theme</td><td>Dark mode only</td></tr>
+            <tr><td>Orientation</td><td>Portrait</td></tr>
         </tbody>
     </table>
 </section>
@@ -537,8 +642,12 @@ docker run -p 3000:3000 lcbc-dock-web</code></pre>
     <h2>Architecture</h2>
     <div class="card-grid">
         <div class="card">
-            <h4>Frontend</h4>
+            <h4>Web Frontend</h4>
             <p>Next.js 13 with App Router, React, TypeScript, Tailwind CSS, Mol* (3D molecular viewer), Material UI icons.</p>
+        </div>
+        <div class="card">
+            <h4>Mobile App</h4>
+            <p>Expo SDK 52, React Native, Expo Router, WebView for 3D viz. Direct API calls (no CORS proxy).</p>
         </div>
         <div class="card">
             <h4>Backend</h4>
@@ -551,6 +660,10 @@ docker run -p 3000:3000 lcbc-dock-web</code></pre>
         <div class="card">
             <h4>Data Sources</h4>
             <p>RCSB PDB for protein structures. PubChem for small molecule / ligand data and 3D conformers.</p>
+        </div>
+        <div class="card">
+            <h4>Deployment</h4>
+            <p>CapRover (Docker PaaS) for web frontend + backend. EAS Build for iOS and Android app store releases.</p>
         </div>
     </div>
 
