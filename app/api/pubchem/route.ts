@@ -1,33 +1,34 @@
 import { NextRequest, NextResponse } from "next/server";
 
 const HEADERS = {
-  "User-Agent": "LCBCDock/2.0 (https://lcbc-client.apps.johnseong.com; mailto:wonmos@uci.edu)",
+  "User-Agent": "LCBCDock/2.0 (https://lcbc-client.apps.johnseong.com)",
   Accept: "application/json",
 };
+
+const PROPS = "MolecularFormula,MolecularWeight,IsomericSMILES";
 
 export async function GET(req: NextRequest) {
   const q = req.nextUrl.searchParams.get("q") ?? "";
   const debug = req.nextUrl.searchParams.get("debug") === "1";
-
-  if (q.length < 2) {
-    return NextResponse.json([]);
-  }
-
   const logs: string[] = [];
 
-  // 1) Try exact name lookup — works for "aspirin", "caffeine", "nutlin-3a", PDB IDs
+  if (q.length < 2) {
+    return NextResponse.json(debug ? { results: [], logs: ["query too short"] } : []);
+  }
+
+  // 1) Try exact name lookup
   const direct = await searchByName(q, logs);
   if (direct.length > 0) {
     return NextResponse.json(debug ? { results: direct, logs } : direct);
   }
 
-  // 2) Try autocomplete for partial names — "asp" → aspirin, aspartame...
+  // 2) Try autocomplete → then fetch each match
   const ac = await searchByAutocomplete(q, logs);
   if (ac.length > 0) {
     return NextResponse.json(debug ? { results: ac, logs } : ac);
   }
 
-  // 3) Try CID lookup — if user entered a number
+  // 3) Try CID if user entered a number
   if (/^\d+$/.test(q.trim())) {
     const cid = await searchByCID(parseInt(q.trim()), logs);
     if (cid.length > 0) {
@@ -39,7 +40,7 @@ export async function GET(req: NextRequest) {
 }
 
 async function searchByName(q: string, logs: string[]) {
-  const url = `https://pubchem.ncbi.nlm.nih.gov/rest/pug/compound/name/${encodeURIComponent(q)}/property/MolecularFormula,MolecularWeight,CanonicalSMILES,IUPACName,CID/JSON`;
+  const url = `https://pubchem.ncbi.nlm.nih.gov/rest/pug/compound/name/${encodeURIComponent(q)}/property/${PROPS}/JSON`;
   logs.push(`[name] GET ${url}`);
 
   try {
@@ -52,28 +53,26 @@ async function searchByName(q: string, logs: string[]) {
     logs.push(`[name] status=${resp.status}`);
     if (!resp.ok) return [];
 
-    const text = await resp.text();
-    logs.push(`[name] body length=${text.length}`);
-
-    const data = JSON.parse(text);
+    const data = await resp.json();
     const props = data?.PropertyTable?.Properties ?? [];
+    logs.push(`[name] found ${props.length} results`);
 
     return props.slice(0, 8).map((p: any) => ({
       cid: p.CID,
-      name: p.IUPACName || q,
+      name: q,
       formula: p.MolecularFormula || "",
-      weight: p.MolecularWeight || 0,
-      smiles: p.CanonicalSMILES || "",
+      weight: parseFloat(p.MolecularWeight) || 0,
+      smiles: p.IsomericSMILES || p.SMILES || p.ConnectivitySMILES || "",
     }));
   } catch (e: any) {
-    logs.push(`[name] error: ${e.message || e}`);
+    logs.push(`[name] error: ${e.message}`);
     return [];
   }
 }
 
 async function searchByAutocomplete(q: string, logs: string[]) {
   const url = `https://pubchem.ncbi.nlm.nih.gov/rest/autocomplete/compound/${encodeURIComponent(q)}/json?limit=8`;
-  logs.push(`[autocomplete] GET ${url}`);
+  logs.push(`[ac] GET ${url}`);
 
   try {
     const resp = await fetch(url, {
@@ -82,30 +81,27 @@ async function searchByAutocomplete(q: string, logs: string[]) {
       cache: "no-store",
     });
 
-    logs.push(`[autocomplete] status=${resp.status}`);
+    logs.push(`[ac] status=${resp.status}`);
     if (!resp.ok) return [];
 
-    const text = await resp.text();
-    logs.push(`[autocomplete] body length=${text.length}`);
-
-    const data = JSON.parse(text);
+    const data = await resp.json();
     const names: string[] = data?.dictionary_terms?.compound ?? [];
-    logs.push(`[autocomplete] found ${names.length} suggestions: ${names.slice(0, 3).join(", ")}`);
+    logs.push(`[ac] suggestions: ${names.join(", ")}`);
 
     if (names.length === 0) return [];
 
-    // Fetch properties for each name in parallel
+    // Fetch properties for each suggestion in parallel
     const results = await Promise.all(
       names.slice(0, 6).map(async (name) => {
+        const propUrl = `https://pubchem.ncbi.nlm.nih.gov/rest/pug/compound/name/${encodeURIComponent(name)}/property/${PROPS}/JSON`;
         try {
-          const propUrl = `https://pubchem.ncbi.nlm.nih.gov/rest/pug/compound/name/${encodeURIComponent(name)}/property/MolecularFormula,MolecularWeight,CanonicalSMILES,CID/JSON`;
           const r = await fetch(propUrl, {
             headers: HEADERS,
             signal: AbortSignal.timeout(8000),
             cache: "no-store",
           });
           if (!r.ok) {
-            logs.push(`[autocomplete→prop] ${name} status=${r.status}`);
+            logs.push(`[ac→prop] ${name} status=${r.status}`);
             return null;
           }
           const d = await r.json();
@@ -115,8 +111,8 @@ async function searchByAutocomplete(q: string, logs: string[]) {
             cid: p.CID,
             name,
             formula: p.MolecularFormula || "",
-            weight: p.MolecularWeight || 0,
-            smiles: p.CanonicalSMILES || "",
+            weight: parseFloat(p.MolecularWeight) || 0,
+            smiles: p.IsomericSMILES || p.SMILES || p.ConnectivitySMILES || "",
           };
         } catch {
           return null;
@@ -124,15 +120,17 @@ async function searchByAutocomplete(q: string, logs: string[]) {
       })
     );
 
-    return results.filter(Boolean);
+    const filtered = results.filter(Boolean);
+    logs.push(`[ac] resolved ${filtered.length}/${names.length} suggestions`);
+    return filtered;
   } catch (e: any) {
-    logs.push(`[autocomplete] error: ${e.message || e}`);
+    logs.push(`[ac] error: ${e.message}`);
     return [];
   }
 }
 
 async function searchByCID(cid: number, logs: string[]) {
-  const url = `https://pubchem.ncbi.nlm.nih.gov/rest/pug/compound/cid/${cid}/property/MolecularFormula,MolecularWeight,CanonicalSMILES,IUPACName,CID/JSON`;
+  const url = `https://pubchem.ncbi.nlm.nih.gov/rest/pug/compound/cid/${cid}/property/${PROPS}/JSON`;
   logs.push(`[cid] GET ${url}`);
 
   try {
@@ -151,13 +149,13 @@ async function searchByCID(cid: number, logs: string[]) {
 
     return [{
       cid: p.CID,
-      name: p.IUPACName || `CID ${cid}`,
+      name: `CID ${cid}`,
       formula: p.MolecularFormula || "",
-      weight: p.MolecularWeight || 0,
-      smiles: p.CanonicalSMILES || "",
+      weight: parseFloat(p.MolecularWeight) || 0,
+      smiles: p.IsomericSMILES || p.SMILES || p.ConnectivitySMILES || "",
     }];
   } catch (e: any) {
-    logs.push(`[cid] error: ${e.message || e}`);
+    logs.push(`[cid] error: ${e.message}`);
     return [];
   }
 }

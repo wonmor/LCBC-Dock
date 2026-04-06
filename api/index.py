@@ -154,7 +154,7 @@ async def search_ligands(q: str = Query(..., min_length=1)):
     try:
         async with httpx.AsyncClient(timeout=15) as client:
             # Search by name
-            url = f"https://pubchem.ncbi.nlm.nih.gov/rest/pug/compound/name/{q}/property/MolecularFormula,MolecularWeight,IUPACName,CanonicalSMILES,CID/JSON"
+            url = f"https://pubchem.ncbi.nlm.nih.gov/rest/pug/compound/name/{q}/property/MolecularFormula,MolecularWeight,IsomericSMILES,CID/JSON"
             resp = await client.get(url)
 
             if resp.status_code == 200:
@@ -167,8 +167,8 @@ async def search_ligands(q: str = Query(..., min_length=1)):
                         "name": q,
                         "molecular_formula": p.get("MolecularFormula", ""),
                         "molecular_weight": p.get("MolecularWeight", 0),
-                        "iupac_name": p.get("IUPACName", ""),
-                        "canonical_smiles": p.get("CanonicalSMILES", ""),
+                        "iupac_name": "",
+                        "canonical_smiles": p.get("IsomericSMILES", p.get("SMILES", "")),
                     })
                 return results
 
@@ -196,7 +196,7 @@ async def get_ligand_detail(cid: int):
     """Get detailed information for a ligand by PubChem CID."""
     try:
         async with httpx.AsyncClient(timeout=15) as client:
-            url = f"https://pubchem.ncbi.nlm.nih.gov/rest/pug/compound/cid/{cid}/property/MolecularFormula,MolecularWeight,IUPACName,CanonicalSMILES/JSON"
+            url = f"https://pubchem.ncbi.nlm.nih.gov/rest/pug/compound/cid/{cid}/property/MolecularFormula,MolecularWeight,IsomericSMILES/JSON"
             resp = await client.get(url)
             resp.raise_for_status()
             data = resp.json()
@@ -219,8 +219,8 @@ async def get_ligand_detail(cid: int):
             "name": synonyms[0] if synonyms else f"CID {cid}",
             "molecular_formula": props.get("MolecularFormula", ""),
             "molecular_weight": props.get("MolecularWeight", 0),
-            "iupac_name": props.get("IUPACName", ""),
-            "canonical_smiles": props.get("CanonicalSMILES", ""),
+            "iupac_name": "",
+            "canonical_smiles": props.get("IsomericSMILES", props.get("SMILES", "")),
             "synonyms": synonyms,
             "image_url": f"https://pubchem.ncbi.nlm.nih.gov/rest/pug/compound/cid/{cid}/PNG",
             "sdf_url": f"https://pubchem.ncbi.nlm.nih.gov/rest/pug/compound/cid/{cid}/SDF?record_type=3d",
@@ -258,7 +258,7 @@ async def get_ligand_mol2(cid: int):
 
 async def _get_ligand_by_name(client: httpx.AsyncClient, name: str) -> Optional[dict]:
     try:
-        url = f"https://pubchem.ncbi.nlm.nih.gov/rest/pug/compound/name/{name}/property/MolecularFormula,MolecularWeight,IUPACName,CanonicalSMILES,CID/JSON"
+        url = f"https://pubchem.ncbi.nlm.nih.gov/rest/pug/compound/name/{name}/property/MolecularFormula,MolecularWeight,IsomericSMILES,CID/JSON"
         resp = await client.get(url, timeout=10)
         if resp.status_code != 200:
             return None
@@ -269,8 +269,8 @@ async def _get_ligand_by_name(client: httpx.AsyncClient, name: str) -> Optional[
             "name": name,
             "molecular_formula": props.get("MolecularFormula", ""),
             "molecular_weight": props.get("MolecularWeight", 0),
-            "iupac_name": props.get("IUPACName", ""),
-            "canonical_smiles": props.get("CanonicalSMILES", ""),
+            "iupac_name": "",
+            "canonical_smiles": props.get("IsomericSMILES", props.get("SMILES", "")),
         }
     except Exception:
         return None
