@@ -21,6 +21,7 @@ export default function RootLayout() {
             headerTransparent: true,
           }}
         />
+        <Stack.Screen name="examples" options={{ headerTitle: "Examples" }} />
         <Stack.Screen name="docking/protein" options={{ headerTitle: "Protein" }} />
         <Stack.Screen name="docking/marinate" options={{ headerTitle: "Prepare" }} />
         <Stack.Screen name="docking/ligand" options={{ headerTitle: "Ligand" }} />

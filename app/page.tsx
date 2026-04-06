@@ -13,12 +13,20 @@ export default function Home() {
           Powered by AutoDock Vina.
         </p>
 
-        <Link
-          href="/docking/protein"
-          className="inline-block bg-white text-black px-8 py-3 rounded-full text-sm font-medium hover:bg-gray-200 transition-colors mb-16"
-        >
-          Start Docking
-        </Link>
+        <div className="flex gap-3 mb-16">
+          <Link
+            href="/docking/protein"
+            className="inline-block bg-white text-black px-8 py-3 rounded-full text-sm font-medium hover:bg-gray-200 transition-colors"
+          >
+            Start Docking
+          </Link>
+          <Link
+            href="/examples"
+            className="inline-block bg-white/10 text-white px-8 py-3 rounded-full text-sm font-medium hover:bg-white/20 transition-colors"
+          >
+            Examples
+          </Link>
+        </div>
 
         <div className="grid grid-cols-1 sm:grid-cols-3 gap-6 text-left">
           <div className="border border-white/10 rounded-2xl p-5">

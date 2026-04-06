@@ -29,6 +29,7 @@ export default function RootLayout({
               </Link>
               <div className="flex items-center gap-6 text-xs text-gray-400">
                 <Link href="/docking/protein" className="hover:text-white transition-colors">Dock</Link>
+                <Link href="/examples" className="hover:text-white transition-colors">Examples</Link>
                 <Link href="/dashboard" className="hover:text-white transition-colors">Dashboard</Link>
                 <Link href="/about" className="hover:text-white transition-colors">About</Link>
               </div>

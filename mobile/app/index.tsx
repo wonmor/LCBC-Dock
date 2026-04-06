@@ -22,6 +22,12 @@ export default function Home() {
           >
             <Text style={styles.ctaText}>Start Docking</Text>
           </Pressable>
+          <Pressable
+            style={styles.ctaSecondary}
+            onPress={() => router.push("/examples")}
+          >
+            <Text style={styles.ctaSecondaryText}>Examples</Text>
+          </Pressable>
         </View>
 
         <View style={styles.cards}>
@@ -47,6 +53,9 @@ export default function Home() {
         </View>
 
         <View style={styles.navRow}>
+          <Pressable onPress={() => router.push("/examples")}>
+            <Text style={styles.navLink}>Examples</Text>
+          </Pressable>
           <Pressable onPress={() => router.push("/dashboard")}>
             <Text style={styles.navLink}>Dashboard</Text>
           </Pressable>
@@ -103,6 +112,18 @@ const styles = StyleSheet.create({
   },
   ctaText: {
     color: "#000",
+    fontSize: 14,
+    fontWeight: "500",
+  },
+  ctaSecondary: {
+    backgroundColor: "rgba(255,255,255,0.1)",
+    paddingHorizontal: 32,
+    paddingVertical: 14,
+    borderRadius: 50,
+    marginTop: 10,
+  },
+  ctaSecondaryText: {
+    color: "#fff",
     fontSize: 14,
     fontWeight: "500",
   },
