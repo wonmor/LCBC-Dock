@@ -1,4 +1,1 @@
-{
-  "schemaVersion": 2,
-  "dockerfilePath": "./Dockerfile.frontend"
-}
+{"schemaVersion":2,"dockerfilePath":"./Dockerfile.frontend"}
