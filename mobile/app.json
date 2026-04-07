@@ -39,12 +39,7 @@
             "kotlinVersion": "1.9.25",
             "targetSdkVersion": 35,
             "compileSdkVersion": 35,
-            "extraMavenRepos": [],
-            "packagingOptions": {
-              "jniLibs": {
-                "useLegacyPackaging": false
-              }
-            }
+            "ndkVersion": "27.1.12297006"
           }
         }
       ],
