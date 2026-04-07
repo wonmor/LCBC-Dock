@@ -8,11 +8,11 @@ import {
   Alert,
 } from "react-native";
 import { useLocalSearchParams, useRouter } from "expo-router";
-import { WebView } from "react-native-webview";
 import { SafeAreaView } from "react-native-safe-area-context";
 import * as WebBrowser from "expo-web-browser";
 import Spinner from "@/components/Spinner";
-import { getResults, getDownloadUrl, getProtein3DViewUrl } from "@/lib/api";
+import ProteinViewer from "@/components/ProteinViewer";
+import { getResults, getDownloadUrl } from "@/lib/api";
 
 interface Pose {
   model: number;
@@ -83,13 +83,16 @@ export default function Results() {
           {results.protein_pdb_id?.toUpperCase()} + {results.ligand_name}
         </Text>
 
-        {/* 3D viewer */}
-        <View style={styles.viewer}>
-          <WebView
-            source={{ uri: getProtein3DViewUrl(results.protein_pdb_id) }}
-            style={{ flex: 1 }}
-            javaScriptEnabled
+        {/* 3D viewer with docked ligand */}
+        <View style={{ marginBottom: 16 }}>
+          <ProteinViewer
+            pdbId={results.protein_pdb_id}
+            ligandPdb={results.docked_pdb}
+            height={380}
           />
+          <Text style={styles.viewerHint}>
+            Protein (rainbow) + docked ligand (green)
+          </Text>
         </View>
 
         {/* Best affinity */}
@@ -195,13 +198,11 @@ const styles = StyleSheet.create({
     textAlign: "center",
     marginBottom: 20,
   },
-  viewer: {
-    width: "100%",
-    aspectRatio: 1,
-    backgroundColor: "rgba(255,255,255,0.05)",
-    borderRadius: 16,
-    overflow: "hidden",
-    marginBottom: 16,
+  viewerHint: {
+    color: "#4b5563",
+    fontSize: 10,
+    textAlign: "center",
+    marginTop: 6,
   },
   affinityCard: {
     borderWidth: 1,

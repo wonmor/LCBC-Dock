@@ -4,6 +4,7 @@ import { FC, useState, useEffect } from "react";
 import { useParams } from "next/navigation";
 import Link from "next/link";
 import axios from "axios";
+import ProteinViewer from "@/app/components/ProteinViewer";
 
 const API_BASE =
   process.env.NODE_ENV === "development"
@@ -62,13 +63,16 @@ const Results: FC = () => {
           {results.protein_pdb_id?.toUpperCase()} + {results.ligand_name}
         </p>
 
-        {/* 3D viewer via RCSB */}
-        <div className="w-full aspect-square bg-white/5 rounded-2xl overflow-hidden mb-6">
-          <iframe
-            src={`https://www.rcsb.org/3d-view/${results.protein_pdb_id}`}
-            className="w-full h-full border-0"
-            title="Protein 3D View"
+        {/* 3D viewer with docked ligand */}
+        <div className="mb-6">
+          <ProteinViewer
+            pdbId={results.protein_pdb_id}
+            ligandPdb={results.docked_pdb}
+            height="450px"
           />
+          <p className="text-[10px] text-gray-600 text-center mt-2">
+            Protein (rainbow) + docked ligand (green). Toggle style below.
+          </p>
         </div>
 
         {/* Best affinity */}

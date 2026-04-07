@@ -3,6 +3,7 @@
 import { FC, useState, useRef } from "react";
 import Link from "next/link";
 import axios from "axios";
+import ProteinViewer from "@/app/components/ProteinViewer";
 
 const Protein: FC = () => {
   const [query, setQuery] = useState("");
@@ -98,13 +99,7 @@ const Protein: FC = () => {
 
         {selected && (
           <div className="flex flex-col items-center gap-4">
-            <div className="w-full aspect-square bg-white/5 rounded-2xl overflow-hidden">
-              <iframe
-                src={`https://www.rcsb.org/3d-view/${selected}`}
-                className="w-full h-full border-0"
-                title="Protein 3D View"
-              />
-            </div>
+            <ProteinViewer pdbId={selected} height="400px" />
 
             <button
               onClick={() => {

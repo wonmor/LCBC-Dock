@@ -9,11 +9,11 @@ import {
   Dimensions,
 } from "react-native";
 import { useRouter } from "expo-router";
-import { WebView } from "react-native-webview";
 import { SafeAreaView } from "react-native-safe-area-context";
 import StepIndicator from "@/components/StepIndicator";
 import Spinner from "@/components/Spinner";
-import { searchProteins, getProtein3DViewUrl } from "@/lib/api";
+import { searchProteins } from "@/lib/api";
+import ProteinViewer from "@/components/ProteinViewer";
 
 export default function Protein() {
   const router = useRouter();
@@ -88,13 +88,7 @@ export default function Protein() {
 
         {selected && (
           <View style={styles.viewerWrap}>
-            <View style={styles.viewer}>
-              <WebView
-                source={{ uri: getProtein3DViewUrl(selected) }}
-                style={{ flex: 1 }}
-                javaScriptEnabled
-              />
-            </View>
+            <ProteinViewer pdbId={selected} height={360} />
             <Pressable
               onPress={() => {
                 setSelected(null);
