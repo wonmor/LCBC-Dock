@@ -92,6 +92,9 @@ export default function Cook() {
             thumbTintColor="#fff"
           />
           <Text style={styles.sliderValue}>{exhaustiveness}</Text>
+          <Text style={styles.footnote}>
+            Lower = faster, higher = more accurate. Default 4 for quick results.
+          </Text>
         </View>
 
         {/* Email */}

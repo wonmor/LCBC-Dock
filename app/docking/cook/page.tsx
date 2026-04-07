@@ -85,6 +85,9 @@ const Cook: FC = () => {
               className="w-full mt-2 accent-white"
             />
             <p className="text-right text-xs text-gray-400 mt-1">{exhaustiveness}</p>
+            <p className="text-[10px] text-gray-600 mt-2">
+              Lower = faster, higher = more accurate. Default 4 for quick results.
+            </p>
           </div>
 
           {/* Email */}

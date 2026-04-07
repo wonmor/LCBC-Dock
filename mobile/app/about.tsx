@@ -40,11 +40,31 @@ export default function About() {
         </Text>
 
         <View style={styles.shoutout}>
+          <Text style={styles.sectionTitle}>A Note on Exhaustiveness</Text>
+          <Text style={styles.listItem}>
+            Docking jobs currently run with a default exhaustiveness of 4 to keep wait
+            times short on our current server. Higher exhaustiveness (8-32) produces more
+            accurate results but takes significantly longer. With additional funding, we
+            plan to upgrade to more powerful compute infrastructure to support higher
+            exhaustiveness and faster turnaround for all users.
+          </Text>
+        </View>
+
+        <View style={styles.shoutout}>
           <Text style={styles.body}>
             A big shoutout to <Text style={styles.bold}>Professor Juyong Lee</Text> at
             Seoul National University Computational Drug Discovery Lab for the inspiration
             and providing me a valuable opportunity to intern at your lab.
           </Text>
+        </View>
+
+        <View style={styles.shoutout}>
+          <Text style={styles.sectionTitle}>Funding & Research Inquiries</Text>
+          <Text style={styles.listItem}>
+            If you are interested in supporting this project, collaborating on research,
+            or have funding inquiries, please reach out:
+          </Text>
+          <Text style={styles.email}>john@orchestrsim.com</Text>
         </View>
 
         <Text style={styles.footer}>
@@ -98,6 +118,11 @@ const styles = StyleSheet.create({
     borderRadius: 16,
     padding: 20,
     marginTop: 24,
+  },
+  email: {
+    color: "#60a5fa",
+    fontSize: 14,
+    marginTop: 8,
   },
   footer: {
     color: "#4b5563",

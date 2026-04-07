@@ -37,12 +37,34 @@ export default function About() {
           </div>
         </div>
 
-        <div className="mt-12 border border-white/10 rounded-2xl p-6">
+        <div className="mt-8 border border-white/10 rounded-2xl p-6">
+          <p className="text-white text-xs font-medium mb-2">A Note on Exhaustiveness</p>
+          <p className="text-xs text-gray-400 leading-relaxed">
+            Docking jobs currently run with a default exhaustiveness of 4 to keep wait times
+            short on our current server. Higher exhaustiveness (8&ndash;32) produces more
+            accurate results but takes significantly longer. With additional funding, we plan
+            to upgrade to more powerful compute infrastructure to support higher exhaustiveness
+            and faster turnaround for all users.
+          </p>
+        </div>
+
+        <div className="mt-4 border border-white/10 rounded-2xl p-6">
           <p className="text-sm text-gray-400 leading-relaxed">
             A big shoutout to <strong className="text-white">Professor Juyong Lee</strong> at
             Seoul National University Computational Drug Discovery Lab for the inspiration
             and providing me a valuable opportunity to intern at your lab.
           </p>
+        </div>
+
+        <div className="mt-4 border border-white/10 rounded-2xl p-6">
+          <p className="text-white text-xs font-medium mb-2">Funding &amp; Research Inquiries</p>
+          <p className="text-xs text-gray-400 leading-relaxed">
+            If you are interested in supporting this project, collaborating on research,
+            or have funding inquiries, please reach out:
+          </p>
+          <a href="mailto:john@orchestrsim.com" className="text-sm text-blue-400 hover:text-blue-300 mt-2 inline-block">
+            john@orchestrsim.com
+          </a>
         </div>
 
         <footer className="mt-10 text-center text-xs text-gray-600">
