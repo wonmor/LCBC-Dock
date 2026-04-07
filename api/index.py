@@ -311,14 +311,24 @@ async def submit_docking_job(request: DockingRequest):
 @app.get("/api/jobs/{job_id}")
 async def get_job_status(job_id: str):
     """Get the status of a docking job."""
-    job = get_job(job_id)
-    if not job:
+    job_data = get_job_full(job_id)
+    if not job_data:
         raise HTTPException(status_code=404, detail="Job not found")
 
-    queue_pos = get_queue_position(job_id) if job.status in (JobStatus.QUEUED,) else 0
+    queue_pos = get_queue_position(job_id) if job_data["status"] in (JobStatus.QUEUED,) else 0
 
     return {
-        **job.model_dump(),
+        "job_id": job_data["job_id"],
+        "status": job_data["status"],
+        "protein_pdb_id": job_data["protein_pdb_id"],
+        "ligand_cid": job_data["ligand_cid"],
+        "ligand_name": job_data["ligand_name"],
+        "created_at": job_data["created_at"],
+        "completed_at": job_data.get("completed_at"),
+        "error_message": job_data.get("error_message"),
+        "best_affinity": job_data.get("best_affinity"),
+        "num_poses": job_data.get("num_poses"),
+        "status_message": job_data.get("status_message", ""),
         "queue_position": queue_pos,
     }
 

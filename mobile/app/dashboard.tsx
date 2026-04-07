@@ -91,6 +91,9 @@ export default function Dashboard() {
               ) : (
                 <View style={{ alignItems: "center" }}>
                   <Spinner label={statusLabel[job.status] || job.status} />
+                  {job.status_message ? (
+                    <Text style={styles.statusMsg}>{job.status_message}</Text>
+                  ) : null}
                 </View>
               )}
             </View>
@@ -202,6 +205,13 @@ const styles = StyleSheet.create({
     fontSize: 18,
     fontWeight: "300",
     textAlign: "center",
+  },
+  statusMsg: {
+    color: "#6b7280",
+    fontSize: 11,
+    fontFamily: "monospace",
+    textAlign: "center",
+    marginTop: 8,
   },
   detailRow: {
     flexDirection: "row",

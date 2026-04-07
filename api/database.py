@@ -38,9 +38,15 @@ def init_db():
             best_affinity REAL,
             num_poses INTEGER,
             output_pdbqt TEXT,
-            docked_pdb TEXT
+            docked_pdb TEXT,
+            status_message TEXT
         )
     """)
+    # Add column if upgrading from old schema
+    try:
+        conn.execute("ALTER TABLE docking_jobs ADD COLUMN status_message TEXT")
+    except Exception:
+        pass
     conn.commit()
     conn.close()
 
@@ -75,15 +81,25 @@ def update_job_status(job_id: str, status: JobStatus,
                       best_affinity: Optional[float] = None,
                       num_poses: Optional[int] = None,
                       output_pdbqt: Optional[str] = None,
-                      docked_pdb: Optional[str] = None):
+                      docked_pdb: Optional[str] = None,
+                      status_message: Optional[str] = None):
     conn = get_db()
     completed_at = datetime.utcnow().isoformat() if status in (JobStatus.COMPLETED, JobStatus.FAILED) else None
     conn.execute("""
         UPDATE docking_jobs SET status=?, completed_at=?, error_message=?,
-        best_affinity=?, num_poses=?, output_pdbqt=?, docked_pdb=?
+        best_affinity=?, num_poses=?, output_pdbqt=?, docked_pdb=?,
+        status_message=COALESCE(?, status_message)
         WHERE job_id=?
     """, (status, completed_at, error_message, best_affinity, num_poses,
-          output_pdbqt, docked_pdb, job_id))
+          output_pdbqt, docked_pdb, status_message, job_id))
+    conn.commit()
+    conn.close()
+
+
+def update_job_message(job_id: str, message: str):
+    """Update just the status message for live progress."""
+    conn = get_db()
+    conn.execute("UPDATE docking_jobs SET status_message=? WHERE job_id=?", (message, job_id))
     conn.commit()
     conn.close()
 

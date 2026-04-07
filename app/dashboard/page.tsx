@@ -100,6 +100,11 @@ const Dashboard: FC = () => {
                   <p className="text-sm text-gray-400">
                     {statusLabel[job.status] || job.status}
                   </p>
+                  {job.status_message && (
+                    <p className="text-[11px] text-gray-500 mt-2 font-mono">
+                      {job.status_message}
+                    </p>
+                  )}
                 </>
               )}
             </div>
