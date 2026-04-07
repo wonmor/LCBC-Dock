@@ -19,16 +19,28 @@ usage() {
 deploy_frontend() {
   echo "[frontend] Setting captain-definition → Dockerfile.frontend"
   echo "$FRONTEND_DEF" > captain-definition
+
+  echo "[frontend] Creating tarball..."
+  tar -cf /tmp/lcbc-deploy.tar --exclude='node_modules' --exclude='.git' --exclude='mobile/node_modules' --exclude='mobile/.expo' .
+
   echo "[frontend] Deploying to $FRONTEND_APP..."
-  caprover deploy --caproverUrl "$CAPROVER_URL" --caproverApp "$FRONTEND_APP" --branch main
+  caprover deploy --caproverUrl "$CAPROVER_URL" --caproverApp "$FRONTEND_APP" --tarFile /tmp/lcbc-deploy.tar
+
+  rm -f /tmp/lcbc-deploy.tar
   echo "[frontend] Done."
 }
 
 deploy_backend() {
   echo "[backend] Setting captain-definition → Dockerfile.backend"
   echo "$BACKEND_DEF" > captain-definition
+
+  echo "[backend] Creating tarball..."
+  tar -cf /tmp/lcbc-deploy.tar --exclude='node_modules' --exclude='.git' --exclude='mobile/node_modules' --exclude='mobile/.expo' .
+
   echo "[backend] Deploying to $BACKEND_APP..."
-  caprover deploy --caproverUrl "$CAPROVER_URL" --caproverApp "$BACKEND_APP" --branch main
+  caprover deploy --caproverUrl "$CAPROVER_URL" --caproverApp "$BACKEND_APP" --tarFile /tmp/lcbc-deploy.tar
+
+  rm -f /tmp/lcbc-deploy.tar
   echo "[backend] Done."
 }
 
