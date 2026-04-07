@@ -31,7 +31,8 @@
     "plugins": [
       "expo-router",
       "expo-font",
-      "expo-asset"
+      "expo-asset",
+      ["./plugins/withKotlinVersion", "1.9.25"]
     ],
     "extra": {
       "router": {
