@@ -1,8 +1,8 @@
-# LCBC Dock
+# DockIt
 
 > AutoDock Vina, reimagined for the web and mobile.
 
-**LCBC Dock** is an online molecular docking platform that brings the power of [AutoDock Vina](https://vina.scripps.edu/) to your browser and your phone. Search proteins and ligands from public databases, configure docking parameters, submit jobs to a processing queue, and visualize docked poses — all without installing anything locally.
+**DockIt** is an online molecular docking platform that brings the power of [AutoDock Vina](https://vina.scripps.edu/) to your browser and your phone. Search proteins and ligands from public databases, configure docking parameters, submit jobs to a processing queue, and visualize docked poses — all without installing anything locally.
 
 ### [https://lcbc-client.apps.johnseong.com](https://lcbc-client.apps.johnseong.com) &nbsp;|&nbsp; [Documentation](https://johnseong.github.io/LCBC-Dock/)
 
@@ -27,7 +27,7 @@ Developed by **John Seong** in collaboration with [Seoul National University](ht
 
 ## Examples Gallery
 
-LCBC Dock includes **16 curated famous protein-ligand dockings** with searchable categories. Tap any example to skip straight to docking with pre-filled protein and ligand.
+DockIt includes **16 curated famous protein-ligand dockings** with searchable categories. Tap any example to skip straight to docking with pre-filled protein and ligand.
 
 | Ligand | Protein | Category | Description |
 |--------|---------|----------|-------------|
@@ -172,7 +172,7 @@ LCBC-Dock/
 
 ## Deployment on CapRover
 
-LCBC Dock uses **two CapRover apps**: a frontend (Next.js) and a backend (FastAPI + Vina).
+DockIt uses **two CapRover apps**: a frontend (Next.js) and a backend (FastAPI + Vina).
 
 ### Prerequisites
 
@@ -224,7 +224,7 @@ Go to `https://captain.apps.johnseong.com` → **lcbc-server** app:
 |----------|-------|----------|
 | `SMTP_USER` | Your Gmail address | For email notifications |
 | `SMTP_PASS` | Gmail [App Password](https://myaccount.google.com/apppasswords) | For email notifications |
-| `FROM_EMAIL` | `noreply@lcbcdock.com` | Optional |
+| `FROM_EMAIL` | `noreply@dockit.app` | Optional |
 | `BASE_URL` | `https://lcbc-client.apps.johnseong.com` | For email links |
 
 #### Persistent Storage (App Configs → Persistent Directories)
@@ -244,7 +244,7 @@ Go to **HTTP Settings** → **Enable HTTPS** for both apps.
 ```bash
 # Check backend is running
 curl https://lcbc-server.apps.johnseong.com/
-# Should return: {"message":"LCBC Dock API v2.0 is running!","docs":"/docs"}
+# Should return: {"message":"DockIt API v2.0 is running!","docs":"/docs"}
 
 # Check API docs
 open https://lcbc-server.apps.johnseong.com/docs
@@ -291,7 +291,7 @@ bash deploy.sh backend
 
 ## Mobile App (iOS & Android)
 
-LCBC Dock includes a standalone **Expo React Native** mobile app in the `mobile/` directory.
+DockIt includes a standalone **Expo React Native** mobile app in the `mobile/` directory.
 
 ### Key Differences from Web
 
@@ -336,8 +336,8 @@ The app is configured in `mobile/app.json`:
 
 | Field | Value |
 |-------|-------|
-| Bundle ID (iOS) | `com.johnseong.lcbcdock` |
-| Package (Android) | `com.johnseong.lcbcdock` |
+| Bundle ID (iOS) | `com.johnseong.dockit` |
+| Package (Android) | `com.johnseong.dockit` |
 | Backend URL | `https://lcbc-server.apps.johnseong.com` |
 | Theme | Dark mode only |
 | Orientation | Portrait |
@@ -382,16 +382,16 @@ The frontend search (protein + ligand) works without the backend — it proxies 
 
 ```bash
 # Backend (includes Vina + Open Babel)
-docker build -f Dockerfile.backend -t lcbc-dock-api .
+docker build -f Dockerfile.backend -t dockit-api .
 docker run -p 8000:8000 \
   -e SMTP_USER=your@email.com \
   -e SMTP_PASS=your-app-password \
   -v lcbc-data:/app/data \
-  lcbc-dock-api
+  dockit-api
 
 # Frontend
-docker build -f Dockerfile.frontend -t lcbc-dock-web .
-docker run -p 3000:3000 lcbc-dock-web
+docker build -f Dockerfile.frontend -t dockit-web .
+docker run -p 3000:3000 dockit-web
 ```
 
 ---
@@ -404,7 +404,7 @@ docker run -p 3000:3000 lcbc-dock-web
 | `SMTP_PORT` | SMTP server port | `587` |
 | `SMTP_USER` | SMTP username/email | — |
 | `SMTP_PASS` | SMTP password or app password | — |
-| `FROM_EMAIL` | Sender email address | `noreply@lcbcdock.com` |
+| `FROM_EMAIL` | Sender email address | `noreply@dockit.app` |
 | `BASE_URL` | Frontend URL (for email links) | `https://lcbc-client.apps.johnseong.com` |
 | `LCBC_DB_PATH` | Path to SQLite database file | `lcbc_dock.db` |
 | `VINA_PATH` | Path to Vina executable | `vina` |

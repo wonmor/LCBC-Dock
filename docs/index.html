@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>LCBC Dock — Documentation</title>
+    <title>DockIt — Documentation</title>
     <style>
         :root {
             --bg: #000;
@@ -235,7 +235,7 @@
 
 <!-- Hero -->
 <header class="hero">
-    <h1>LCBC <span>DOCK</span></h1>
+    <h1>Dock<span>It</span></h1>
     <p class="tagline">AutoDock Vina, reimagined for the web and mobile.</p>
     <div class="badges">
         <a href="https://lcbc-client.apps.johnseong.com" class="btn-primary">Launch Web App</a>
@@ -322,7 +322,7 @@
 <!-- Examples Gallery -->
 <section id="examples">
     <h2>Examples Gallery</h2>
-    <p>LCBC Dock includes 16 curated famous protein-ligand dockings across 7 categories. Search, filter, and tap any example to skip straight to docking with pre-filled protein and ligand.</p>
+    <p>DockIt includes 16 curated famous protein-ligand dockings across 7 categories. Search, filter, and tap any example to skip straight to docking with pre-filled protein and ligand.</p>
 
     <table class="api-table" style="margin-top: 24px;">
         <thead><tr><th>Ligand</th><th>Protein</th><th>Category</th><th>Description</th></tr></thead>
@@ -352,7 +352,7 @@
 <!-- Workflow -->
 <section id="workflow">
     <h2>Docking Workflow</h2>
-    <p>LCBC Dock guides you through a 4-step molecular docking process:</p>
+    <p>DockIt guides you through a 4-step molecular docking process:</p>
     <table class="workflow-table">
         <thead>
             <tr><th>Step</th><th>Route</th><th>Description</th></tr>
@@ -400,7 +400,7 @@
 <!-- Mobile App -->
 <section id="mobile">
     <h2>Mobile App (iOS &amp; Android)</h2>
-    <p>LCBC Dock includes a standalone <strong>Expo React Native</strong> mobile app in the <code>mobile/</code> directory. It provides the same 4-step docking workflow, examples gallery, and results viewer — optimized for touch.</p>
+    <p>DockIt includes a standalone <strong>Expo React Native</strong> mobile app in the <code>mobile/</code> directory. It provides the same 4-step docking workflow, examples gallery, and results viewer — optimized for touch.</p>
 
     <div class="card-grid">
         <div class="card">
@@ -445,8 +445,8 @@ eas submit --platform android</code></pre>
     <table class="env-table">
         <thead><tr><th>Field</th><th>Value</th></tr></thead>
         <tbody>
-            <tr><td>Bundle ID (iOS)</td><td>com.johnseong.lcbcdock</td></tr>
-            <tr><td>Package (Android)</td><td>com.johnseong.lcbcdock</td></tr>
+            <tr><td>Bundle ID (iOS)</td><td>com.johnseong.dockit</td></tr>
+            <tr><td>Package (Android)</td><td>com.johnseong.dockit</td></tr>
             <tr><td>Backend URL</td><td>https://lcbc-server.apps.johnseong.com</td></tr>
             <tr><td>Theme</td><td>Dark mode only</td></tr>
             <tr><td>Orientation</td><td>Portrait</td></tr>
@@ -601,7 +601,7 @@ npm run fastapi-dev   # Backend on :8000</code></pre>
             <tr><td>SMTP_PORT</td><td>SMTP server port</td><td>587</td></tr>
             <tr><td>SMTP_USER</td><td>SMTP username / email</td><td>—</td></tr>
             <tr><td>SMTP_PASS</td><td>SMTP password or app password</td><td>—</td></tr>
-            <tr><td>FROM_EMAIL</td><td>Sender address for notifications</td><td>noreply@lcbcdock.com</td></tr>
+            <tr><td>FROM_EMAIL</td><td>Sender address for notifications</td><td>noreply@dockit.app</td></tr>
             <tr><td>BASE_URL</td><td>Public URL (for email links)</td><td>https://lcbc-client.apps.johnseong.com</td></tr>
             <tr><td>LCBC_DB_PATH</td><td>SQLite database file path</td><td>lcbc_dock.db</td></tr>
             <tr><td>VINA_PATH</td><td>AutoDock Vina executable path</td><td>vina</td></tr>
@@ -620,7 +620,7 @@ npm run fastapi-dev   # Backend on :8000</code></pre>
 <!-- CapRover -->
 <section id="caprover">
     <h2>CapRover Deployment</h2>
-    <p>LCBC Dock uses <strong>two CapRover apps</strong>: <code>lcbc-client</code> (frontend, port 3000) and <code>lcbc-server</code> (backend, port 8000).</p>
+    <p>DockIt uses <strong>two CapRover apps</strong>: <code>lcbc-client</code> (frontend, port 3000) and <code>lcbc-server</code> (backend, port 8000).</p>
 
     <h3>Prerequisites</h3>
     <ul>
@@ -678,7 +678,7 @@ BASE_URL=https://lcbc-client.apps.johnseong.com</code></pre>
     <h3>Verify Deployment</h3>
 <pre><code># Check backend health
 curl https://lcbc-server.apps.johnseong.com/
-# Expected: {"message":"LCBC Dock API v2.0 is running!","docs":"/docs"}
+# Expected: {"message":"DockIt API v2.0 is running!","docs":"/docs"}
 
 # Check frontend
 open https://lcbc-client.apps.johnseong.com
@@ -693,19 +693,19 @@ bash deploy.sh backend</code></pre>
     <p>The backend Docker image includes AutoDock Vina 1.2.5 and Open Babel pre-installed.</p>
 
     <h3>Backend</h3>
-<pre><code>docker build -f Dockerfile.backend -t lcbc-dock-api .
+<pre><code>docker build -f Dockerfile.backend -t dockit-api .
 
 docker run -p 8000:8000 \
   -e SMTP_USER=your@email.com \
   -e SMTP_PASS=your-app-password \
   -e BASE_URL=https://lcbc-client.apps.johnseong.com \
   -v lcbc-data:/app/data \
-  lcbc-dock-api</code></pre>
+  dockit-api</code></pre>
     <p>The <code>-v lcbc-data:/app/data</code> flag persists the SQLite database across container restarts.</p>
 
     <h3>Frontend</h3>
-<pre><code>docker build -f Dockerfile.frontend -t lcbc-dock-web .
-docker run -p 3000:3000 lcbc-dock-web</code></pre>
+<pre><code>docker build -f Dockerfile.frontend -t dockit-web .
+docker run -p 3000:3000 dockit-web</code></pre>
 </section>
 
 <!-- Architecture -->
@@ -757,7 +757,7 @@ docker run -p 3000:3000 lcbc-dock-web</code></pre>
 </div>
 
 <footer>
-    <p>LCBC Dock &mdash; Developed and designed by <strong>John Seong</strong> in collaboration with Seoul National University.</p>
+    <p>DockIt &mdash; Developed and designed by <strong>John Seong</strong> in collaboration with Seoul National University.</p>
     <p style="margin-top: 8px;">Licensed under MIT &mdash; <a href="https://github.com/johnseong/LCBC-Dock">View on GitHub</a></p>
 </footer>
 

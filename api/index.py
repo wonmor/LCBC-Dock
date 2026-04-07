@@ -18,7 +18,7 @@ from api.worker import start_worker
 logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
 
-app = FastAPI(title="LCBC Dock API", version="2.0.0")
+app = FastAPI(title="DockIt API", version="2.0.0")
 
 app.add_middleware(
     CORSMiddleware,
@@ -33,7 +33,7 @@ app.add_middleware(
 async def startup():
     init_db()
     start_worker()
-    logger.info("LCBC Dock API started")
+    logger.info("DockIt API started")
 
 
 # ---------------------------------------------------------------------------
@@ -422,4 +422,4 @@ async def get_stats():
 
 @app.get("/")
 async def root():
-    return {"message": "LCBC Dock API v2.0 is running!", "docs": "/docs"}
+    return {"message": "DockIt API v2.0 is running!", "docs": "/docs"}

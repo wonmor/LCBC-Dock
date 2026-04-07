@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 
 const HEADERS = {
-  "User-Agent": "LCBCDock/2.0 (https://lcbc-client.apps.johnseong.com)",
+  "User-Agent": "DockIt/2.0 (https://lcbc-client.apps.johnseong.com)",
   Accept: "application/json",
 };
 

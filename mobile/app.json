@@ -1,11 +1,11 @@
 {
   "expo": {
-    "name": "LCBC Dock",
-    "slug": "lcbc-dock",
+    "name": "DockIt",
+    "slug": "dockit",
     "version": "1.0.0",
     "orientation": "portrait",
     "icon": "./assets/icon.png",
-    "scheme": "lcbcdock",
+    "scheme": "dockit",
     "userInterfaceStyle": "dark",
     "newArchEnabled": true,
     "splash": {
@@ -15,14 +15,14 @@
     },
     "ios": {
       "supportsTablet": true,
-      "bundleIdentifier": "com.johnseong.lcbcdock"
+      "bundleIdentifier": "com.johnseong.dockit"
     },
     "android": {
       "adaptiveIcon": {
         "foregroundImage": "./assets/adaptive-icon.png",
         "backgroundColor": "#000000"
       },
-      "package": "com.johnseong.lcbcdock"
+      "package": "com.johnseong.dockit"
     },
     "plugins": [
       "expo-router",

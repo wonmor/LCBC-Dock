@@ -76,7 +76,7 @@ export default function Home() {
       >
         {/* Hero */}
         <Text style={styles.title}>
-          LCBC <Text style={styles.titleBold}>DOCK</Text>
+          Dock<Text style={styles.titleBold}>It</Text>
         </Text>
         <Text style={styles.subtitle}>
           Molecular docking on the go.{"\n"}Powered by AutoDock Vina.

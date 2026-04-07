@@ -8,7 +8,7 @@ export default function About() {
         <Text style={styles.heading}>About</Text>
 
         <Text style={styles.body}>
-          <Text style={styles.bold}>LCBC Dock</Text> is an online molecular
+          <Text style={styles.bold}>DockIt</Text> is an online molecular
           docking platform powered by AutoDock Vina. It lets you search for
           proteins and small molecules from public databases, configure docking
           parameters, and visualize results — entirely from your phone.

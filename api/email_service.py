@@ -20,14 +20,14 @@ def send_completion_email(to_email: str, job_id: str, protein_pdb_id: str,
         logger.warning("SMTP credentials not configured, skipping email notification")
         return False
 
-    subject = f"LCBC Dock - Your docking job is complete!"
+    subject = f"DockIt - Your docking job is complete!"
 
     html_body = f"""
     <html>
     <body style="font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif; background: #000; color: #fff; padding: 40px;">
         <div style="max-width: 600px; margin: 0 auto; background: #111; border-radius: 16px; padding: 32px;">
             <h1 style="color: #93c5fd; font-weight: 300; font-size: 28px; margin-bottom: 8px;">
-                LCBC <span style="font-weight: 600;">DOCK</span>
+                DockIt
             </h1>
             <p style="color: #9ca3af; margin-bottom: 24px;">Your molecular docking job has completed.</p>
 
@@ -59,7 +59,7 @@ def send_completion_email(to_email: str, job_id: str, protein_pdb_id: str,
             </a>
 
             <p style="color: #6b7280; font-size: 12px; margin-top: 24px;">
-                This email was sent by LCBC Dock. If you did not submit this job, please ignore this email.
+                This email was sent by DockIt. If you did not submit this job, please ignore this email.
             </p>
         </div>
     </body>
@@ -90,14 +90,14 @@ def send_failure_email(to_email: str, job_id: str, protein_pdb_id: str,
         logger.warning("SMTP credentials not configured, skipping email notification")
         return False
 
-    subject = "LCBC Dock - Docking job failed"
+    subject = "DockIt - Docking job failed"
 
     html_body = f"""
     <html>
     <body style="font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif; background: #000; color: #fff; padding: 40px;">
         <div style="max-width: 600px; margin: 0 auto; background: #111; border-radius: 16px; padding: 32px;">
             <h1 style="color: #93c5fd; font-weight: 300; font-size: 28px; margin-bottom: 8px;">
-                LCBC <span style="font-weight: 600;">DOCK</span>
+                DockIt
             </h1>
             <p style="color: #fca5a5; margin-bottom: 24px;">Unfortunately, your docking job encountered an error.</p>
 

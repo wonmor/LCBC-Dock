@@ -52,7 +52,7 @@ restore() {
 
 TARGET="${1:-all}"
 
-echo "=== LCBC Dock — CapRover Deploy ==="
+echo "=== DockIt — CapRover Deploy ==="
 echo ""
 
 case "$TARGET" in

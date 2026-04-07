@@ -80,7 +80,7 @@ export default function Home() {
         {/* Hero */}
         <div className="text-center mb-10">
           <h1 className="text-6xl sm:text-8xl font-extralight tracking-tight mb-4">
-            LCBC <span className="font-semibold">DOCK</span>
+            Dock<span className="font-semibold">It</span>
           </h1>
           <p className="text-gray-400 text-lg mb-8">
             Molecular docking on the go.
