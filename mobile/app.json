@@ -36,10 +36,19 @@
         "expo-build-properties",
         {
           "android": {
-            "kotlinVersion": "1.9.25"
+            "kotlinVersion": "1.9.25",
+            "targetSdkVersion": 35,
+            "compileSdkVersion": 35,
+            "extraMavenRepos": [],
+            "packagingOptions": {
+              "jniLibs": {
+                "useLegacyPackaging": false
+              }
+            }
           }
         }
-      ]
+      ],
+      "./plugins/withPageSize16K"
     ],
     "extra": {
       "router": {
