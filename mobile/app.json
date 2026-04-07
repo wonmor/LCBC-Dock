@@ -15,19 +15,31 @@
     },
     "ios": {
       "supportsTablet": true,
-      "bundleIdentifier": "com.johnseong.dock-it"
+      "bundleIdentifier": "com.johnseong.dock-it",
+      "infoPlist": {
+        "ITSAppUsesNonExemptEncryption": false
+      }
     },
     "android": {
       "adaptiveIcon": {
         "foregroundImage": "./assets/adaptive-icon.png",
         "backgroundColor": "#000000"
       },
-      "package": "com.johnseong.dock_it"
+      "package": "com.johnseong.dock_it",
+      "kotlinVersion": "1.9.25"
     },
     "plugins": [
       "expo-router",
       "expo-font",
       "expo-asset"
-    ]
+    ],
+    "extra": {
+      "router": {
+        "origin": false
+      },
+      "eas": {
+        "projectId": "8c21fe13-436b-44fc-8eb6-9623561528be"
+      }
+    }
   }
 }
