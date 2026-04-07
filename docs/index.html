@@ -254,6 +254,7 @@
         <a href="#quickstart">Quick Start</a>
         <a href="#api">API Reference</a>
         <a href="#configuration">Configuration</a>
+        <a href="#caprover">CapRover</a>
         <a href="#docker">Docker</a>
         <a href="#architecture">Architecture</a>
     </div>
@@ -616,9 +617,79 @@ npm run fastapi-dev   # Backend on :8000</code></pre>
     </ol>
 </section>
 
+<!-- CapRover -->
+<section id="caprover">
+    <h2>CapRover Deployment</h2>
+    <p>LCBC Dock uses <strong>two CapRover apps</strong>: <code>lcbc-client</code> (frontend, port 3000) and <code>lcbc-server</code> (backend, port 8000).</p>
+
+    <h3>Prerequisites</h3>
+    <ul>
+        <li>A CapRover server (e.g. <code>captain.apps.yourdomain.com</code>)</li>
+        <li><a href="https://caprover.com/docs/cli-commands.html">CapRover CLI</a>: <code>npm install -g caprover</code></li>
+        <li>Two apps in the dashboard: <code>lcbc-client</code> and <code>lcbc-server</code></li>
+    </ul>
+
+    <h3>Deploy Script</h3>
+    <p>The included <code>deploy.sh</code> handles the <code>captain-definition</code> swap automatically:</p>
+<pre><code># Login to CapRover (one-time, saves credentials)
+caprover login
+
+# Deploy everything (frontend + backend)
+bash deploy.sh all
+
+# Deploy frontend only
+bash deploy.sh frontend
+
+# Deploy backend only
+bash deploy.sh backend</code></pre>
+
+    <h3>CapRover App Setup</h3>
+    <table class="env-table">
+        <thead><tr><th>App</th><th>Dockerfile</th><th>Container Port</th></tr></thead>
+        <tbody>
+            <tr><td>lcbc-client</td><td>Dockerfile.frontend</td><td>3000</td></tr>
+            <tr><td>lcbc-server</td><td>Dockerfile.backend</td><td>8000</td></tr>
+        </tbody>
+    </table>
+
+    <h3>Backend Configuration</h3>
+    <p>In CapRover dashboard &rarr; <code>lcbc-server</code> &rarr; <strong>App Configs</strong>:</p>
+
+    <h4>Bulk Edit Environment Variables</h4>
+    <p>Go to <strong>Environmental Variables &rarr; Bulk Edit</strong> and paste:</p>
+<pre><code>SMTP_USER=yourname@gmail.com
+SMTP_PASS=your_16_char_app_password
+FROM_EMAIL=yourname@gmail.com
+BASE_URL=https://lcbc-client.apps.johnseong.com</code></pre>
+
+    <h4>Persistent Storage</h4>
+    <p>Go to <strong>Persistent Directories</strong> and add:</p>
+    <table class="env-table">
+        <thead><tr><th>Path in App</th><th>Label</th></tr></thead>
+        <tbody>
+            <tr><td>/app/data</td><td>lcbc-data</td></tr>
+        </tbody>
+    </table>
+    <p>This keeps the SQLite database alive across redeploys.</p>
+
+    <h4>HTTPS</h4>
+    <p>Go to <strong>HTTP Settings &rarr; Enable HTTPS</strong> for both apps.</p>
+
+    <h3>Verify Deployment</h3>
+<pre><code># Check backend health
+curl https://lcbc-server.apps.johnseong.com/
+# Expected: {"message":"LCBC Dock API v2.0 is running!","docs":"/docs"}
+
+# Check frontend
+open https://lcbc-client.apps.johnseong.com
+
+# If backend returns 502, redeploy it
+bash deploy.sh backend</code></pre>
+</section>
+
 <!-- Docker -->
 <section id="docker">
-    <h2>Docker Deployment</h2>
+    <h2>Docker (Standalone)</h2>
     <p>The backend Docker image includes AutoDock Vina 1.2.5 and Open Babel pre-installed.</p>
 
     <h3>Backend</h3>

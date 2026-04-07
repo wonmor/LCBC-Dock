@@ -179,55 +179,42 @@ LCBC Dock uses **two CapRover apps**: a frontend (Next.js) and a backend (FastAP
 - A CapRover server (e.g. `captain.apps.yourdomain.com`)
 - [CapRover CLI](https://caprover.com/docs/cli-commands.html) installed: `npm install -g caprover`
 - Two apps created in the CapRover dashboard:
-  - **`lcbc-client`** — frontend
-  - **`lcbc-server`** — backend
+  - **`lcbc-client`** — frontend (container port **3000**)
+  - **`lcbc-server`** — backend (container port **8000**)
 
-### Step 1: Deploy the Frontend
+### Deploy Script
 
-The default `captain-definition` points to `Dockerfile.frontend`.
-
-```bash
-# Make sure captain-definition points to frontend
-cat captain-definition
-# Should show: {"schemaVersion":2,"dockerfilePath":"./Dockerfile.frontend"}
-
-# If not, reset it:
-echo '{"schemaVersion":2,"dockerfilePath":"./Dockerfile.frontend"}' > captain-definition
-
-# Deploy
-caprover deploy \
-  --caproverUrl https://captain.apps.johnseong.com \
-  --caproverApp lcbc-client \
-  --branch main
-```
-
-### Step 2: Deploy the Backend
-
-Swap the `captain-definition` to point to the backend Dockerfile, then deploy:
+The included `deploy.sh` handles the `captain-definition` swap automatically:
 
 ```bash
-# Swap to backend
-cp captain-definition-backend captain-definition
+# Login to CapRover (one-time, saves credentials)
+caprover login
 
-# Deploy
-caprover deploy \
-  --caproverUrl https://captain.apps.johnseong.com \
-  --caproverApp lcbc-server \
-  --branch main
+# Deploy everything (frontend + backend)
+bash deploy.sh all
 
-# Swap back to frontend (important for future frontend deploys)
-echo '{"schemaVersion":2,"dockerfilePath":"./Dockerfile.frontend"}' > captain-definition
+# Deploy frontend only
+bash deploy.sh frontend
+
+# Deploy backend only
+bash deploy.sh backend
 ```
 
-Or as a one-liner:
+The script will:
+1. Swap `captain-definition` to the correct Dockerfile
+2. Run `caprover deploy` targeting the correct app
+3. Restore `captain-definition` to frontend default afterward
 
-```bash
-cp captain-definition-backend captain-definition && \
-caprover deploy --caproverUrl https://captain.apps.johnseong.com --caproverApp lcbc-server --branch main && \
-echo '{"schemaVersion":2,"dockerfilePath":"./Dockerfile.frontend"}' > captain-definition
-```
+You'll be prompted for your CapRover password if you haven't run `caprover login`.
 
-### Step 3: Configure the Backend in CapRover Dashboard
+### CapRover App Setup
+
+| App | Dockerfile | Container Port |
+|-----|-----------|----------------|
+| `lcbc-client` | `Dockerfile.frontend` | 3000 |
+| `lcbc-server` | `Dockerfile.backend` | 8000 |
+
+### Configure the Backend in CapRover Dashboard
 
 Go to `https://captain.apps.johnseong.com` → **lcbc-server** app:
 
@@ -272,14 +259,32 @@ curl "https://lcbc-client.apps.johnseong.com/api/pubchem?q=aspirin&debug=1"
 ### Quick Redeploy Commands
 
 ```bash
-# Redeploy frontend only
-echo '{"schemaVersion":2,"dockerfilePath":"./Dockerfile.frontend"}' > captain-definition
-caprover deploy --caproverUrl https://captain.apps.johnseong.com --caproverApp lcbc-client --branch main
+bash deploy.sh all        # Redeploy everything
+bash deploy.sh frontend   # Redeploy web frontend only
+bash deploy.sh backend    # Redeploy backend server only
+```
 
-# Redeploy backend only
-cp captain-definition-backend captain-definition
-caprover deploy --caproverUrl https://captain.apps.johnseong.com --caproverApp lcbc-server --branch main
-echo '{"schemaVersion":2,"dockerfilePath":"./Dockerfile.frontend"}' > captain-definition
+### Bulk Edit Environment Variables
+
+In CapRover dashboard → `lcbc-server` → **App Configs** → **Bulk Edit**, paste:
+
+```
+SMTP_USER=yourname@gmail.com
+SMTP_PASS=your_16_char_app_password
+FROM_EMAIL=yourname@gmail.com
+BASE_URL=https://lcbc-client.apps.johnseong.com
+```
+
+### Troubleshooting
+
+```bash
+# Check if backend is alive
+curl https://lcbc-server.apps.johnseong.com/
+
+# If you get 502 Bad Gateway, redeploy the backend
+bash deploy.sh backend
+
+# Check CapRover logs in dashboard → lcbc-server → App Logs
 ```
 
 ---
