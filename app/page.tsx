@@ -196,7 +196,7 @@ export default function Home() {
         </div>
 
         <footer className="text-center text-xs text-gray-600 mt-4">
-          Built by John Seong &middot; Seoul National University
+          Built by John Wonmo Seong &middot; UC Irvine &times; Seoul National University
         </footer>
       </div>
     </div>

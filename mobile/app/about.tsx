@@ -68,7 +68,7 @@ export default function About() {
         </View>
 
         <Text style={styles.footer}>
-          Built by John Wonmo Seong · Seoul National University
+          Built by John Wonmo Seong · UC Irvine × Seoul National University
         </Text>
       </ScrollView>
     </SafeAreaView>

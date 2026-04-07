@@ -8,7 +8,7 @@
 
 Available on **Web**, **iOS**, and **Android**.
 
-Developed by **John Wonmo Seong** at [Seoul National University](https://en.snu.ac.kr). Special thanks to Professor Juyong Lee at the Computational Drug Discovery Lab.
+Developed by **John Wonmo Seong** at [University of California, Irvine](https://uci.edu) in collaboration with [Seoul National University](https://en.snu.ac.kr). Special thanks to Professor Juyong Lee at the Computational Drug Discovery Lab.
 
 ---
 
@@ -312,5 +312,5 @@ For research inquiries, funding, and collaboration: **[john@orchestrsim.com](mai
 
 ---
 
-> Built by John Wonmo Seong at Seoul National University.
+> Built by John Wonmo Seong at University of California, Irvine in collaboration with Seoul National University.
 > Special thanks to Professor Juyong Lee at the Computational Drug Discovery Lab.

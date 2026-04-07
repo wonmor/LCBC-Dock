@@ -215,7 +215,7 @@ export default function Home() {
         </View>
 
         <Text style={styles.footer}>
-          Built by John Seong · Seoul National University
+          Built by John Wonmo Seong · UC Irvine × Seoul National University
         </Text>
       </ScrollView>
     </SafeAreaView>

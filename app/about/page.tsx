@@ -68,7 +68,7 @@ export default function About() {
         </div>
 
         <footer className="mt-10 text-center text-xs text-gray-600">
-          Built by John Wonmo Seong &middot; Seoul National University
+          Built by John Wonmo Seong &middot; UC Irvine &times; Seoul National University
         </footer>
       </div>
     </div>
