@@ -1,33 +1,34 @@
 const { withAppBuildGradle, withGradleProperties } = require("expo/config-plugins");
 
-// Enables 16KB page size support required by Google Play for API 35+
 module.exports = function withPageSize16K(config) {
-  // Add gradle property
+  // Set gradle properties
   config = withGradleProperties(config, (config) => {
-    config.modResults = config.modResults.filter(
-      (item) =>
-        !(item.type === "property" && item.key === "android.experimental.art.16kb.alignment")
-    );
-    config.modResults.push({
-      type: "property",
-      key: "android.experimental.art.16kb.alignment",
-      value: "true",
-    });
+    const props = [
+      { key: "android.experimental.art.16kb.alignment", value: "true" },
+      { key: "kotlin.suppressKotlinVersionCompatibilityCheck", value: "true" },
+    ];
+    for (const prop of props) {
+      config.modResults = config.modResults.filter(
+        (item) => !(item.type === "property" && item.key === prop.key)
+      );
+      config.modResults.push({ type: "property", ...prop });
+    }
     return config;
   });
 
-  // Patch app/build.gradle to align native libs to 16KB
+  // Patch build.gradle to extract native libs uncompressed (required for 16KB)
   config = withAppBuildGradle(config, (config) => {
-    if (config.modResults.contents.includes("page_size")) {
+    const contents = config.modResults.contents;
+
+    if (contents.includes("useLegacyPackaging")) {
       return config;
     }
 
-    // Add packaging options to align shared libs to 16KB pages
-    const anchor = "android {";
-    config.modResults.contents = config.modResults.contents.replace(
-      anchor,
-      `${anchor}
-    packagingOptions {
+    // Add packaging options and enable extractNativeLibs=false
+    config.modResults.contents = contents.replace(
+      /android\s*\{/,
+      `android {
+    packaging {
         jniLibs {
             useLegacyPackaging = false
         }
