@@ -54,42 +54,58 @@ async def _process_job(job: dict):
     job_id = job["job_id"]
 
     try:
-        update_job_status(job_id, JobStatus.PREPARING, status_message="Starting job...")
+        import time as _time
+        TOTAL_STEPS = 7
+        start_time = _time.time()
+
+        def progress(step: int, msg: str):
+            elapsed = _time.time() - start_time
+            if step > 1 and elapsed > 0:
+                est_total = elapsed / (step - 1) * TOTAL_STEPS
+                remaining = max(0, est_total - elapsed)
+                mins, secs = divmod(int(remaining), 60)
+                eta = f"{mins}m {secs}s" if mins else f"{secs}s"
+                full_msg = f"[{step}/{TOTAL_STEPS}] {msg} (ETA ~{eta})"
+            else:
+                full_msg = f"[{step}/{TOTAL_STEPS}] {msg}"
+            update_job_message(job_id, full_msg)
+
+        update_job_status(job_id, JobStatus.PREPARING, status_message=f"[1/{TOTAL_STEPS}] Starting job...")
 
         with tempfile.TemporaryDirectory(prefix=f"dock_{job_id[:8]}_") as work_dir:
-            # Download protein
-            update_job_message(job_id, f"Downloading protein {job['protein_pdb_id']} from RCSB PDB...")
+            # Step 1: Download protein
+            progress(1, f"Downloading protein {job['protein_pdb_id']} from RCSB PDB...")
             logger.info(f"[{job_id[:8]}] Downloading protein {job['protein_pdb_id']}")
             pdb_path = await download_protein_pdb(job["protein_pdb_id"], work_dir)
 
-            # Clean protein
-            update_job_message(job_id, "Removing water molecules and heteroatoms...")
+            # Step 2: Clean protein
+            progress(2, "Removing water molecules and heteroatoms...")
             clean_pdb = clean_protein_pdb(pdb_path, work_dir)
 
             # Compute grid center if user provided zeros
             center_x, center_y, center_z = job["center_x"], job["center_y"], job["center_z"]
             if center_x == 0 and center_y == 0 and center_z == 0:
-                update_job_message(job_id, "Computing grid center from protein coordinates...")
                 center_x, center_y, center_z = compute_grid_center(clean_pdb)
                 logger.info(f"[{job_id[:8]}] Auto grid center: ({center_x}, {center_y}, {center_z})")
 
-            # Prepare protein PDBQT
-            update_job_message(job_id, "Converting protein to PDBQT format...")
+            # Step 3: Prepare protein PDBQT
+            progress(3, "Converting protein to PDBQT format...")
             logger.info(f"[{job_id[:8]}] Preparing protein PDBQT")
             receptor_pdbqt = prepare_protein_pdbqt(clean_pdb, work_dir)
 
-            # Download and prepare ligand
-            update_job_message(job_id, f"Downloading ligand {job['ligand_name']} from PubChem...")
+            # Step 4: Download ligand
+            progress(4, f"Downloading ligand {job['ligand_name']} from PubChem...")
             logger.info(f"[{job_id[:8]}] Downloading ligand CID {job['ligand_cid']}")
             sdf_path = await download_ligand_sdf(job["ligand_cid"], work_dir)
 
-            update_job_message(job_id, "Converting ligand to PDBQT format...")
+            # Step 5: Prepare ligand PDBQT
+            progress(5, "Converting ligand to PDBQT format...")
             logger.info(f"[{job_id[:8]}] Preparing ligand PDBQT")
             ligand_pdbqt = prepare_ligand_pdbqt(sdf_path, work_dir)
 
-            # Run Vina
-            update_job_message(job_id, f"Running AutoDock Vina (exhaustiveness={job['exhaustiveness']})...")
-            update_job_status(job_id, JobStatus.DOCKING, status_message=f"Running AutoDock Vina (exhaustiveness={job['exhaustiveness']})...")
+            # Step 6: Run Vina
+            progress(6, f"Running AutoDock Vina (exhaustiveness={job['exhaustiveness']})...")
+            update_job_status(job_id, JobStatus.DOCKING, status_message=f"[6/{TOTAL_STEPS}] Running AutoDock Vina (exhaustiveness={job['exhaustiveness']})...")
             logger.info(f"[{job_id[:8]}] Running AutoDock Vina")
 
             output_pdbqt_path, poses = run_vina(
@@ -99,8 +115,8 @@ async def _process_job(job: dict):
                 job["exhaustiveness"], job["num_modes"], job["energy_range"]
             )
 
-            # Convert output to PDB for viewing
-            update_job_message(job_id, "Converting docked poses to PDB format...")
+            # Step 7: Convert output
+            progress(7, "Converting docked poses to PDB format...")
             docked_pdb_path = pdbqt_to_pdb(output_pdbqt_path, work_dir)
 
             # Read output files

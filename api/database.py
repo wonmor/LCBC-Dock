@@ -97,9 +97,21 @@ def update_job_status(job_id: str, status: JobStatus,
 
 
 def update_job_message(job_id: str, message: str):
-    """Update just the status message for live progress."""
+    """Append a message to the status log for live progress."""
     conn = get_db()
-    conn.execute("UPDATE docking_jobs SET status_message=? WHERE job_id=?", (message, job_id))
+    row = conn.execute("SELECT status_message FROM docking_jobs WHERE job_id=?", (job_id,)).fetchone()
+    existing = row["status_message"] if row and row["status_message"] else ""
+    # Keep latest message on first line, full log below
+    from datetime import datetime
+    timestamp = datetime.utcnow().strftime("%H:%M:%S")
+    log_line = f"[{timestamp}] {message}"
+    if existing:
+        lines = existing.split("\n")
+        # Replace first line (current status) and append to log
+        updated = f"{message}\n{log_line}\n" + "\n".join(lines[1:]) if len(lines) > 1 else f"{message}\n{log_line}"
+    else:
+        updated = f"{message}\n{log_line}"
+    conn.execute("UPDATE docking_jobs SET status_message=? WHERE job_id=?", (updated, job_id))
     conn.commit()
     conn.close()
 

@@ -100,11 +100,25 @@ const Dashboard: FC = () => {
                   <p className="text-sm text-gray-400">
                     {statusLabel[job.status] || job.status}
                   </p>
-                  {job.status_message && (
-                    <p className="text-[11px] text-gray-500 mt-2 font-mono">
-                      {job.status_message}
-                    </p>
-                  )}
+                  {job.status_message && (() => {
+                    const lines = job.status_message.split("\n").filter(Boolean);
+                    const current = lines[0] || "";
+                    const log = lines.slice(1);
+                    return (
+                      <div className="mt-3 w-full">
+                        <p className="text-[11px] text-white font-mono mb-2">{current}</p>
+                        {log.length > 0 && (
+                          <div className="bg-white/5 rounded-lg p-3 max-h-32 overflow-y-auto text-left">
+                            {log.map((line: string, i: number) => (
+                              <p key={i} className="text-[10px] text-gray-600 font-mono leading-relaxed">
+                                {line}
+                              </p>
+                            ))}
+                          </div>
+                        )}
+                      </div>
+                    );
+                  })()}
                 </>
               )}
             </div>

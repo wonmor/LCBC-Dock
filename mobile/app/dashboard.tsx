@@ -91,9 +91,23 @@ export default function Dashboard() {
               ) : (
                 <View style={{ alignItems: "center" }}>
                   <Spinner label={statusLabel[job.status] || job.status} />
-                  {job.status_message ? (
-                    <Text style={styles.statusMsg}>{job.status_message}</Text>
-                  ) : null}
+                  {job.status_message ? (() => {
+                    const lines = job.status_message.split("\n").filter(Boolean);
+                    const current = lines[0] || "";
+                    const log = lines.slice(1);
+                    return (
+                      <View style={{ width: "100%", marginTop: 12 }}>
+                        <Text style={styles.statusCurrent}>{current}</Text>
+                        {log.length > 0 && (
+                          <View style={styles.logBox}>
+                            {log.map((line: string, i: number) => (
+                              <Text key={i} style={styles.logLine}>{line}</Text>
+                            ))}
+                          </View>
+                        )}
+                      </View>
+                    );
+                  })() : null}
                 </View>
               )}
             </View>
@@ -209,12 +223,24 @@ const styles = StyleSheet.create({
     fontWeight: "300",
     textAlign: "center",
   },
-  statusMsg: {
-    color: "#6b7280",
+  statusCurrent: {
+    color: "#fff",
     fontSize: 11,
     fontFamily: "monospace",
     textAlign: "center",
-    marginTop: 8,
+    marginBottom: 8,
+  },
+  logBox: {
+    backgroundColor: "rgba(255,255,255,0.05)",
+    borderRadius: 8,
+    padding: 10,
+    maxHeight: 120,
+  },
+  logLine: {
+    color: "#4b5563",
+    fontSize: 10,
+    fontFamily: "monospace",
+    lineHeight: 16,
   },
   detailRow: {
     flexDirection: "row",

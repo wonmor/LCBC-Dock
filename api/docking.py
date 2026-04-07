@@ -95,34 +95,30 @@ def prepare_ligand_pdbqt(sdf_path: str, work_dir: str) -> str:
     """Convert ligand SDF to PDBQT format."""
     pdbqt_path = os.path.join(work_dir, "ligand.pdbqt")
 
-    # Try meeko first
+    # PubChem SDF already has 3D coords, so skip --gen3d (it's very slow)
     try:
-        mol2_path = os.path.join(work_dir, "ligand.mol2")
-        subprocess.run(
-            ["obabel", sdf_path, "-O", mol2_path, "--gen3d"],
-            capture_output=True, text=True, timeout=60
-        )
         result = subprocess.run(
-            ["mk_prepare_ligand.py", "-i", mol2_path, "-o", pdbqt_path],
-            capture_output=True, text=True, timeout=60
+            ["obabel", sdf_path, "-O", pdbqt_path],
+            capture_output=True, text=True, timeout=30
         )
         if os.path.exists(pdbqt_path) and os.path.getsize(pdbqt_path) > 0:
             return pdbqt_path
-    except (FileNotFoundError, subprocess.TimeoutExpired):
-        pass
+        logger.warning(f"obabel produced empty output: {result.stderr}")
+    except (FileNotFoundError, subprocess.TimeoutExpired) as e:
+        logger.warning(f"obabel without --gen3d failed: {e}")
 
-    # Fallback: Open Babel
+    # Fallback: with --gen3d if no 3D coords in SDF
     try:
         result = subprocess.run(
             ["obabel", sdf_path, "-O", pdbqt_path, "--gen3d"],
-            capture_output=True, text=True, timeout=60
+            capture_output=True, text=True, timeout=120
         )
         if os.path.exists(pdbqt_path) and os.path.getsize(pdbqt_path) > 0:
             return pdbqt_path
     except (FileNotFoundError, subprocess.TimeoutExpired):
         pass
 
-    raise RuntimeError("Could not convert ligand to PDBQT. Ensure Open Babel or Meeko is installed.")
+    raise RuntimeError("Could not convert ligand to PDBQT. Ensure Open Babel is installed.")
 
 
 def _manual_pdb_to_pdbqt(pdb_path: str, work_dir: str, name: str) -> str:
