@@ -15,14 +15,14 @@
     },
     "ios": {
       "supportsTablet": true,
-      "bundleIdentifier": "com.johnseong.dockit"
+      "bundleIdentifier": "com.johnseong.dock-it"
     },
     "android": {
       "adaptiveIcon": {
         "foregroundImage": "./assets/adaptive-icon.png",
         "backgroundColor": "#000000"
       },
-      "package": "com.johnseong.dockit"
+      "package": "com.johnseong.dock_it"
     },
     "plugins": [
       "expo-router",
