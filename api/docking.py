@@ -152,7 +152,6 @@ def run_vina(receptor_pdbqt: str, ligand_pdbqt: str, work_dir: str,
              energy_range: float = 3.0) -> Tuple[str, List[dict]]:
     """Run AutoDock Vina and return output PDBQT path and parsed poses."""
     output_path = os.path.join(work_dir, "docked_output.pdbqt")
-    log_path = os.path.join(work_dir, "vina_log.txt")
 
     cmd = [
         VINA_EXECUTABLE,
@@ -168,7 +167,6 @@ def run_vina(receptor_pdbqt: str, ligand_pdbqt: str, work_dir: str,
         "--num_modes", str(num_modes),
         "--energy_range", str(energy_range),
         "--out", output_path,
-        "--log", log_path,
     ]
 
     logger.info(f"Running Vina: {' '.join(cmd)}")

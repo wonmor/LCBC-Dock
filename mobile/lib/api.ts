@@ -192,3 +192,16 @@ export function getProtein3DViewUrl(pdbId: string) {
 export function getMoleculeImageUrl(cid: number) {
   return `https://pubchem.ncbi.nlm.nih.gov/rest/pug/compound/cid/${cid}/PNG?image_size=300x300`;
 }
+
+export interface Stats {
+  queue_length: number;
+  active_jobs: number;
+  completed_jobs: number;
+  total_jobs: number;
+  est_wait_minutes: number;
+}
+
+export async function getStats(): Promise<Stats> {
+  const resp = await axios.get(`${BACKEND_BASE}/api/stats`, { timeout: 5000 });
+  return resp.data;
+}

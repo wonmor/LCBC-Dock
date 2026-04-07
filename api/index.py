@@ -384,6 +384,42 @@ async def download_pdb(job_id: str):
     )
 
 
+@app.get("/api/stats")
+async def get_stats():
+    """Get live queue stats for the homepage."""
+    from api.database import get_db
+    conn = get_db()
+
+    queued = conn.execute(
+        "SELECT COUNT(*) as c FROM docking_jobs WHERE status IN ('queued', 'preparing')"
+    ).fetchone()["c"]
+
+    active = conn.execute(
+        "SELECT COUNT(*) as c FROM docking_jobs WHERE status = 'docking'"
+    ).fetchone()["c"]
+
+    completed = conn.execute(
+        "SELECT COUNT(*) as c FROM docking_jobs WHERE status = 'completed'"
+    ).fetchone()["c"]
+
+    total = conn.execute(
+        "SELECT COUNT(*) as c FROM docking_jobs"
+    ).fetchone()["c"]
+
+    # Estimate wait time: ~3 min per queued job on average
+    est_wait_min = (queued + active) * 3
+
+    conn.close()
+
+    return {
+        "queue_length": queued,
+        "active_jobs": active,
+        "completed_jobs": completed,
+        "total_jobs": total,
+        "est_wait_minutes": est_wait_min,
+    }
+
+
 @app.get("/")
 async def root():
     return {"message": "LCBC Dock API v2.0 is running!", "docs": "/docs"}
