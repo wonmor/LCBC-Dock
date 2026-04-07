@@ -39,8 +39,16 @@ export default function About() {
           Computational chemistry education
         </Text>
 
+        <View style={styles.shoutout}>
+          <Text style={styles.body}>
+            A big shoutout to <Text style={styles.bold}>Professor Juyong Lee</Text> at
+            Seoul National University Computational Drug Discovery Lab for the inspiration
+            and providing me a valuable opportunity to intern at your lab.
+          </Text>
+        </View>
+
         <Text style={styles.footer}>
-          Built by John Seong · Seoul National University
+          Built by John Wonmo Seong · Seoul National University
         </Text>
       </ScrollView>
     </SafeAreaView>
@@ -84,10 +92,17 @@ const styles = StyleSheet.create({
     lineHeight: 20,
     paddingLeft: 8,
   },
+  shoutout: {
+    borderWidth: 1,
+    borderColor: "rgba(255,255,255,0.1)",
+    borderRadius: 16,
+    padding: 20,
+    marginTop: 24,
+  },
   footer: {
     color: "#4b5563",
     fontSize: 11,
     textAlign: "center",
-    marginTop: 40,
+    marginTop: 24,
   },
 });

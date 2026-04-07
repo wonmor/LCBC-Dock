@@ -37,8 +37,16 @@ export default function About() {
           </div>
         </div>
 
-        <footer className="mt-16 text-center text-xs text-gray-600">
-          Built by John Seong &middot; Seoul National University
+        <div className="mt-12 border border-white/10 rounded-2xl p-6">
+          <p className="text-sm text-gray-400 leading-relaxed">
+            A big shoutout to <strong className="text-white">Professor Juyong Lee</strong> at
+            Seoul National University Computational Drug Discovery Lab for the inspiration
+            and providing me a valuable opportunity to intern at your lab.
+          </p>
+        </div>
+
+        <footer className="mt-10 text-center text-xs text-gray-600">
+          Built by John Wonmo Seong &middot; Seoul National University
         </footer>
       </div>
     </div>

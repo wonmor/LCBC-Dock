@@ -22,7 +22,7 @@ export default function Cook() {
   }>();
 
   const [email, setEmail] = useState("");
-  const [exhaustiveness, setExhaustiveness] = useState(8);
+  const [exhaustiveness, setExhaustiveness] = useState(4);
   const [submitting, setSubmitting] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
