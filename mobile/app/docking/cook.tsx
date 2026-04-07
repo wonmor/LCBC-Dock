@@ -146,6 +146,9 @@ const styles = StyleSheet.create({
     paddingTop: 8,
     paddingBottom: 24,
     gap: 12,
+    maxWidth: 600,
+    alignSelf: "center",
+    width: "100%",
   },
   heading: {
     fontSize: 32,

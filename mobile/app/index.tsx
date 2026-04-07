@@ -11,6 +11,7 @@ import {
 import { useRouter } from "expo-router";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { getStats, getMoleculeImageUrl, type Stats } from "@/lib/api";
+import { useIsWide } from "@/lib/useLayout";
 
 interface Example {
   protein: string;
@@ -44,6 +45,7 @@ const CATEGORIES = ["All", ...Array.from(new Set(EXAMPLES.map((e) => e.category)
 
 export default function Home() {
   const router = useRouter();
+  const isWide = useIsWide();
   const [stats, setStats] = useState<Stats | null>(null);
   const [search, setSearch] = useState("");
   const [category, setCategory] = useState("All");
@@ -158,10 +160,11 @@ export default function Home() {
         </ScrollView>
 
         {/* Example cards */}
+        <View style={isWide ? styles.gridWide : undefined}>
         {filtered.map((ex) => (
           <Pressable
             key={`${ex.protein}-${ex.ligandCid}`}
-            style={styles.exCard}
+            style={[styles.exCard, isWide && styles.exCardWide]}
             onPress={() =>
               router.push({
                 pathname: "/docking/cook",
@@ -195,6 +198,8 @@ export default function Home() {
           </Pressable>
         ))}
 
+        </View>
+
         {filtered.length === 0 && (
           <Text style={styles.empty}>No examples match your search.</Text>
         )}
@@ -224,6 +229,9 @@ const styles = StyleSheet.create({
     paddingHorizontal: 24,
     paddingTop: 60,
     paddingBottom: 32,
+    maxWidth: 800,
+    alignSelf: "center",
+    width: "100%",
   },
   title: {
     fontSize: 48,
@@ -351,6 +359,14 @@ const styles = StyleSheet.create({
   catText: { color: "#9ca3af", fontSize: 9 },
   exMeta: { color: "#6b7280", fontSize: 11 },
   exDesc: { color: "#4b5563", fontSize: 11 },
+  gridWide: {
+    flexDirection: "row",
+    flexWrap: "wrap",
+    gap: 8,
+  },
+  exCardWide: {
+    width: "48.5%",
+  },
   empty: {
     color: "#6b7280",
     fontSize: 12,

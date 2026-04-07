@@ -156,6 +156,9 @@ const styles = StyleSheet.create({
     flex: 1,
     paddingHorizontal: 24,
     paddingTop: 8,
+    maxWidth: 600,
+    alignSelf: "center",
+    width: "100%",
   },
   heading: {
     fontSize: 32,

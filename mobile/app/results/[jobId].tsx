@@ -178,6 +178,9 @@ const styles = StyleSheet.create({
     paddingHorizontal: 24,
     paddingTop: 8,
     paddingBottom: 32,
+    maxWidth: 700,
+    alignSelf: "center",
+    width: "100%",
   },
   heading: {
     fontSize: 32,
