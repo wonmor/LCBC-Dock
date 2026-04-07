@@ -5,7 +5,7 @@ import os
 import threading
 import time
 
-from api.database import get_pending_jobs, update_job_status, update_job_message, get_job_full
+from api.database import get_pending_jobs, update_job_status, update_job_message, get_job_full, cleanup_old_jobs
 from api.models import JobStatus
 from api.docking import (
     download_protein_pdb, download_ligand_sdf, clean_protein_pdb,
@@ -34,9 +34,18 @@ def _worker_loop():
     """Main worker loop that processes queued jobs."""
     loop = asyncio.new_event_loop()
     asyncio.set_event_loop(loop)
+    last_cleanup = 0
 
     while True:
         try:
+            # Cleanup old jobs once per hour
+            now = time.time()
+            if now - last_cleanup > 3600:
+                deleted = cleanup_old_jobs(days=30)
+                if deleted > 0:
+                    logger.info(f"Cleaned up {deleted} old jobs (>30 days)")
+                last_cleanup = now
+
             pending = get_pending_jobs()
             if pending:
                 job = pending[0]

@@ -154,6 +154,20 @@ def get_queue_position(job_id: str) -> int:
     return 0
 
 
+def cleanup_old_jobs(days: int = 30):
+    """Delete completed/failed jobs older than N days to save disk space."""
+    conn = get_db()
+    cutoff = (datetime.utcnow() - __import__('datetime').timedelta(days=days)).isoformat()
+    result = conn.execute(
+        "DELETE FROM docking_jobs WHERE status IN (?, ?) AND created_at < ?",
+        (JobStatus.COMPLETED, JobStatus.FAILED, cutoff)
+    )
+    deleted = result.rowcount
+    conn.commit()
+    conn.close()
+    return deleted
+
+
 def get_pending_jobs() -> List[dict]:
     conn = get_db()
     rows = conn.execute(
