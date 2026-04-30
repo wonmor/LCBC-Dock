@@ -109,6 +109,16 @@ const template = [
         accelerator: "CmdOrCtrl+N",
         click: () => mainWindow?.loadURL(`${WEB_URL}/docking/protein`),
       },
+      {
+        label: "Glossary",
+        accelerator: "CmdOrCtrl+Shift+G",
+        click: () => mainWindow?.loadURL(`${WEB_URL}/glossary`),
+      },
+      { type: "separator" },
+      {
+        label: "Compare runs",
+        click: () => mainWindow?.loadURL(`${WEB_URL}/compare`),
+      },
     ],
   },
 ];
