@@ -64,7 +64,7 @@ export default function Glossary() {
               ask for nine, it only returns that many if it can find that
               many distinct poses within the energy range. Reduce to one
               if you only care about the best fit; raise to twenty if
-              you're surveying the binding landscape.
+              you&apos;re surveying the binding landscape.
             </p>
           }
         />
@@ -92,8 +92,8 @@ export default function Glossary() {
               The 3D rectangle in which Vina is allowed to place the
               ligand. DockIt computes the geometric centre of the protein
               by default — you almost always want to <em>narrow</em> this to
-              a known binding pocket once you've got an initial result, so
-              the search doesn't waste time on the surface. Box sizes
+              a known binding pocket once you&apos;ve got an initial result, so
+              the search doesn&apos;t waste time on the surface. Box sizes
               between 18 and 25 Å per side cover most pockets.
             </p>
           }
@@ -104,7 +104,7 @@ export default function Glossary() {
           title="PDBQT"
           body={
             <p>
-              AutoDock's extended PDB format. Each atom carries an
+              AutoDock&apos;s extended PDB format. Each atom carries an
               additional Gasteiger partial charge plus an autodock atom
               type (e.g. C.ar for aromatic carbon). DockIt produces this
               automatically when you submit, but you can download the
@@ -122,7 +122,7 @@ export default function Glossary() {
               The open-source docking engine DockIt wraps. Vina was
               published by Trott &amp; Olson in 2010 and uses an iterated
               local search global optimiser with an empirical scoring
-              function. It's fast (seconds to minutes per ligand) and
+              function. It&apos;s fast (seconds to minutes per ligand) and
               <em> good enough</em> for triage / teaching, though dedicated
               physics-based methods (e.g. FEP) outperform it in absolute
               accuracy.

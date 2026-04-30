@@ -12,16 +12,20 @@ import { MetadataRoute } from "next";
 const BASE = "https://lcbc-client.apps.johnseong.com";
 
 export default function sitemap(): MetadataRoute.Sitemap {
+  // Older Next.js MetadataRoute.Sitemap types only support url +
+  // lastModified. Newer versions add changeFrequency / priority but
+  // we keep this minimal so the build doesn't fail across versions —
+  // Google reads url + last-modified anyway.
   const lastModified = new Date();
   return [
-    { url: `${BASE}/`,                lastModified, changeFrequency: "weekly",  priority: 1.0 },
-    { url: `${BASE}/docking/protein`, lastModified, changeFrequency: "monthly", priority: 0.9 },
-    { url: `${BASE}/docking/ligand`,  lastModified, changeFrequency: "monthly", priority: 0.8 },
-    { url: `${BASE}/dashboard`,       lastModified, changeFrequency: "weekly",  priority: 0.6 },
-    { url: `${BASE}/examples`,        lastModified, changeFrequency: "monthly", priority: 0.7 },
-    { url: `${BASE}/tutorials`,       lastModified, changeFrequency: "monthly", priority: 0.7 },
-    { url: `${BASE}/glossary`,        lastModified, changeFrequency: "monthly", priority: 0.8 },
-    { url: `${BASE}/about`,           lastModified, changeFrequency: "yearly",  priority: 0.4 },
-    { url: `${BASE}/contact`,         lastModified, changeFrequency: "yearly",  priority: 0.3 },
+    { url: `${BASE}/`,                lastModified },
+    { url: `${BASE}/docking/protein`, lastModified },
+    { url: `${BASE}/docking/ligand`,  lastModified },
+    { url: `${BASE}/dashboard`,       lastModified },
+    { url: `${BASE}/examples`,        lastModified },
+    { url: `${BASE}/tutorials`,       lastModified },
+    { url: `${BASE}/glossary`,        lastModified },
+    { url: `${BASE}/about`,           lastModified },
+    { url: `${BASE}/contact`,         lastModified },
   ];
 }
