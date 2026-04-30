@@ -42,13 +42,69 @@ def init_db():
             status_message TEXT
         )
     """)
-    # Add column if upgrading from old schema
-    try:
-        conn.execute("ALTER TABLE docking_jobs ADD COLUMN status_message TEXT")
-    except Exception:
-        pass
+    # Add columns if upgrading from old schema. Each ALTER is wrapped
+    # individually so a partial migration doesn't block the rest.
+    for ddl in (
+        "ALTER TABLE docking_jobs ADD COLUMN status_message TEXT",
+        # Academic / lab-notebook fields. Notes is freeform; tags is a
+        # comma-separated list ("ochem-201, thesis-ch3"). Both are
+        # nullable so legacy rows just read as empty.
+        "ALTER TABLE docking_jobs ADD COLUMN notes TEXT",
+        "ALTER TABLE docking_jobs ADD COLUMN tags TEXT",
+        "ALTER TABLE docking_jobs ADD COLUMN owner_email TEXT",
+    ):
+        try:
+            conn.execute(ddl)
+        except Exception:
+            pass
     conn.commit()
     conn.close()
+
+
+def update_job_metadata(job_id: str, notes: Optional[str] = None,
+                        tags: Optional[str] = None) -> bool:
+    """Update the academic-only fields (notes, tags). Returns True
+    when the row exists, False when no job matches the id."""
+    conn = get_db()
+    row = conn.execute("SELECT job_id FROM docking_jobs WHERE job_id=?", (job_id,)).fetchone()
+    if not row:
+        conn.close()
+        return False
+    conn.execute("""
+        UPDATE docking_jobs
+        SET notes = COALESCE(?, notes),
+            tags  = COALESCE(?, tags)
+        WHERE job_id=?
+    """, (notes, tags, job_id))
+    conn.commit()
+    conn.close()
+    return True
+
+
+def list_jobs_by_email(email: str, limit: int = 100) -> List[dict]:
+    """All jobs submitted under a given email — drives the dashboard
+    filter and the per-class roll-up for instructors."""
+    conn = get_db()
+    rows = conn.execute(
+        "SELECT * FROM docking_jobs WHERE email=? OR owner_email=? ORDER BY created_at DESC LIMIT ?",
+        (email, email, limit)
+    ).fetchall()
+    conn.close()
+    return [dict(r) for r in rows]
+
+
+def list_jobs_by_ids(job_ids: List[str]) -> List[dict]:
+    """Used by the comparison view to load N jobs in one round-trip."""
+    if not job_ids:
+        return []
+    conn = get_db()
+    placeholders = ",".join("?" * len(job_ids))
+    rows = conn.execute(
+        f"SELECT * FROM docking_jobs WHERE job_id IN ({placeholders})",
+        tuple(job_ids)
+    ).fetchall()
+    conn.close()
+    return [dict(r) for r in rows]
 
 
 def create_job(job_id: str, protein_pdb_id: str, ligand_cid: int,

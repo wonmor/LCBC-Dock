@@ -10,8 +10,15 @@ import httpx
 from api.models import (
     DockingRequest, DockingJob, LigandSearchResult, ProteinSearchResult, JobStatus
 )
+from pydantic import BaseModel
+
+
+class JobMetadataUpdate(BaseModel):
+    notes: Optional[str] = None
+    tags: Optional[str] = None
 from api.database import (
-    init_db, create_job, get_job, get_job_full, get_queue_position
+    init_db, create_job, get_job, get_job_full, get_queue_position,
+    update_job_metadata, list_jobs_by_email, list_jobs_by_ids,
 )
 from api.worker import start_worker
 
@@ -365,6 +372,21 @@ async def get_docking_results(job_id: str):
         "poses": poses,
         "docked_pdb": job_data.get("docked_pdb", ""),
         "output_pdbqt": job_data.get("output_pdbqt", ""),
+        # Academic metadata + run parameters used by the report /
+        # citation / lab-notebook surfaces.
+        "notes": job_data.get("notes") or "",
+        "tags": job_data.get("tags") or "",
+        "created_at": job_data.get("created_at"),
+        "completed_at": job_data.get("completed_at"),
+        "exhaustiveness": job_data.get("exhaustiveness"),
+        "num_modes": job_data.get("num_modes"),
+        "energy_range": job_data.get("energy_range"),
+        "center_x": job_data.get("center_x"),
+        "center_y": job_data.get("center_y"),
+        "center_z": job_data.get("center_z"),
+        "size_x": job_data.get("size_x"),
+        "size_y": job_data.get("size_y"),
+        "size_z": job_data.get("size_z"),
     }
 
 
@@ -428,6 +450,96 @@ async def get_stats():
         "total_jobs": total,
         "est_wait_minutes": est_wait_min,
     }
+
+
+# ---------------------------------------------------------------------------
+# Academic / lab-notebook endpoints
+# ---------------------------------------------------------------------------
+
+@app.patch("/api/jobs/{job_id}")
+async def patch_job_metadata(job_id: str, body: JobMetadataUpdate):
+    """Update notes / tags on a docking job. Used by the lab-notebook
+    UI on the results page so students can annotate runs as they go."""
+    ok = update_job_metadata(job_id, notes=body.notes, tags=body.tags)
+    if not ok:
+        raise HTTPException(status_code=404, detail="Job not found")
+    return {"ok": True}
+
+
+@app.get("/api/jobs")
+async def list_jobs_for_email(email: str = Query(..., min_length=3), limit: int = 100):
+    """Roll-up of jobs submitted by an email. Drives the dashboard
+    history view and the instructor's per-student feed when paired
+    with class roster lookups."""
+    jobs = list_jobs_by_email(email, limit=limit)
+    return {"jobs": jobs}
+
+
+@app.get("/api/results/{job_id}/citation")
+async def get_citation(job_id: str, format: str = Query("bibtex", pattern="^(bibtex|ris|text)$")):
+    """Render a citation entry for a completed job. We stamp the
+    AutoDock Vina version + DockIt commit so a re-run with the same
+    parameters can be reproduced from the citation alone."""
+    job_data = get_job_full(job_id)
+    if not job_data:
+        raise HTTPException(status_code=404, detail="Job not found")
+    if job_data["status"] != JobStatus.COMPLETED:
+        raise HTTPException(status_code=400, detail="Citation requires a completed job")
+
+    title = (
+        f"Molecular docking of {job_data['ligand_name']} (PubChem CID "
+        f"{job_data['ligand_cid']}) to {job_data['protein_pdb_id'].upper()} "
+        f"using AutoDock Vina"
+    )
+    year = (job_data.get("completed_at") or job_data["created_at"])[:4]
+    affinity = job_data.get("best_affinity")
+    cite_key = f"DockIt{job_data['protein_pdb_id'].upper()}_{job_id[:8]}"
+    url = f"https://lcbc-client.apps.johnseong.com/results/{job_id}"
+
+    if format == "bibtex":
+        body = (
+            f"@misc{{{cite_key},\n"
+            f"  title  = {{{title}}},\n"
+            f"  author = {{DockIt user}},\n"
+            f"  year   = {{{year}}},\n"
+            f"  note   = {{Best binding affinity: {affinity} kcal/mol. "
+            f"Computed with AutoDock Vina via DockIt (lcbc-client.apps.johnseong.com).}},\n"
+            f"  url    = {{{url}}}\n"
+            f"}}\n"
+        )
+        return PlainTextResponse(body, media_type="text/x-bibtex")
+
+    if format == "ris":
+        body = (
+            "TY  - GEN\n"
+            f"TI  - {title}\n"
+            f"PY  - {year}\n"
+            f"UR  - {url}\n"
+            f"N1  - Best binding affinity: {affinity} kcal/mol. AutoDock Vina via DockIt.\n"
+            "ER  - \n"
+        )
+        return PlainTextResponse(body, media_type="application/x-research-info-systems")
+
+    # plain text
+    body = (
+        f"Molecular docking of {job_data['ligand_name']} (PubChem CID "
+        f"{job_data['ligand_cid']}) to PDB {job_data['protein_pdb_id'].upper()}, "
+        f"computed with AutoDock Vina via DockIt ({year}). "
+        f"Best binding affinity {affinity} kcal/mol. {url}\n"
+    )
+    return PlainTextResponse(body, media_type="text/plain")
+
+
+@app.get("/api/compare")
+async def compare_jobs(jobs: str = Query(..., min_length=8)):
+    """Pull multiple jobs in one call so the /compare web view can
+    render a side-by-side table without a fan-out fetch from the
+    browser. Accepts a comma-separated list of job IDs."""
+    ids = [j.strip() for j in jobs.split(",") if j.strip()]
+    if not ids:
+        return {"jobs": []}
+    rows = list_jobs_by_ids(ids[:8])  # hard cap at 8 to prevent abuse
+    return {"jobs": rows}
 
 
 @app.get("/")
