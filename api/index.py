@@ -221,19 +221,37 @@ async def get_ligand_detail(cid: int):
                 if info:
                     synonyms = info[0].get("Synonym", [])[:10]
 
+        smiles = props.get("IsomericSMILES", props.get("SMILES", ""))
+        # Drug-likeness panel — Lipinski / Veber / Ghose / PAINS / QED.
+        # Computed inline rather than via a separate endpoint so the
+        # client gets it on first paint without an extra round-trip.
+        from api.druglikeness import score as score_druglikeness
+        druglikeness = score_druglikeness(smiles)
+
         return {
             "cid": cid,
             "name": synonyms[0] if synonyms else f"CID {cid}",
             "molecular_formula": props.get("MolecularFormula", ""),
             "molecular_weight": props.get("MolecularWeight", 0),
             "iupac_name": "",
-            "canonical_smiles": props.get("IsomericSMILES", props.get("SMILES", "")),
+            "canonical_smiles": smiles,
             "synonyms": synonyms,
             "image_url": f"https://pubchem.ncbi.nlm.nih.gov/rest/pug/compound/cid/{cid}/PNG",
             "sdf_url": f"https://pubchem.ncbi.nlm.nih.gov/rest/pug/compound/cid/{cid}/SDF?record_type=3d",
+            "druglikeness": druglikeness,
         }
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e))
+
+
+@app.post("/api/druglikeness")
+async def druglikeness_endpoint(payload: dict):
+    """Score an arbitrary SMILES — useful when the user has a custom
+    structure that isn't in PubChem yet (e.g., a fresh analog from
+    a lead-optimisation series)."""
+    from api.druglikeness import score as score_druglikeness
+    smiles = (payload or {}).get("smiles", "")
+    return score_druglikeness(smiles)
 
 
 @app.get("/api/ligands/{cid}/sdf")

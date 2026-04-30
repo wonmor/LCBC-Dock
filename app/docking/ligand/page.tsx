@@ -1,9 +1,14 @@
 "use client";
 
-import { FC, useState, useRef } from "react";
+import { FC, useState, useRef, useEffect } from "react";
 import { useSearchParams } from "next/navigation";
 import Link from "next/link";
 import axios from "axios";
+
+const API_BASE =
+  process.env.NODE_ENV === "development"
+    ? "http://localhost:8000"
+    : "https://lcbc-server.apps.johnseong.com";
 
 interface Molecule {
   cid: number;
@@ -11,6 +16,32 @@ interface Molecule {
   formula: string;
   weight: number;
   smiles: string;
+}
+
+interface Druglikeness {
+  available: boolean;
+  verdict?: "drug_like" | "concerns" | "fail";
+  qed?: number;
+  qed_label?: string;
+  properties?: {
+    molecular_weight: number;
+    log_p: number;
+    tpsa: number;
+    h_bond_donors: number;
+    h_bond_acceptors: number;
+    rotatable_bonds: number;
+    rings: number;
+    aromatic_rings: number;
+    heavy_atoms: number;
+    formal_charge: number;
+  };
+  rules?: {
+    lipinski: { passes: boolean; violations: string[]; max_allowed_violations: number };
+    veber: { passes: boolean; violations: string[] };
+    ghose: { passes: boolean; violations: string[] };
+    pains: { passes: boolean; matched_filters: string[]; match_count: number };
+  };
+  error?: string;
 }
 
 const Ligand: FC = () => {
@@ -22,7 +53,23 @@ const Ligand: FC = () => {
   const [selected, setSelected] = useState<Molecule | null>(null);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [druglikeness, setDruglikeness] = useState<Druglikeness | null>(null);
+  const [dlLoading, setDlLoading] = useState(false);
   const debounceRef = useRef<NodeJS.Timeout | null>(null);
+
+  // Fetch drug-likeness whenever a ligand is selected. /api/ligands/{cid}
+  // already returns it inline, so this is one round-trip per selection
+  // and the panel renders before the user hits "Next".
+  useEffect(() => {
+    if (!selected) { setDruglikeness(null); return; }
+    let cancelled = false;
+    setDlLoading(true);
+    axios.get(`${API_BASE}/api/ligands/${selected.cid}`)
+      .then((r) => { if (!cancelled) setDruglikeness(r.data?.druglikeness ?? null); })
+      .catch(() => { if (!cancelled) setDruglikeness(null); })
+      .finally(() => { if (!cancelled) setDlLoading(false); });
+    return () => { cancelled = true; };
+  }, [selected?.cid]);
 
   const search = async (term: string) => {
     if (!term || term.trim().length < 2) {
@@ -151,6 +198,83 @@ const Ligand: FC = () => {
               )}
             </div>
 
+            {/* Drug-likeness panel — Lipinski / Veber / Ghose / PAINS / QED.
+                Surfaces medicinal-chemistry red flags before the user
+                spends docking compute on a non-drug-like compound. */}
+            {dlLoading && (
+              <div className="border border-white/10 rounded-2xl p-5 text-center">
+                <div className="inline-block w-4 h-4 border-2 border-white/20 border-t-white rounded-full animate-spin" />
+                <p className="text-[10px] text-gray-500 mt-2">Scoring drug-likeness…</p>
+              </div>
+            )}
+            {!dlLoading && druglikeness?.available && druglikeness.properties && druglikeness.rules && (
+              <div className="border border-white/10 rounded-2xl p-5 space-y-4">
+                <div className="flex items-center justify-between">
+                  <p className="text-xs text-gray-400">Drug-likeness</p>
+                  {druglikeness.verdict && (
+                    <span className={`text-[10px] px-2 py-0.5 rounded-full font-medium ${
+                      druglikeness.verdict === "drug_like" ? "bg-emerald-500/20 text-emerald-400"
+                        : druglikeness.verdict === "concerns" ? "bg-yellow-500/20 text-yellow-400"
+                        : "bg-red-500/20 text-red-400"
+                    }`}>
+                      {druglikeness.verdict === "drug_like" ? "Drug-like"
+                        : druglikeness.verdict === "concerns" ? "Concerns"
+                        : "Fails filters"}
+                    </span>
+                  )}
+                </div>
+
+                {/* QED — Bickerton's quantitative estimate of drug-likeness */}
+                {druglikeness.qed != null && (
+                  <div>
+                    <div className="flex items-baseline justify-between mb-1">
+                      <span className="text-[10px] text-gray-500">QED score</span>
+                      <span className="text-xs font-mono">
+                        {druglikeness.qed.toFixed(2)} · {druglikeness.qed_label}
+                      </span>
+                    </div>
+                    <div className="h-1.5 bg-white/5 rounded-full overflow-hidden">
+                      <div
+                        className={`h-full transition-all ${
+                          druglikeness.qed >= 0.67 ? "bg-emerald-400"
+                            : druglikeness.qed >= 0.5 ? "bg-green-400"
+                            : druglikeness.qed >= 0.35 ? "bg-yellow-400"
+                            : "bg-red-400"
+                        }`}
+                        style={{ width: `${druglikeness.qed * 100}%` }}
+                      />
+                    </div>
+                  </div>
+                )}
+
+                {/* Rule grid */}
+                <div className="grid grid-cols-2 gap-2 text-[10px]">
+                  <RuleBadge label="Lipinski" pass={druglikeness.rules.lipinski.passes}
+                             violations={druglikeness.rules.lipinski.violations} />
+                  <RuleBadge label="Veber" pass={druglikeness.rules.veber.passes}
+                             violations={druglikeness.rules.veber.violations} />
+                  <RuleBadge label="Ghose" pass={druglikeness.rules.ghose.passes}
+                             violations={druglikeness.rules.ghose.violations} />
+                  <RuleBadge label="PAINS"
+                             pass={druglikeness.rules.pains.passes}
+                             violations={druglikeness.rules.pains.matched_filters
+                               .map((f) => `Matches ${f}`)} />
+                </div>
+
+                {/* Property table */}
+                <div className="grid grid-cols-2 gap-x-3 gap-y-1.5 text-[10px] pt-3 border-t border-white/5">
+                  <PropRow label="MW (g/mol)"   value={druglikeness.properties.molecular_weight} />
+                  <PropRow label="LogP"         value={druglikeness.properties.log_p} />
+                  <PropRow label="TPSA (Å²)"    value={druglikeness.properties.tpsa} />
+                  <PropRow label="Rot. bonds"   value={druglikeness.properties.rotatable_bonds} />
+                  <PropRow label="H-donors"     value={druglikeness.properties.h_bond_donors} />
+                  <PropRow label="H-acceptors"  value={druglikeness.properties.h_bond_acceptors} />
+                  <PropRow label="Heavy atoms"  value={druglikeness.properties.heavy_atoms} />
+                  <PropRow label="Aromatic rings" value={druglikeness.properties.aromatic_rings} />
+                </div>
+              </div>
+            )}
+
             <button
               onClick={() => {
                 setSelected(null);
@@ -201,5 +325,43 @@ const Ligand: FC = () => {
     </div>
   );
 };
+
+function RuleBadge({ label, pass, violations }: {
+  label: string;
+  pass: boolean;
+  violations: string[];
+}) {
+  return (
+    <div
+      className={`px-2 py-1.5 rounded-lg border ${
+        pass ? "border-emerald-500/30 bg-emerald-500/5" : "border-red-500/30 bg-red-500/5"
+      }`}
+      title={violations.join("\n") || `${label}: passes all criteria`}
+    >
+      <div className="flex items-center justify-between">
+        <span className={pass ? "text-emerald-400" : "text-red-400"}>{label}</span>
+        <span className={pass ? "text-emerald-400" : "text-red-400"}>
+          {pass ? "✓" : "✗"}
+        </span>
+      </div>
+      {!pass && violations.length > 0 && (
+        <p className="text-[9px] text-gray-400 mt-0.5 line-clamp-2">
+          {violations[0]}{violations.length > 1 ? ` +${violations.length - 1}` : ""}
+        </p>
+      )}
+    </div>
+  );
+}
+
+function PropRow({ label, value }: { label: string; value: number }) {
+  return (
+    <>
+      <span className="text-gray-500">{label}</span>
+      <span className="font-mono text-right">{
+        Number.isInteger(value) ? value : value.toFixed(2)
+      }</span>
+    </>
+  );
+}
 
 export default Ligand;
