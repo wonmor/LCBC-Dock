@@ -2,12 +2,12 @@ import SwiftUI
 import AppKit
 
 @main
-struct DockMoleMacApp: App {
+struct MolDockMacApp: App {
     @NSApplicationDelegateAdaptor(AppDelegate.self) private var appDelegate
     @Environment(\.openWindow) private var openWindow
 
     var body: some Scene {
-        WindowGroup("DockMole", id: "main") {
+        WindowGroup("MolDock", id: "main") {
             ContentView()
                 .frame(minWidth: 980, minHeight: 640)
                 .preferredColorScheme(.dark)
@@ -20,7 +20,7 @@ struct DockMoleMacApp: App {
             // Apple guideline 4: closing the only window must leave a
             // way back. ⌘0 + Window-menu entry reopens the main window.
             CommandGroup(after: .windowList) {
-                Button("DockMole") {
+                Button("MolDock") {
                     if let win = NSApp.windows.first(where: { $0.canBecomeKey }) {
                         win.makeKeyAndOrderFront(nil)
                     } else {

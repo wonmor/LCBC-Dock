@@ -1,6 +1,6 @@
 import SwiftUI
 
-/// Two-pane scaffold matching the iOS DockMole feature set. Real
+/// Two-pane scaffold matching the iOS MolDock feature set. Real
 /// docking logic is a multi-week port — for now each sidebar item
 /// hosts a PlaceholderView that explains what'll live there and
 /// links out to the web app for users who need it today.
@@ -41,7 +41,7 @@ struct ContentView: View {
             List(Section.allCases, selection: $section) { s in
                 Label(s.rawValue, systemImage: s.systemImage).tag(s as Section?)
             }
-            .navigationTitle("DockMole")
+            .navigationTitle("MolDock")
             .frame(minWidth: 200)
         } detail: {
             if let s = section {
@@ -70,7 +70,7 @@ private struct PlaceholderView: View {
 
             Text("Beta — using the iOS / web app in the meantime")
                 .font(.system(.subheadline, design: .rounded).weight(.semibold))
-            Text("The Mac native UI is in active development. While we build it out, you can use the iOS DockMole or the full web app — both share the same docking backend, so jobs you start there will work in either client.")
+            Text("The Mac native UI is in active development. While we build it out, you can use the iOS MolDock or the full web app — both share the same docking backend, so jobs you start there will work in either client.")
                 .font(.system(.body, design: .rounded))
                 .foregroundColor(.secondary)
                 .lineSpacing(3)

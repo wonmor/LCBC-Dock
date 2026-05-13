@@ -1,20 +1,18 @@
-# XcodeGen spec for DockMole — macOS native app.
+# XcodeGen spec for MolDock — macOS native app.
 #
 # Run once:
 #   brew install xcodegen
 # Then in this directory:
 #   xcodegen generate
-#   open DockMoleMac.xcodeproj
+#   open MolDockMac.xcodeproj
 #
-# Why a separate native app instead of Mac Catalyst from the iOS DockMole:
-# the user picked Option C — native macOS — for proper Mac UX (real
-# menus, NSSidebar, multi-window). Initial scaffold ships a placeholder
-# NavigationSplitView matching the iOS feature set (Search / Docking /
-# Results) plus the Window-menu reopen handler from day one so we
-# never hit the Apple guideline 4 rejection that bit AtomizerMac +
-# ElectronVisualizedMac.
+# Bundle shared with iOS MolDock (com.johnseong.dock-it) so App Store
+# Connect ships them as one universal product page across iPhone +
+# iPad + Mac. Codebases are independent — iOS is React Native via
+# Expo, Mac is native SwiftUI — but the same Apple ID + same
+# subscription entitlements transfer cross-platform.
 
-name: DockMoleMac
+name: MolDockMac
 
 options:
   bundleIdPrefix: com.johnseong
@@ -30,43 +28,41 @@ settings:
     GENERATE_INFOPLIST_FILE: "YES"
     ENABLE_HARDENED_RUNTIME: "YES"
     MACOSX_DEPLOYMENT_TARGET: "13.0"
-    CODE_SIGN_ENTITLEMENTS: DockMoleMac.entitlements
+    CODE_SIGN_ENTITLEMENTS: MolDockMac.entitlements
 
 targets:
-  DockMoleMac:
+  MolDockMac:
     type: application
     platform: macOS
     sources:
-      - path: Sources/DockMoleMac
+      - path: Sources/MolDockMac
         excludes:
           - "**/*.md"
     info:
       path: Generated/Info.plist
       properties:
-        CFBundleDisplayName: DockMole
+        CFBundleDisplayName: MolDock
         LSApplicationCategoryType: public.app-category.education
         NSHumanReadableCopyright: "© 2026 John Seong"
-        # WebKit fallback view (the 'Open full DockMole in browser →'
-        # button) needs network-client to reach the public web app.
         NSAppTransportSecurity:
           NSAllowsArbitraryLoadsInWebContent: true
     settings:
       base:
-        # Distinct from the iOS DockMole bundle (com.johnseong.dock-it)
-        # because the codebases are completely different — Mac is
-        # SwiftUI, iOS is React Native. Separate ASC entry.
-        PRODUCT_BUNDLE_IDENTIFIER: com.johnseong.dockmole-mac
-        PRODUCT_NAME: DockMole
+        # Same as iOS MolDock — App Store Connect treats them as one
+        # universal app under a single SKU. Same subscription
+        # entitlements transfer.
+        PRODUCT_BUNDLE_IDENTIFIER: com.johnseong.dock-it
+        PRODUCT_NAME: MolDock
         MARKETING_VERSION: "1.0"
         CURRENT_PROJECT_VERSION: "1"
         ALWAYS_EMBED_SWIFT_STANDARD_LIBRARIES: "NO"
         ASSETCATALOG_COMPILER_APPICON_NAME: AppIcon
 
 schemes:
-  DockMoleMac:
+  MolDockMac:
     build:
       targets:
-        DockMoleMac: all
+        MolDockMac: all
     run:
       config: Debug
     archive:

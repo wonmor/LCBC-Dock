@@ -8,7 +8,7 @@ const PUBCHEM_BASE = "https://pubchem.ncbi.nlm.nih.gov/rest";
 const PUBCHEM_PROPS = "MolecularFormula,MolecularWeight,IsomericSMILES";
 
 const HEADERS = {
-  "User-Agent": "DockMole/2.0-mobile",
+  "User-Agent": "MolDock/2.0-mobile",
   Accept: "application/json",
 };
 
