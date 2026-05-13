@@ -13,12 +13,21 @@
     },
     "production": {
       "autoIncrement": true,
+      "ios": {
+        "image": "latest"
+      },
       "android": {
         "image": "latest"
       }
     }
   },
   "submit": {
-    "production": {}
+    "production": {
+      "ios": {
+        "ascAppId": "6761741448",
+        "appleId": "wonmor@yahoo.com",
+        "appleTeamId": "Z64KRUX3W3"
+      }
+    }
   }
 }
