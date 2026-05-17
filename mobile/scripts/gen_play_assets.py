@@ -13,7 +13,10 @@ from PIL import Image, ImageDraw, ImageFont
 ROOT = Path(__file__).resolve().parents[1]
 ASSETS = ROOT / "assets"
 
-ICON_SRC = ASSETS / "icon.png"
+# Source = adaptive-icon.png because that's the Android launcher icon
+# (the one users actually see on-device on Android). The Play Store
+# listing should match what's installed, not the iOS App Store icon.
+ICON_SRC = ASSETS / "adaptive-icon.png"
 PLAY_ICON_OUT = ASSETS / "play-store-icon.png"
 FEATURE_OUT = ASSETS / "feature-graphic.png"
 
