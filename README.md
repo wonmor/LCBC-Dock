@@ -1,8 +1,8 @@
-# DockIt
+# MolDock
 
 > Drug Discovery, On the Go. Powered by AutoDock Vina.
 
-**DockIt** is a molecular docking platform that brings [AutoDock Vina](https://vina.scripps.edu/) to your browser and phone. Search proteins and ligands from public databases, submit docking jobs, and visualize results — no installation required.
+**MolDock** is a molecular docking platform that brings [AutoDock Vina](https://vina.scripps.edu/) to your browser and phone. Search proteins and ligands from public databases, submit docking jobs, and visualize results — no installation required.
 
 ### [Launch Web App](https://lcbc-client.apps.johnseong.com) &nbsp;|&nbsp; [Documentation](https://wonmor.github.io/LCBC-Dock/) &nbsp;|&nbsp; [Privacy Policy](https://wonmor.github.io/LCBC-Dock/privacy.html)
 

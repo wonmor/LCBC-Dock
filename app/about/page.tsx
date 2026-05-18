@@ -6,7 +6,7 @@ export default function About() {
 
         <div className="space-y-6 text-sm text-gray-400 leading-relaxed">
           <p>
-            <strong className="text-white">DockIt</strong> is an online molecular docking
+            <strong className="text-white">MolDock</strong> is an online molecular docking
             platform powered by AutoDock Vina. It lets you search for proteins and small
             molecules from public databases, configure docking parameters, and visualize
             results — entirely in your browser.

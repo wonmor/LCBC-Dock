@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>DockIt — Documentation</title>
+    <title>MolDock — Documentation</title>
     <style>
         :root {
             --bg: #000;
@@ -322,7 +322,7 @@
 <!-- Examples Gallery -->
 <section id="examples">
     <h2>Examples Gallery</h2>
-    <p>DockIt includes 16 curated famous protein-ligand dockings across 7 categories. Search, filter, and tap any example to skip straight to docking with pre-filled protein and ligand.</p>
+    <p>MolDock includes 16 curated famous protein-ligand dockings across 7 categories. Search, filter, and tap any example to skip straight to docking with pre-filled protein and ligand.</p>
 
     <table class="api-table" style="margin-top: 24px;">
         <thead><tr><th>Ligand</th><th>Protein</th><th>Category</th><th>Description</th></tr></thead>
@@ -352,7 +352,7 @@
 <!-- Workflow -->
 <section id="workflow">
     <h2>Docking Workflow</h2>
-    <p>DockIt guides you through a 4-step molecular docking process:</p>
+    <p>MolDock guides you through a 4-step molecular docking process:</p>
     <table class="workflow-table">
         <thead>
             <tr><th>Step</th><th>Route</th><th>Description</th></tr>
@@ -400,7 +400,7 @@
 <!-- Mobile App -->
 <section id="mobile">
     <h2>Mobile App (iOS &amp; Android)</h2>
-    <p>DockIt includes a standalone <strong>Expo React Native</strong> mobile app in the <code>mobile/</code> directory. It provides the same 4-step docking workflow, examples gallery, and results viewer — optimized for touch.</p>
+    <p>MolDock includes a standalone <strong>Expo React Native</strong> mobile app in the <code>mobile/</code> directory. It provides the same 4-step docking workflow, examples gallery, and results viewer — optimized for touch.</p>
 
     <div class="card-grid">
         <div class="card">
@@ -620,7 +620,7 @@ npm run fastapi-dev   # Backend on :8000</code></pre>
 <!-- CapRover -->
 <section id="caprover">
     <h2>CapRover Deployment</h2>
-    <p>DockIt uses <strong>two CapRover apps</strong>: <code>lcbc-client</code> (frontend, port 3000) and <code>lcbc-server</code> (backend, port 8000).</p>
+    <p>MolDock uses <strong>two CapRover apps</strong>: <code>lcbc-client</code> (frontend, port 3000) and <code>lcbc-server</code> (backend, port 8000).</p>
 
     <h3>Prerequisites</h3>
     <ul>
@@ -678,7 +678,7 @@ BASE_URL=https://lcbc-client.apps.johnseong.com</code></pre>
     <h3>Verify Deployment</h3>
 <pre><code># Check backend health
 curl https://lcbc-server.apps.johnseong.com/
-# Expected: {"message":"DockIt API v2.0 is running!","docs":"/docs"}
+# Expected: {"message":"MolDock API v2.0 is running!","docs":"/docs"}
 
 # Check frontend
 open https://lcbc-client.apps.johnseong.com
@@ -757,7 +757,7 @@ docker run -p 3000:3000 dockit-web</code></pre>
 </div>
 
 <footer>
-    <p>DockIt &mdash; Built by John Wonmo Seong at University of California, Irvine in collaboration with Seoul National University.</p>
+    <p>MolDock &mdash; Built by John Wonmo Seong at University of California, Irvine in collaboration with Seoul National University.</p>
     <p style="margin-top: 8px;">Licensed under MIT &mdash; <a href="https://github.com/johnseong/LCBC-Dock">View on GitHub</a></p>
 </footer>
 

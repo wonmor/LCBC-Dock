@@ -14,7 +14,7 @@ export const metadata: Metadata = {
   ],
   alternates: { canonical: "/glossary" },
   openGraph: {
-    title: "Molecular docking glossary — DockIt",
+    title: "Molecular docking glossary — MolDock",
     description: "Plain-English docking terms for medicinal chemistry students.",
     url: "/glossary",
   },

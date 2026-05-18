@@ -1,7 +1,7 @@
 {
   "name": "dockit-desktop",
   "version": "1.0.0",
-  "description": "DockIt — Drug Discovery, On the Go",
+  "description": "MolDock — Drug Discovery, On the Go",
   "main": "main.js",
   "scripts": {
     "start": "electron .",
@@ -20,7 +20,7 @@
   },
   "build": {
     "appId": "com.johnseong.dock-it",
-    "productName": "DockIt",
+    "productName": "MolDock",
     "mac": {
       "category": "public.app-category.education",
       "icon": "icons/icon.icns",

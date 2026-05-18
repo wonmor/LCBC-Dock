@@ -90,7 +90,7 @@ export default function Glossary() {
           body={
             <p>
               The 3D rectangle in which Vina is allowed to place the
-              ligand. DockIt computes the geometric centre of the protein
+              ligand. MolDock computes the geometric centre of the protein
               by default — you almost always want to <em>narrow</em> this to
               a known binding pocket once you&apos;ve got an initial result, so
               the search doesn&apos;t waste time on the surface. Box sizes
@@ -106,7 +106,7 @@ export default function Glossary() {
             <p>
               AutoDock&apos;s extended PDB format. Each atom carries an
               additional Gasteiger partial charge plus an autodock atom
-              type (e.g. C.ar for aromatic carbon). DockIt produces this
+              type (e.g. C.ar for aromatic carbon). MolDock produces this
               automatically when you submit, but you can download the
               docked PDBQT and feed it back into other AutoDock-family
               tools.
@@ -119,7 +119,7 @@ export default function Glossary() {
           title="AutoDock Vina"
           body={
             <p>
-              The open-source docking engine DockIt wraps. Vina was
+              The open-source docking engine MolDock wraps. Vina was
               published by Trott &amp; Olson in 2010 and uses an iterated
               local search global optimiser with an empirical scoring
               function. It&apos;s fast (seconds to minutes per ligand) and
