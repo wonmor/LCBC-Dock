@@ -13,10 +13,11 @@ from PIL import Image, ImageDraw, ImageFont
 ROOT = Path(__file__).resolve().parents[1]
 ASSETS = ROOT / "assets"
 
-# Source = adaptive-icon.png because that's the Android launcher icon
-# (the one users actually see on-device on Android). The Play Store
-# listing should match what's installed, not the iOS App Store icon.
-ICON_SRC = ASSETS / "adaptive-icon.png"
+# Source = icon.png — the iOS App Store icon is the canonical brand
+# image; Play Store icon + Android adaptive-icon both mirror it. This
+# guarantees the iOS App Store, Google Play listing, Android home
+# screen, and macOS dock all render the same artwork.
+ICON_SRC = ASSETS / "icon.png"
 PLAY_ICON_OUT = ASSETS / "play-store-icon.png"
 FEATURE_OUT = ASSETS / "feature-graphic.png"
 
