@@ -79,12 +79,13 @@ def feature_graphic():
     tagline_bbox = draw.textbbox((0, 0), TAGLINE, font=tagline_font)
     tagline_h = tagline_bbox[3] - tagline_bbox[1]
 
-    block_h = title_h + 24 + tagline_h
+    title_gap = 56  # padding above the tagline
+    block_h = title_h + title_gap + tagline_h
     y_start = (H - block_h) // 2 - 10
 
     draw.text((text_x, y_start), BRAND, font=title_font, fill=(250, 250, 250))
     draw.text(
-        (text_x, y_start + title_h + 24),
+        (text_x, y_start + title_h + title_gap),
         TAGLINE,
         font=tagline_font,
         fill=(170, 195, 230),
