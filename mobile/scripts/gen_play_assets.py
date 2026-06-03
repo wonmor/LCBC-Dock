@@ -24,7 +24,7 @@ FEATURE_OUT = ASSETS / "feature-graphic.png"
 BRAND = "MolDock"
 TAGLINE = "Protein–Ligand Docking"
 
-FONT_BOLD = "/Library/Fonts/SF-Pro-Display-Heavy.otf"
+FONT_BOLD = "/Library/Fonts/SF-Pro-Display-Light.otf"
 FONT_REG = "/Library/Fonts/SF-Pro-Display-Medium.otf"
 
 # Background gradient — matches the icon's deep-navy → near-black.
