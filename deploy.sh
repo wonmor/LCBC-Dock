@@ -1,6 +1,11 @@
 #!/bin/bash
 set -e
 
+# Always operate on the repo this script lives in, regardless of where
+# it's invoked from. Running it from the parent monorepo would otherwise
+# tar every submodule (gigabytes) and trip CapRover's nginx 413 limit.
+cd "$(dirname "$0")"
+
 CAPROVER_URL="https://captain.apps.johnseong.com"
 FRONTEND_APP="lcbc-client"
 BACKEND_APP="lcbc-server"
