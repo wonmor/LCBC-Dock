@@ -2,7 +2,7 @@ import uuid
 import logging
 from typing import List, Optional
 
-from fastapi import FastAPI, HTTPException, Query
+from fastapi import FastAPI, HTTPException, Query, Request
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import PlainTextResponse
 import httpx
@@ -19,6 +19,7 @@ class JobMetadataUpdate(BaseModel):
 from api.database import (
     init_db, create_job, get_job, get_job_full, get_queue_position,
     update_job_metadata, list_jobs_by_email, list_jobs_by_ids,
+    country_leaderboard,
 )
 from api.worker import start_worker
 
@@ -305,10 +306,57 @@ async def _get_ligand_by_name(client: httpx.AsyncClient, name: str) -> Optional[
 # Docking Jobs
 # ---------------------------------------------------------------------------
 
+def _client_ip(http_request: Request) -> Optional[str]:
+    """Real client IP behind the CapRover/nginx proxy. X-Forwarded-For is
+    a comma list "client, proxy1, proxy2" — the first entry is the origin."""
+    fwd = http_request.headers.get("x-forwarded-for")
+    if fwd:
+        return fwd.split(",")[0].strip()
+    real = http_request.headers.get("x-real-ip")
+    if real:
+        return real.strip()
+    return http_request.client.host if http_request.client else None
+
+
+def _is_public_ip(ip: Optional[str]) -> bool:
+    """Skip geolocation for missing / private / loopback addresses."""
+    if not ip:
+        return False
+    try:
+        import ipaddress
+        addr = ipaddress.ip_address(ip)
+        return not (addr.is_private or addr.is_loopback or addr.is_reserved
+                    or addr.is_link_local)
+    except ValueError:
+        return False
+
+
+async def _geolocate(ip: Optional[str]):
+    """Resolve (country, country_code) from an IP via ip-api.com (free,
+    no key). Best-effort: any failure returns (None, None) so a docking
+    job is never blocked by the lookup."""
+    if not _is_public_ip(ip):
+        return None, None
+    try:
+        async with httpx.AsyncClient(timeout=3.0) as client:
+            resp = await client.get(
+                f"http://ip-api.com/json/{ip}",
+                params={"fields": "status,country,countryCode"},
+            )
+            data = resp.json()
+            if data.get("status") == "success":
+                return data.get("country"), data.get("countryCode")
+    except Exception as e:
+        logger.warning(f"Geolocation failed for {ip}: {e}")
+    return None, None
+
+
 @app.post("/api/dock", response_model=DockingJob)
-async def submit_docking_job(request: DockingRequest):
+async def submit_docking_job(request: DockingRequest, http_request: Request):
     """Submit a new docking job to the queue."""
     job_id = str(uuid.uuid4())
+
+    country, country_code = await _geolocate(_client_ip(http_request))
 
     job = create_job(
         job_id=job_id,
@@ -325,6 +373,8 @@ async def submit_docking_job(request: DockingRequest):
         exhaustiveness=request.exhaustiveness,
         num_modes=request.num_modes,
         energy_range=request.energy_range,
+        country=country,
+        country_code=country_code,
     )
 
     queue_pos = get_queue_position(job_id)
@@ -468,6 +518,14 @@ async def get_stats():
         "total_jobs": total,
         "est_wait_minutes": est_wait_min,
     }
+
+
+@app.get("/api/leaderboard/countries")
+async def get_country_leaderboard(limit: int = Query(20, ge=1, le=100)):
+    """Countries ranked by number of docking jobs run — powers the
+    homepage 'Top countries' leaderboard."""
+    rows = country_leaderboard(limit=limit)
+    return {"countries": rows, "total_countries": len(rows)}
 
 
 # ---------------------------------------------------------------------------

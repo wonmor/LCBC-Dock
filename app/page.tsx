@@ -17,6 +17,24 @@ interface Stats {
   est_wait_minutes: number;
 }
 
+interface CountryRow {
+  country: string;
+  country_code: string | null;
+  jobs: number;
+}
+
+// ISO 3166-1 alpha-2 → regional-indicator flag emoji (e.g. "US" → 🇺🇸).
+function flagEmoji(code: string | null): string {
+  if (!code || code.length !== 2) return "🏳️";
+  const A = 0x1f1e6;
+  return String.fromCodePoint(
+    ...code
+      .toUpperCase()
+      .split("")
+      .map((c) => A + c.charCodeAt(0) - 65),
+  );
+}
+
 interface Example {
   protein: string;
   proteinName: string;
@@ -49,6 +67,7 @@ const CATEGORIES = ["All", ...Array.from(new Set(EXAMPLES.map((e) => e.category)
 
 export default function Home() {
   const [stats, setStats] = useState<Stats | null>(null);
+  const [countries, setCountries] = useState<CountryRow[]>([]);
   const [search, setSearch] = useState("");
   const [category, setCategory] = useState("All");
 
@@ -57,7 +76,13 @@ export default function Home() {
       .get(`${API_BASE}/api/stats`, { timeout: 5000 })
       .then((r) => setStats(r.data))
       .catch(() => {});
+    axios
+      .get(`${API_BASE}/api/leaderboard/countries?limit=10`, { timeout: 5000 })
+      .then((r) => setCountries(r.data.countries ?? []))
+      .catch(() => {});
   }, []);
+
+  const maxJobs = countries.length ? countries[0].jobs : 0;
 
   const filtered = useMemo(() => {
     return EXAMPLES.filter((ex) => {
@@ -80,7 +105,7 @@ export default function Home() {
         {/* Hero */}
         <div className="text-center mb-10">
           <h1 className="text-6xl sm:text-8xl font-extralight tracking-tight mb-4">
-            Dock<span className="font-semibold">It</span>
+            Mol<span className="font-semibold">Dock</span>
           </h1>
           <p className="text-gray-400 text-lg mb-8">
             Molecular docking on the go.
@@ -114,6 +139,40 @@ export default function Home() {
             </div>
           )}
         </div>
+
+        {/* Country leaderboard — where docking is happening */}
+        {countries.length > 0 && (
+          <div className="mb-10">
+            <div className="flex items-center justify-between mb-4">
+              <h2 className="text-lg font-light">Top countries</h2>
+              <span className="text-[10px] text-gray-500">by docking jobs run</span>
+            </div>
+            <div className="space-y-2">
+              {countries.map((c, i) => (
+                <div
+                  key={`${c.country}-${i}`}
+                  className="relative flex items-center gap-3 border border-white/10 rounded-2xl px-4 py-3 overflow-hidden"
+                >
+                  {/* Proportional bar */}
+                  <div
+                    className="absolute inset-y-0 left-0 bg-white/[0.04]"
+                    style={{ width: `${maxJobs ? (c.jobs / maxJobs) * 100 : 0}%` }}
+                  />
+                  <span className="relative w-5 text-center text-xs text-gray-500 tabular-nums">
+                    {i + 1}
+                  </span>
+                  <span className="relative text-xl leading-none">
+                    {flagEmoji(c.country_code)}
+                  </span>
+                  <span className="relative flex-1 text-sm truncate">{c.country}</span>
+                  <span className="relative text-sm font-light tabular-nums">
+                    {c.jobs.toLocaleString()}
+                  </span>
+                </div>
+              ))}
+            </div>
+          </div>
+        )}
 
         {/* Examples section */}
         <div className="mb-8">

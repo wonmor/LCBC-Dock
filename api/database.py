@@ -52,6 +52,11 @@ def init_db():
         "ALTER TABLE docking_jobs ADD COLUMN notes TEXT",
         "ALTER TABLE docking_jobs ADD COLUMN tags TEXT",
         "ALTER TABLE docking_jobs ADD COLUMN owner_email TEXT",
+        # Geo-of-origin for the country leaderboard. Resolved from the
+        # client IP at submission time (ip-api.com). Nullable so jobs
+        # where lookup failed / was a private IP just don't get counted.
+        "ALTER TABLE docking_jobs ADD COLUMN country TEXT",
+        "ALTER TABLE docking_jobs ADD COLUMN country_code TEXT",
     ):
         try:
             conn.execute(ddl)
@@ -111,18 +116,22 @@ def create_job(job_id: str, protein_pdb_id: str, ligand_cid: int,
                ligand_name: str, email: Optional[str],
                center_x: float, center_y: float, center_z: float,
                size_x: float, size_y: float, size_z: float,
-               exhaustiveness: int, num_modes: int, energy_range: float) -> DockingJob:
+               exhaustiveness: int, num_modes: int, energy_range: float,
+               country: Optional[str] = None,
+               country_code: Optional[str] = None) -> DockingJob:
     conn = get_db()
     now = datetime.utcnow().isoformat()
     conn.execute("""
         INSERT INTO docking_jobs
         (job_id, status, protein_pdb_id, ligand_cid, ligand_name, email,
          center_x, center_y, center_z, size_x, size_y, size_z,
-         exhaustiveness, num_modes, energy_range, created_at)
-        VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+         exhaustiveness, num_modes, energy_range, created_at,
+         country, country_code)
+        VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
     """, (job_id, JobStatus.QUEUED, protein_pdb_id, ligand_cid, ligand_name,
           email, center_x, center_y, center_z, size_x, size_y, size_z,
-          exhaustiveness, num_modes, energy_range, now))
+          exhaustiveness, num_modes, energy_range, now,
+          country, country_code))
     conn.commit()
     conn.close()
     return DockingJob(
@@ -222,6 +231,25 @@ def cleanup_old_jobs(days: int = 30):
     conn.commit()
     conn.close()
     return deleted
+
+
+def country_leaderboard(limit: int = 20) -> List[dict]:
+    """Countries ranked by number of docking jobs run. Rows without a
+    resolved country are excluded. Drives the homepage leaderboard."""
+    conn = get_db()
+    rows = conn.execute(
+        """
+        SELECT country, country_code, COUNT(*) AS jobs
+        FROM docking_jobs
+        WHERE country IS NOT NULL AND country != ''
+        GROUP BY country, country_code
+        ORDER BY jobs DESC, country ASC
+        LIMIT ?
+        """,
+        (limit,),
+    ).fetchall()
+    conn.close()
+    return [dict(r) for r in rows]
 
 
 def get_pending_jobs() -> List[dict]:

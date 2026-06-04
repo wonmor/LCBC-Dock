@@ -21,7 +21,13 @@ deploy_frontend() {
   echo "$FRONTEND_DEF" > captain-definition
 
   echo "[frontend] Creating tarball..."
-  tar -cf /tmp/lcbc-deploy.tar --exclude='node_modules' --exclude='.git' --exclude='mobile/node_modules' --exclude='mobile/.expo' .
+  # Keep the upload small (CapRover nginx rejects large bodies with 413).
+  # Neither the web frontend nor the Python backend image needs the
+  # Next build cache, the native app trees, or marketing assets.
+  tar -cf /tmp/lcbc-deploy.tar \
+    --exclude='node_modules' --exclude='.git' \
+    --exclude='./.next' --exclude='./mobile' --exclude='./macos' \
+    --exclude='./desktop' --exclude='./screenshots' --exclude='./docs' .
 
   echo "[frontend] Deploying to $FRONTEND_APP..."
   caprover deploy --caproverUrl "$CAPROVER_URL" --caproverApp "$FRONTEND_APP" --tarFile /tmp/lcbc-deploy.tar
@@ -35,7 +41,13 @@ deploy_backend() {
   echo "$BACKEND_DEF" > captain-definition
 
   echo "[backend] Creating tarball..."
-  tar -cf /tmp/lcbc-deploy.tar --exclude='node_modules' --exclude='.git' --exclude='mobile/node_modules' --exclude='mobile/.expo' .
+  # Keep the upload small (CapRover nginx rejects large bodies with 413).
+  # Neither the web frontend nor the Python backend image needs the
+  # Next build cache, the native app trees, or marketing assets.
+  tar -cf /tmp/lcbc-deploy.tar \
+    --exclude='node_modules' --exclude='.git' \
+    --exclude='./.next' --exclude='./mobile' --exclude='./macos' \
+    --exclude='./desktop' --exclude='./screenshots' --exclude='./docs' .
 
   echo "[backend] Deploying to $BACKEND_APP..."
   caprover deploy --caproverUrl "$CAPROVER_URL" --caproverApp "$BACKEND_APP" --tarFile /tmp/lcbc-deploy.tar
