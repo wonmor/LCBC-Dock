@@ -8,3 +8,6 @@ dist/
 *.mobileprovision
 *.orig.*
 web-build/
+
+# Google Play service account key (secret — never commit)
+play-service-account.json

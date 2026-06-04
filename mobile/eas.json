@@ -27,6 +27,11 @@
         "ascAppId": "6761741448",
         "appleId": "wonmor@yahoo.com",
         "appleTeamId": "Z64KRUX3W3"
+      },
+      "android": {
+        "serviceAccountKeyPath": "./play-service-account.json",
+        "track": "internal",
+        "releaseStatus": "draft"
       }
     }
   }
