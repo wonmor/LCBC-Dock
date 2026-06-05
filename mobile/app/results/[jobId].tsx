@@ -13,6 +13,7 @@ import * as WebBrowser from "expo-web-browser";
 import Spinner from "@/components/Spinner";
 import ProteinViewer from "@/components/ProteinViewer";
 import { getResults, getDownloadUrl } from "@/lib/api";
+import { maybeRequestReview } from "@/lib/rateApp";
 
 interface Pose {
   model: number;
@@ -30,7 +31,14 @@ export default function Results() {
   useEffect(() => {
     if (!jobId) return;
     getResults(jobId)
-      .then((data) => setResults(data))
+      .then((data) => {
+        setResults(data);
+        // The user just reached completed docking results — a genuine
+        // win. Ask for a review once the results UI has settled.
+        setTimeout(() => {
+          maybeRequestReview();
+        }, 1800);
+      })
       .catch((e) =>
         setError(e.response?.data?.detail || "Could not load results.")
       )
