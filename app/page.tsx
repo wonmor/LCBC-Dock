@@ -3,11 +3,7 @@
 import { useState, useEffect, useMemo } from "react";
 import Link from "next/link";
 import axios from "axios";
-
-const API_BASE =
-  process.env.NODE_ENV === "development"
-    ? "http://localhost:8000"
-    : "https://lcbc-server.apps.johnseong.com";
+import { API_BASE } from "@/app/lib/api";
 
 interface Stats {
   queue_length: number;
@@ -68,6 +64,7 @@ const CATEGORIES = ["All", ...Array.from(new Set(EXAMPLES.map((e) => e.category)
 export default function Home() {
   const [stats, setStats] = useState<Stats | null>(null);
   const [countries, setCountries] = useState<CountryRow[]>([]);
+  const [leaderboardNote, setLeaderboardNote] = useState("");
   const [search, setSearch] = useState("");
   const [category, setCategory] = useState("All");
 
@@ -78,7 +75,10 @@ export default function Home() {
       .catch(() => {});
     axios
       .get(`${API_BASE}/api/leaderboard/countries?limit=10`, { timeout: 5000 })
-      .then((r) => setCountries(r.data.countries ?? []))
+      .then((r) => {
+        setCountries(r.data.countries ?? []);
+        setLeaderboardNote(r.data.definition ?? "");
+      })
       .catch(() => {});
   }, []);
 
@@ -118,11 +118,11 @@ export default function Home() {
             <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 mb-8">
               <div className="border border-white/10 rounded-2xl p-4 text-center">
                 <p className="text-2xl font-light">{stats.total_jobs}</p>
-                <p className="text-[10px] text-gray-500 mt-1">Total Jobs</p>
+                <p className="text-[10px] text-gray-500 mt-1">Jobs · 30 days</p>
               </div>
               <div className="border border-white/10 rounded-2xl p-4 text-center">
                 <p className="text-2xl font-light">{stats.completed_jobs}</p>
-                <p className="text-[10px] text-gray-500 mt-1">Completed</p>
+                <p className="text-[10px] text-gray-500 mt-1">Completed · 30 days</p>
               </div>
               <div className="border border-white/10 rounded-2xl p-4 text-center">
                 <p className="text-2xl font-light text-yellow-400">
@@ -140,42 +140,22 @@ export default function Home() {
           )}
         </div>
 
-        {/* Country leaderboard — where docking is happening */}
-        {countries.length > 0 && (
-          <div className="mb-10">
-            <div className="flex items-center justify-between mb-4">
-              <h2 className="text-lg font-light">Top countries</h2>
-              <span className="text-[10px] text-gray-500">by docking jobs run</span>
-            </div>
-            <div className="space-y-2">
-              {countries.map((c, i) => (
-                <div
-                  key={`${c.country}-${i}`}
-                  className="relative flex items-center gap-3 border border-white/10 rounded-2xl px-4 py-3 overflow-hidden"
-                >
-                  {/* Proportional bar */}
-                  <div
-                    className="absolute inset-y-0 left-0 bg-white/[0.04]"
-                    style={{ width: `${maxJobs ? (c.jobs / maxJobs) * 100 : 0}%` }}
-                  />
-                  <span className="relative w-5 text-center text-xs text-gray-500 tabular-nums">
-                    {i + 1}
-                  </span>
-                  <span className="relative text-xl leading-none">
-                    {flagEmoji(c.country_code)}
-                  </span>
-                  <span className="relative flex-1 text-sm truncate">{c.country}</span>
-                  <span className="relative text-sm font-light tabular-nums">
-                    {c.jobs.toLocaleString()}
-                  </span>
-                </div>
-              ))}
-            </div>
-          </div>
-        )}
+        {/* Researcher tools */}
+        <div className="grid grid-cols-1 sm:grid-cols-3 gap-2 mb-10">
+          {[
+            ["/screen", "Virtual screening", "Rank a ligand library against one target"],
+            ["/docking/protein", "Redock & validate", "Co-crystal box, RMSD, interaction maps"],
+            ["/pricing", "MolDock Pro", "Higher limits, private jobs, API keys"],
+          ].map(([href, title, sub]) => (
+            <Link key={href} href={href} className="border border-white/10 rounded-2xl px-4 py-3 hover:border-white/25 transition-colors">
+              <p className="text-sm">{title}</p>
+              <p className="text-[10px] text-gray-500">{sub}</p>
+            </Link>
+          ))}
+        </div>
 
         {/* Examples section */}
-        <div className="mb-8">
+        <div className="mb-10">
           <div className="flex items-center justify-between mb-4">
             <h2 className="text-lg font-light">Famous Dockings</h2>
             <Link
@@ -253,6 +233,45 @@ export default function Home() {
             )}
           </div>
         </div>
+
+        {/* Country leaderboard — sits directly under Famous Dockings.
+            Metric (server-defined): completed jobs in the last 30 days,
+            repeat submissions folded, failed/batch/data-centre excluded. */}
+        {countries.length > 0 && (
+          <section className="mb-10" aria-labelledby="top-countries">
+            <div className="flex items-baseline justify-between mb-1">
+              <h2 id="top-countries" className="text-lg font-light">Top countries</h2>
+              <span className="text-[10px] text-gray-500">docking jobs completed · last 30 days</span>
+            </div>
+            <p className="text-[10px] text-gray-600 mb-4" title={leaderboardNote}>
+              Unique jobs by submitter country; repeat submissions of the same complex count once.
+            </p>
+            <div className="space-y-2">
+              {countries.map((c, i) => (
+                <div
+                  key={`${c.country}-${i}`}
+                  className="relative flex items-center gap-3 border border-white/10 rounded-2xl px-4 py-3 overflow-hidden"
+                >
+                  {/* Proportional bar */}
+                  <div
+                    className="absolute inset-y-0 left-0 bg-white/[0.04]"
+                    style={{ width: `${maxJobs ? (c.jobs / maxJobs) * 100 : 0}%` }}
+                  />
+                  <span className="relative w-5 text-center text-xs text-gray-500 tabular-nums">
+                    {i + 1}
+                  </span>
+                  <span className="relative text-xl leading-none">
+                    {flagEmoji(c.country_code)}
+                  </span>
+                  <span className="relative flex-1 text-sm truncate">{c.country}</span>
+                  <span className="relative text-sm font-light tabular-nums">
+                    {c.jobs.toLocaleString()}
+                  </span>
+                </div>
+              ))}
+            </div>
+          </section>
+        )}
 
         <footer className="text-center text-xs text-gray-600 mt-4">
           Built by John Wonmo Seong &middot; UC Irvine &times; Seoul National University

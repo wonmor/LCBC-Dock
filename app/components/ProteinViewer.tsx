@@ -38,11 +38,23 @@ export default function ProteinViewer({ pdbId, pdbData, ligandPdb, height = "100
   useEffect(() => {
     if (!loaded || !containerRef.current) return;
 
-    const viewer = window.$3Dmol.createViewer(containerRef.current, {
-      backgroundColor: "0x0a0a0a",
-      antialias: true,
-      cartoonQuality: 8,
-    });
+    // No WebGL (old devices, locked-down browsers, headless) → 3Dmol throws;
+    // keep the rest of the results page usable instead of crashing it.
+    let viewer: any;
+    try {
+      viewer = window.$3Dmol.createViewer(containerRef.current, {
+        backgroundColor: "0x0a0a0a",
+        antialias: true,
+        cartoonQuality: 8,
+      });
+    } catch {
+      viewer = null;
+    }
+    if (!viewer) {
+      containerRef.current.innerHTML =
+        '<p style="color:#6b7280;font-size:11px;text-align:center;padding-top:40%">3D viewer needs WebGL — use the exports below.</p>';
+      return;
+    }
     viewerRef.current = viewer;
 
     const loadStructure = async () => {

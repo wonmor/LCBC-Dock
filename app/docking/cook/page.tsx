@@ -3,11 +3,8 @@
 import { FC, useState, useEffect } from "react";
 import { useSearchParams, useRouter } from "next/navigation";
 import axios from "axios";
-
-const API_BASE =
-  process.env.NODE_ENV === "development"
-    ? "http://localhost:8000"
-    : "https://lcbc-server.apps.johnseong.com";
+import { API_BASE, errorText } from "@/app/lib/api";
+import SiteSelector, { PrepValue, SiteValue } from "@/app/components/SiteSelector";
 
 const Cook: FC = () => {
   const searchParams = useSearchParams();
@@ -18,9 +15,22 @@ const Cook: FC = () => {
   const ligandName = searchParams.get("ligandName") ?? "";
 
   const [email, setEmail] = useState("");
-  const [exhaustiveness, setExhaustiveness] = useState(4);
+  const [exhaustiveness, setExhaustiveness] = useState(8);
+  const [numModes, setNumModes] = useState(9);
   const [submitting, setSubmitting] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [advanced, setAdvanced] = useState(false);
+  const [site, setSite] = useState<SiteValue>({ mode: "auto" });
+  const [prep, setPrep] = useState<PrepValue>({ chains: [], keep_hetero: [], ph: 7.4 });
+  const [redock, setRedock] = useState(true);
+  const [isPrivate, setIsPrivate] = useState(false);
+  const [seed, setSeed] = useState("");
+  const [acct, setAcct] = useState<any>(null);
+
+  useEffect(() => {
+    axios.get(`${API_BASE}/api/account`).then((r) => setAcct(r.data)).catch(() => {});
+  }, []);
+  const lim = acct?.limits;
 
   const handleSubmit = async () => {
     setSubmitting(true);
@@ -38,14 +48,21 @@ const Cook: FC = () => {
         size_y: 20,
         size_z: 20,
         exhaustiveness,
-        num_modes: 9,
+        num_modes: numModes,
         energy_range: 3.0,
         email: email || null,
+        site: site.mode === "auto" ? undefined : site,
+        prep,
+        // Redocking validation: RMSD of every pose to the crystal ligand.
+        reference_ligand: site.mode === "ligand" && redock ? site.ligand : undefined,
+        seed: seed ? parseInt(seed) : undefined,
+        private: isPrivate,
+        strict: true,
       });
 
       router.push(`/dashboard?jobId=${resp.data.job_id}`);
     } catch (err: any) {
-      setError(err.response?.data?.detail || "Failed to submit. Is the backend running?");
+      setError(errorText(err, "Failed to submit. Is the backend running?"));
       setSubmitting(false);
     }
   };
@@ -73,9 +90,25 @@ const Cook: FC = () => {
             </div>
           </div>
 
+          {/* Binding site + protein prep */}
+          <div className="border border-white/10 rounded-2xl p-5">
+            <SiteSelector protein={proteinState} site={site} onSite={setSite} prep={prep} onPrep={setPrep} />
+            {site.mode === "ligand" && (
+              <label className="flex items-center gap-2 text-[11px] text-gray-400 mt-3">
+                <input type="checkbox" checked={redock} onChange={(e) => setRedock(e.target.checked)} />
+                Redocking check: report RMSD of each pose to the crystal ligand
+              </label>
+            )}
+          </div>
+
           {/* Exhaustiveness */}
           <div className="border border-white/10 rounded-2xl p-5">
-            <label className="text-xs text-gray-500">Exhaustiveness (1-32)</label>
+            <label className="text-xs text-gray-500">
+              Exhaustiveness (1-32)
+              {lim && exhaustiveness > lim.max_exhaustiveness && (
+                <span className="ml-2 text-[10px] text-amber-400">above {lim.max_exhaustiveness} needs Pro</span>
+              )}
+            </label>
             <input
               type="range"
               min="1"
@@ -86,8 +119,41 @@ const Cook: FC = () => {
             />
             <p className="text-right text-xs text-gray-400 mt-1">{exhaustiveness}</p>
             <p className="text-[10px] text-gray-600 mt-2">
-              Lower = faster, higher = more accurate. Default 4 for quick results.
+              Lower = faster, higher = more reproducible searches. 8 is the Vina default.
             </p>
+            <button
+              type="button"
+              onClick={() => setAdvanced(!advanced)}
+              className="text-[11px] text-gray-400 hover:text-white mt-3"
+              aria-expanded={advanced}
+            >
+              {advanced ? "Hide" : "Show"} advanced options
+            </button>
+            {advanced && (
+              <div className="grid grid-cols-2 gap-3 mt-3">
+                <label className="text-[11px] text-gray-500 flex flex-col gap-1">
+                  Poses (num_modes)
+                  {lim && numModes > lim.max_num_modes && <span className="text-amber-400 text-[10px]">Pro</span>}
+                  <input
+                    type="number" min={1} max={20} value={numModes}
+                    onChange={(e) => setNumModes(parseInt(e.target.value || "9"))}
+                    className="bg-black/40 border border-white/10 rounded-lg px-3 py-2 text-xs text-white"
+                  />
+                </label>
+                <label className="text-[11px] text-gray-500 flex flex-col gap-1">
+                  Random seed (blank = random, recorded)
+                  <input
+                    type="number" value={seed} onChange={(e) => setSeed(e.target.value)} placeholder="e.g. 42"
+                    className="bg-black/40 border border-white/10 rounded-lg px-3 py-2 text-xs text-white"
+                  />
+                </label>
+                <label className="col-span-2 flex items-center gap-2 text-[11px] text-gray-400">
+                  <input type="checkbox" checked={isPrivate} onChange={(e) => setIsPrivate(e.target.checked)} />
+                  Private job (only you can open the results)
+                  {lim && !lim.private_jobs && <span className="text-[10px] text-amber-400">Pro</span>}
+                </label>
+              </div>
+            )}
           </div>
 
           {/* Email */}
@@ -117,7 +183,9 @@ const Cook: FC = () => {
           </button>
 
           <p className="text-[10px] text-gray-600 text-center">
-            Grid center auto-computed from protein. Powered by AutoDock Vina.
+            {acct
+              ? `${acct.usage.remaining_today} of ${acct.usage.jobs_per_day} dockings left today on your ${acct.tier === "anonymous" ? "guest" : acct.tier} plan.`
+              : "Powered by AutoDock Vina."}
           </p>
         </div>
       </div>

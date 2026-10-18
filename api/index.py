@@ -22,11 +22,34 @@ from api.database import (
     country_leaderboard,
 )
 from api.worker import start_worker
+from api import accounts as acc
+from api.accounts import PaywallError
+from api.routes import router as pro_router, submit_single, load_viewable_job, analysis_for_viewer
+from api import exports
+from fastapi.responses import JSONResponse
+import json
 
 logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
 
-app = FastAPI(title="DockIt API", version="2.0.0")
+app = FastAPI(
+    title="MolDock API",
+    version="3.0.0",
+    description=(
+        "Protein–ligand docking with AutoDock Vina. Authenticate with "
+        "`Authorization: Bearer <session>` (web) or `X-API-Key: mdk_...` (Pro). "
+        "Submit with POST /api/dock or POST /api/batch, poll GET /api/jobs/{id}, "
+        "fetch GET /api/results/{id} and GET /api/results/{id}/export/{fmt}."
+    ),
+)
+
+
+@app.exception_handler(PaywallError)
+async def paywall_handler(request, exc: PaywallError):
+    return JSONResponse(status_code=exc.status, content=exc.payload())
+
+
+app.include_router(pro_router)
 
 app.add_middleware(
     CORSMiddleware,
@@ -41,7 +64,7 @@ app.add_middleware(
 async def startup():
     init_db()
     start_worker()
-    logger.info("DockIt API started")
+    logger.info("MolDock API started")
 
 
 # ---------------------------------------------------------------------------
@@ -306,89 +329,20 @@ async def _get_ligand_by_name(client: httpx.AsyncClient, name: str) -> Optional[
 # Docking Jobs
 # ---------------------------------------------------------------------------
 
-def _client_ip(http_request: Request) -> Optional[str]:
-    """Real client IP behind the CapRover/nginx proxy. X-Forwarded-For is
-    a comma list "client, proxy1, proxy2" — the first entry is the origin."""
-    fwd = http_request.headers.get("x-forwarded-for")
-    if fwd:
-        return fwd.split(",")[0].strip()
-    real = http_request.headers.get("x-real-ip")
-    if real:
-        return real.strip()
-    return http_request.client.host if http_request.client else None
-
-
-def _is_public_ip(ip: Optional[str]) -> bool:
-    """Skip geolocation for missing / private / loopback addresses."""
-    if not ip:
-        return False
-    try:
-        import ipaddress
-        addr = ipaddress.ip_address(ip)
-        return not (addr.is_private or addr.is_loopback or addr.is_reserved
-                    or addr.is_link_local)
-    except ValueError:
-        return False
-
-
-async def _geolocate(ip: Optional[str]):
-    """Resolve (country, country_code) from an IP via ip-api.com (free,
-    no key). Best-effort: any failure returns (None, None) so a docking
-    job is never blocked by the lookup."""
-    if not _is_public_ip(ip):
-        return None, None
-    try:
-        async with httpx.AsyncClient(timeout=3.0) as client:
-            resp = await client.get(
-                f"http://ip-api.com/json/{ip}",
-                params={"fields": "status,country,countryCode"},
-            )
-            data = resp.json()
-            if data.get("status") == "success":
-                return data.get("country"), data.get("countryCode")
-    except Exception as e:
-        logger.warning(f"Geolocation failed for {ip}: {e}")
-    return None, None
-
-
-@app.post("/api/dock", response_model=DockingJob)
+@app.post("/api/dock")
 async def submit_docking_job(request: DockingRequest, http_request: Request):
-    """Submit a new docking job to the queue."""
-    job_id = str(uuid.uuid4())
-
-    country, country_code = await _geolocate(_client_ip(http_request))
-
-    job = create_job(
-        job_id=job_id,
-        protein_pdb_id=request.protein_pdb_id,
-        ligand_cid=request.ligand_cid,
-        ligand_name=request.ligand_name,
-        email=request.email,
-        center_x=request.center_x,
-        center_y=request.center_y,
-        center_z=request.center_z,
-        size_x=request.size_x,
-        size_y=request.size_y,
-        size_z=request.size_z,
-        exhaustiveness=request.exhaustiveness,
-        num_modes=request.num_modes,
-        energy_range=request.energy_range,
-        country=country,
-        country_code=country_code,
-    )
-
-    queue_pos = get_queue_position(job_id)
-    logger.info(f"Job {job_id} submitted, queue position: {queue_pos}")
-
-    return job
+    """Submit a docking job. Plan limits are enforced server-side: with
+    `strict: true` over-limit parameters return 402 (upgrade); otherwise
+    they are clamped and listed in `adjustments`. Daily quota → 429.
+    An identical submission within 10 minutes returns the existing job
+    (`deduplicated: true`)."""
+    return await submit_single(request, http_request)
 
 
 @app.get("/api/jobs/{job_id}")
-async def get_job_status(job_id: str):
+async def get_job_status(job_id: str, http_request: Request):
     """Get the status of a docking job."""
-    job_data = get_job_full(job_id)
-    if not job_data:
-        raise HTTPException(status_code=404, detail="Job not found")
+    job_data, _ident = load_viewable_job(job_id, http_request, completed=False)
 
     queue_pos = get_queue_position(job_id) if job_data["status"] in (JobStatus.QUEUED,) else 0
 
@@ -405,18 +359,16 @@ async def get_job_status(job_id: str):
         "num_poses": job_data.get("num_poses"),
         "status_message": job_data.get("status_message", ""),
         "queue_position": queue_pos,
+        "batch_id": job_data.get("batch_id"),
+        "visibility": job_data.get("visibility") or "public",
     }
 
 
 @app.get("/api/results/{job_id}")
-async def get_docking_results(job_id: str):
-    """Get full docking results including poses."""
-    job_data = get_job_full(job_id)
-    if not job_data:
-        raise HTTPException(status_code=404, detail="Job not found")
-
-    if job_data["status"] != JobStatus.COMPLETED:
-        raise HTTPException(status_code=400, detail=f"Job status is {job_data['status']}, not completed")
+async def get_docking_results(job_id: str, http_request: Request):
+    """Get full docking results including poses, interaction analysis,
+    redocking RMSD and the reproducibility record."""
+    job_data, ident = load_viewable_job(job_id, http_request)
 
     from api.docking import parse_vina_output
     import tempfile, os
@@ -455,15 +407,25 @@ async def get_docking_results(job_id: str):
         "size_x": job_data.get("size_x"),
         "size_y": job_data.get("size_y"),
         "size_z": job_data.get("size_z"),
+        "seed": job_data.get("seed"),
+        "visibility": job_data.get("visibility") or "public",
+        "batch_id": job_data.get("batch_id"),
+        "ligand_smiles": job_data.get("ligand_smiles"),
+        "ligand_source": job_data.get("ligand_source") or "pubchem",
+        "protein_source": job_data.get("protein_source") or "pdb",
+        "analysis": analysis_for_viewer(job_data, ident),
+        "reproducibility": json.loads(job_data.get("repro_json") or "{}") if job_data.get("repro_json") else None,
+        "preparation": json.loads(job_data.get("prep_json") or "{}") if job_data.get("prep_json") else None,
+        "site": json.loads(job_data.get("site_json") or "{}") if job_data.get("site_json") else None,
+        "methods": exports.methods_paragraph(job_data) if job_data.get("repro_json") else None,
+        "has_receptor": bool(job_data.get("receptor_pdb_gz")),
     }
 
 
 @app.get("/api/results/{job_id}/download/pdbqt")
-async def download_pdbqt(job_id: str):
+async def download_pdbqt(job_id: str, http_request: Request):
     """Download docked output as PDBQT."""
-    job_data = get_job_full(job_id)
-    if not job_data or job_data["status"] != JobStatus.COMPLETED:
-        raise HTTPException(status_code=404, detail="Results not available")
+    job_data, _ = load_viewable_job(job_id, http_request)
     return PlainTextResponse(
         job_data["output_pdbqt"],
         media_type="chemical/x-pdbqt",
@@ -472,11 +434,9 @@ async def download_pdbqt(job_id: str):
 
 
 @app.get("/api/results/{job_id}/download/pdb")
-async def download_pdb(job_id: str):
+async def download_pdb(job_id: str, http_request: Request):
     """Download docked output as PDB."""
-    job_data = get_job_full(job_id)
-    if not job_data or job_data["status"] != JobStatus.COMPLETED:
-        raise HTTPException(status_code=404, detail="Results not available")
+    job_data, _ = load_viewable_job(job_id, http_request)
     return PlainTextResponse(
         job_data.get("docked_pdb", ""),
         media_type="chemical/x-pdb",
@@ -490,6 +450,8 @@ async def get_stats():
     from api.database import get_db
     conn = get_db()
 
+    from datetime import datetime, timedelta
+    since = (datetime.utcnow() - timedelta(days=30)).isoformat()
     queued = conn.execute(
         "SELECT COUNT(*) as c FROM docking_jobs WHERE status IN ('queued', 'preparing')"
     ).fetchone()["c"]
@@ -498,12 +460,14 @@ async def get_stats():
         "SELECT COUNT(*) as c FROM docking_jobs WHERE status = 'docking'"
     ).fetchone()["c"]
 
+    # Explicit 30-day window (it used to be "whatever the 30-day cleanup
+    # had not deleted yet", which drifts once paid jobs are retained).
     completed = conn.execute(
-        "SELECT COUNT(*) as c FROM docking_jobs WHERE status = 'completed'"
+        "SELECT COUNT(*) as c FROM docking_jobs WHERE status = 'completed' AND completed_at >= ?", (since,)
     ).fetchone()["c"]
 
     total = conn.execute(
-        "SELECT COUNT(*) as c FROM docking_jobs"
+        "SELECT COUNT(*) as c FROM docking_jobs WHERE created_at >= ?", (since,)
     ).fetchone()["c"]
 
     # Estimate wait time: ~3 min per queued job on average
@@ -517,15 +481,19 @@ async def get_stats():
         "completed_jobs": completed,
         "total_jobs": total,
         "est_wait_minutes": est_wait_min,
+        "window_days": 30,
     }
 
 
 @app.get("/api/leaderboard/countries")
 async def get_country_leaderboard(limit: int = Query(20, ge=1, le=100)):
-    """Countries ranked by number of docking jobs run — powers the
-    homepage 'Top countries' leaderboard."""
+    """Countries ranked by completed docking jobs in the last 30 days
+    (see `definition` in the response) — powers the homepage panel."""
+    from api.database import LEADERBOARD_DEFINITION, LEADERBOARD_WINDOW_DAYS
     rows = country_leaderboard(limit=limit)
-    return {"countries": rows, "total_countries": len(rows)}
+    return {"countries": rows, "total_countries": len(rows),
+            "metric": "completed_jobs", "window_days": LEADERBOARD_WINDOW_DAYS,
+            "definition": LEADERBOARD_DEFINITION}
 
 
 # ---------------------------------------------------------------------------
@@ -533,9 +501,13 @@ async def get_country_leaderboard(limit: int = Query(20, ge=1, le=100)):
 # ---------------------------------------------------------------------------
 
 @app.patch("/api/jobs/{job_id}")
-async def patch_job_metadata(job_id: str, body: JobMetadataUpdate):
+async def patch_job_metadata(job_id: str, body: JobMetadataUpdate, http_request: Request):
     """Update notes / tags on a docking job. Used by the lab-notebook
-    UI on the results page so students can annotate runs as they go."""
+    UI on the results page so students can annotate runs as they go.
+    Jobs that belong to an account can only be annotated by that account."""
+    row, ident = load_viewable_job(job_id, http_request, completed=False)
+    if row.get("owner_user_id") and row["owner_user_id"] != ident.user_id:
+        raise HTTPException(status_code=403, detail="Only the owner can edit this job's notes")
     ok = update_job_metadata(job_id, notes=body.notes, tags=body.tags)
     if not ok:
         raise HTTPException(status_code=404, detail="Job not found")
@@ -547,20 +519,21 @@ async def list_jobs_for_email(email: str = Query(..., min_length=3), limit: int 
     """Roll-up of jobs submitted by an email. Drives the dashboard
     history view and the instructor's per-student feed when paired
     with class roster lookups."""
-    jobs = list_jobs_by_email(email, limit=limit)
+    jobs = [j for j in list_jobs_by_email(email, limit=limit) if (j.get("visibility") or "public") != "private"]
+    for j in jobs:
+        for k in ("output_pdbqt", "docked_pdb", "receptor_pdb_gz", "client_hash", "ligand_sdf"):
+            j.pop(k, None)
     return {"jobs": jobs}
 
 
 @app.get("/api/results/{job_id}/citation")
-async def get_citation(job_id: str, format: str = Query("bibtex", pattern="^(bibtex|ris|text)$")):
+async def get_citation(http_request: Request, job_id: str, format: str = Query("bibtex", pattern="^(bibtex|ris|text)$")):
     """Render a citation entry for a completed job. We stamp the
     AutoDock Vina version + DockIt commit so a re-run with the same
     parameters can be reproduced from the citation alone."""
-    job_data = get_job_full(job_id)
-    if not job_data:
-        raise HTTPException(status_code=404, detail="Job not found")
-    if job_data["status"] != JobStatus.COMPLETED:
-        raise HTTPException(status_code=400, detail="Citation requires a completed job")
+    job_data, _ = load_viewable_job(job_id, http_request)
+    if format == "bibtex":
+        return PlainTextResponse(exports.bibtex(job_data), media_type="text/x-bibtex")
 
     title = (
         f"Molecular docking of {job_data['ligand_name']} (PubChem CID "
@@ -607,17 +580,21 @@ async def get_citation(job_id: str, format: str = Query("bibtex", pattern="^(bib
 
 
 @app.get("/api/compare")
-async def compare_jobs(jobs: str = Query(..., min_length=8)):
+async def compare_jobs(http_request: Request, jobs: str = Query(..., min_length=8)):
     """Pull multiple jobs in one call so the /compare web view can
     render a side-by-side table without a fan-out fetch from the
     browser. Accepts a comma-separated list of job IDs."""
     ids = [j.strip() for j in jobs.split(",") if j.strip()]
     if not ids:
         return {"jobs": []}
-    rows = list_jobs_by_ids(ids[:8])  # hard cap at 8 to prevent abuse
+    ident = acc.resolve_identity(http_request)
+    rows = [r for r in list_jobs_by_ids(ids[:8]) if acc.can_view(r, ident)]  # hard cap at 8
+    for r in rows:
+        for k in ("receptor_pdb_gz", "client_hash", "ligand_sdf", "analysis_json"):
+            r.pop(k, None)
     return {"jobs": rows}
 
 
 @app.get("/")
 async def root():
-    return {"message": "DockIt API v2.0 is running!", "docs": "/docs"}
+    return {"message": "MolDock API v3 is running!", "docs": "/docs"}

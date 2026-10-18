@@ -5,11 +5,8 @@ import { useParams } from "next/navigation";
 import Link from "next/link";
 import axios from "axios";
 import ProteinViewer from "@/app/components/ProteinViewer";
-
-const API_BASE =
-  process.env.NODE_ENV === "development"
-    ? "http://localhost:8000"
-    : "https://lcbc-server.apps.johnseong.com";
+import { API_BASE, downloadFile } from "@/app/lib/api";
+import { ExportsPanel, InteractionsPanel, MethodsPanel, RmsdCard } from "@/app/components/ResearchPanels";
 
 interface Pose {
   model: number;
@@ -114,6 +111,10 @@ const Results: FC = () => {
         <h1 className="text-4xl font-extralight text-center mb-1">Results</h1>
         <p className="text-xs text-gray-500 text-center mb-10">
           {results.protein_pdb_id?.toUpperCase()} + {results.ligand_name}
+          {results.visibility === "private" && <span className="ml-2 text-[10px] bg-white/10 px-2 py-0.5 rounded-full">private</span>}
+          {results.batch_id && (
+            <Link href={`/screen/${results.batch_id}`} className="ml-2 text-[10px] underline">back to screen</Link>
+          )}
         </p>
 
         {/* 3D viewer with docked ligand */}
@@ -156,6 +157,7 @@ const Results: FC = () => {
                 <tr className="border-b border-white/5 text-gray-500">
                   <th className="text-left px-4 py-2">Pose</th>
                   <th className="text-right px-4 py-2">Affinity (kcal/mol)</th>
+                  {results.analysis?.rmsd && <th className="text-right px-4 py-2">RMSD to crystal (Å)</th>}
                 </tr>
               </thead>
               <tbody>
@@ -172,12 +174,24 @@ const Results: FC = () => {
                     <td className={`px-4 py-2 text-right ${i === 0 ? "text-green-400" : ""}`}>
                       {pose.affinity}
                     </td>
+                    {results.analysis?.rmsd && (
+                      <td className="px-4 py-2 text-right tabular-nums">
+                        {results.analysis.rmsd.values?.[i] != null ? results.analysis.rmsd.values[i].toFixed(2) : "–"}
+                      </td>
+                    )}
                   </tr>
                 ))}
               </tbody>
             </table>
           </div>
         )}
+
+        <RmsdCard analysis={results.analysis} />
+        {results.analysis?.poses?.length > 0 && (
+          <InteractionsPanel jobId={jobId} numPoses={results.num_poses || 1} analysis={results.analysis} />
+        )}
+        <ExportsPanel jobId={jobId} hasReceptor={!!results.has_receptor} />
+        <MethodsPanel methods={results.methods} repro={results.reproducibility} jobId={jobId} />
 
         {/* Lab notebook — notes + tags. Saved per-job; visible to
             anyone with the link, so suitable for class assignments
@@ -213,18 +227,18 @@ const Results: FC = () => {
 
         {/* Downloads + academic exports */}
         <div className="flex gap-2 mb-2">
-          <a
-            href={`${API_BASE}/api/results/${jobId}/download/pdb`}
+          <button
+            onClick={() => downloadFile(`${API_BASE}/api/results/${jobId}/download/pdb`, `docked_${jobId.slice(0, 8)}.pdb`)}
             className="flex-1 text-center bg-white text-black text-xs font-medium py-2.5 rounded-full hover:bg-gray-200 transition-colors"
           >
             Download PDB
-          </a>
-          <a
-            href={`${API_BASE}/api/results/${jobId}/download/pdbqt`}
+          </button>
+          <button
+            onClick={() => downloadFile(`${API_BASE}/api/results/${jobId}/download/pdbqt`, `docked_${jobId.slice(0, 8)}.pdbqt`)}
             className="flex-1 text-center bg-white/10 text-white text-xs font-medium py-2.5 rounded-full hover:bg-white/20 transition-colors"
           >
             Download PDBQT
-          </a>
+          </button>
         </div>
         <div className="flex gap-2">
           <button

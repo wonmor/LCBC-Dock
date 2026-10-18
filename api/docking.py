@@ -3,6 +3,7 @@ import tempfile
 import subprocess
 import logging
 import re
+from functools import lru_cache
 from typing import Optional, Tuple, List
 
 import httpx
@@ -141,12 +142,25 @@ def _manual_pdb_to_pdbqt(pdb_path: str, work_dir: str, name: str) -> str:
     return pdbqt_path
 
 
+@lru_cache(maxsize=1)
+def vina_version() -> str:
+    try:
+        out = subprocess.run([VINA_EXECUTABLE, "--version"], capture_output=True, text=True, timeout=10)
+        m = re.search(r"v?(\d+\.\d+\.\d+\S*)", out.stdout + out.stderr)
+        return m.group(1) if m else "unknown"
+    except Exception:
+        return "unavailable"
+
+
 def run_vina(receptor_pdbqt: str, ligand_pdbqt: str, work_dir: str,
              center_x: float, center_y: float, center_z: float,
              size_x: float, size_y: float, size_z: float,
              exhaustiveness: int = 8, num_modes: int = 9,
-             energy_range: float = 3.0) -> Tuple[str, List[dict]]:
-    """Run AutoDock Vina and return output PDBQT path and parsed poses."""
+             energy_range: float = 3.0, seed: Optional[int] = None,
+             cpu: Optional[int] = None, command_out: Optional[list] = None) -> Tuple[str, List[dict]]:
+    """Run AutoDock Vina and return output PDBQT path and parsed poses.
+    `seed` makes the run reproducible; the exact command line is appended
+    to `command_out` for the reproducibility record."""
     output_path = os.path.join(work_dir, "docked_output.pdbqt")
 
     cmd = [
@@ -164,6 +178,13 @@ def run_vina(receptor_pdbqt: str, ligand_pdbqt: str, work_dir: str,
         "--energy_range", str(energy_range),
         "--out", output_path,
     ]
+    if seed is not None:
+        cmd += ["--seed", str(int(seed))]
+    if cpu:
+        cmd += ["--cpu", str(int(cpu))]
+    if command_out is not None:
+        command_out.append(" ".join(
+            os.path.basename(c) if os.path.isabs(c) else c for c in cmd))
 
     logger.info(f"Running Vina: {' '.join(cmd)}")
 
@@ -182,27 +203,37 @@ def run_vina(receptor_pdbqt: str, ligand_pdbqt: str, work_dir: str,
 
 def parse_vina_output(pdbqt_path: str) -> List[dict]:
     """Parse Vina output PDBQT to extract poses and affinities."""
-    poses = []
-    current_pose = []
-    current_model = 0
-    affinity = None
-
     with open(pdbqt_path, "r") as f:
-        for line in f:
-            if line.startswith("MODEL"):
-                current_model = int(line.split()[1])
-                current_pose = []
-            elif line.startswith("REMARK VINA RESULT"):
-                parts = line.split()
-                affinity = float(parts[3])
-            elif line.startswith("ENDMDL"):
-                poses.append({
-                    "model": current_model,
-                    "affinity": affinity,
-                    "pdbqt": "".join(current_pose),
-                })
-            elif line.startswith("ATOM") or line.startswith("HETATM"):
-                current_pose.append(line)
+        return parse_vina_output_text(f.read())
+
+
+def parse_vina_output_text(text: str) -> List[dict]:
+    """Poses with affinity and Vina's RMSD bounds to the best mode."""
+    poses = []
+    current_pose: List[str] = []
+    current_model = 0
+    affinity = rmsd_lb = rmsd_ub = None
+
+    for line in (text or "").splitlines(keepends=True):
+        if line.startswith("MODEL"):
+            current_model = int(line.split()[1])
+            current_pose = []
+            affinity = rmsd_lb = rmsd_ub = None
+        elif line.startswith("REMARK VINA RESULT"):
+            parts = line.split()
+            affinity = float(parts[3])
+            if len(parts) >= 6:
+                rmsd_lb, rmsd_ub = float(parts[4]), float(parts[5])
+        elif line.startswith("ENDMDL"):
+            poses.append({
+                "model": current_model,
+                "affinity": affinity,
+                "rmsd_lb": rmsd_lb,
+                "rmsd_ub": rmsd_ub,
+                "pdbqt": "".join(current_pose),
+            })
+        elif line.startswith("ATOM") or line.startswith("HETATM"):
+            current_pose.append(line)
 
     return poses
 

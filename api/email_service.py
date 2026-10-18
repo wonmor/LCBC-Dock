@@ -151,3 +151,47 @@ def send_failure_email(to_email: str, job_id: str, protein_pdb_id: str,
     except Exception as e:
         logger.error(f"Failed to send failure email to {to_email}: {e}")
         return False
+
+
+def smtp_configured() -> bool:
+    return bool(SMTP_USER and SMTP_PASS)
+
+
+def _send_html(to_email: str, subject: str, html_body: str) -> bool:
+    if not smtp_configured():
+        logger.warning("SMTP credentials not configured, skipping email")
+        return False
+    msg = MIMEMultipart("alternative")
+    msg["Subject"] = subject
+    msg["From"] = FROM_EMAIL
+    msg["To"] = to_email
+    msg.attach(MIMEText(html_body, "html"))
+    try:
+        with smtplib.SMTP(SMTP_HOST, SMTP_PORT) as server:
+            server.starttls()
+            server.login(SMTP_USER, SMTP_PASS)
+            server.sendmail(FROM_EMAIL, to_email, msg.as_string())
+        return True
+    except Exception as e:
+        logger.error(f"Failed to send email: {e}")
+        return False
+
+
+def send_login_email(to_email: str, link: str) -> bool:
+    html = f"""
+    <html><body style="font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;background:#000;color:#fff;padding:40px;">
+      <div style="max-width:560px;margin:0 auto;background:#111;border-radius:16px;padding:32px;">
+        <h1 style="font-weight:300;font-size:26px;margin:0 0 8px;">Mol<b>Dock</b></h1>
+        <p style="color:#9ca3af;">Click to sign in. The link works once and expires in 30 minutes.</p>
+        <a href="{link}" style="display:inline-block;background:#fff;color:#000;padding:12px 24px;border-radius:999px;text-decoration:none;font-weight:600;margin:16px 0;">Sign in to MolDock</a>
+        <p style="color:#6b7280;font-size:12px;">If you didn't ask for this, ignore this email.</p>
+      </div></body></html>"""
+    return _send_html(to_email, "Your MolDock sign-in link", html)
+
+
+def send_lab_quote_email(owner_email: str, quote: dict) -> bool:
+    import html as _html
+    rows = "".join(f"<tr><td style='color:#9ca3af;padding:4px 12px 4px 0'>{_html.escape(str(k))}</td>"
+                   f"<td>{_html.escape(str(v))}</td></tr>" for k, v in quote.items())
+    html = f"<html><body style='font-family:sans-serif'><h2>New MolDock Lab quote request</h2><table>{rows}</table></body></html>"
+    return _send_html(owner_email, f"MolDock Lab quote: {str(quote.get('institution', ''))[:80]}", html)

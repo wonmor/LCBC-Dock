@@ -18,3 +18,7 @@ biopython
 rdkit
 slowapi
 firebase-admin
+numpy
+scipy
+cryptography
+PyJWT

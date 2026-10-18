@@ -54,6 +54,35 @@ Developed by **John Wonmo Seong** at [University of California, Irvine](https://
 - **Mobile App** — Native iOS & Android app with tablet-optimized layouts
 - **Live Stats** — Queue length, completed jobs, and estimated wait time on the homepage
 
+
+### For researchers (v3)
+
+- **Virtual screening** (`/screen`) — paste SMILES or upload an SDF library, dock every ligand against one target, ranked table (affinity, ligand efficiency, H-bonds, key residues) + CSV export
+- **Protein prep** — PDB ID or UniProt accession (AlphaFold DB model), chain selection, waters/hetero groups removed (metals optionally kept), hydrogens for a chosen pH + Gasteiger charges
+- **Binding site** — co-crystallised ligand, residue list, automatic pocket detection (grid buriedness), or whole protein
+- **Redocking validation** — heavy-atom RMSD of every pose to the crystal ligand (1HSG/indinavir: 0.57 Å)
+- **Interaction analysis** — H-bonds, hydrophobic contacts, π-stacking, salt bridges, metal contacts; 2D interaction map + residue table per pose
+- **Reproducibility** — recorded Vina/Open Babel/RDKit versions, seed, box, protonation, exact Vina command; methods paragraph and BibTeX
+- **Exports** — poses SDF/PDBQT/PDB, complex PDB, PyMOL `.pml`, ChimeraX `.cxc`, CSVs, `params.json`, or everything as one ZIP
+- **REST API** — `X-API-Key: mdk_...` (Pro). OpenAPI docs at `/docs` on the API server
+
+### Plans
+
+| | Free | Pro ($9.99/mo or $79/yr) | Lab / Institution (quote) |
+|---|---|---|---|
+| Dockings/day | 5 (3 without account) | 300, priority queue | 1000 per seat |
+| Exhaustiveness / poses / box | 8 / 9 / 30 Å | 32 / 20 / 40 Å | 64 / 20 / 60 Å |
+| Batch screening | 5 ligands | 500 per batch | 2000 per batch |
+| Private jobs, API keys, kept forever | – | ✓ | ✓ |
+
+Limits are enforced server-side (`api/plans.py`, `api/accounts.py`). Stripe price IDs come from the environment; see `.env.example`.
+
+### Tests
+
+```bash
+pip install -r requirements.txt pytest && pytest tests   # needs Open Babel for the interaction tests
+```
+
 ---
 
 ## Examples Gallery

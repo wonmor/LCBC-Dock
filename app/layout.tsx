@@ -4,6 +4,7 @@ import React from "react";
 import { Outfit } from "next/font/google";
 
 import "./globals.css";
+import { NavAccount, PaywallModal } from "./components/ClientShell";
 
 const outfit = Outfit({ subsets: ["latin"] });
 
@@ -125,18 +126,22 @@ export default function RootLayout({
                 <span className="text-sm font-light tracking-widest">Mol</span>
                 <span className="text-sm font-semibold tracking-widest">Dock</span>
               </Link>
-              <div className="flex items-center gap-6 text-xs text-gray-400">
+              <div className="flex items-center gap-4 sm:gap-6 text-xs text-gray-400">
                 <Link href="/docking/protein" className="hover:text-white transition-colors">Dock</Link>
-                <Link href="/examples" className="hover:text-white transition-colors">Examples</Link>
-                <Link href="/dashboard" className="hover:text-white transition-colors">Dashboard</Link>
-                <Link href="/glossary" className="hover:text-white transition-colors">Glossary</Link>
-                <Link href="/about" className="hover:text-white transition-colors">About</Link>
+                <Link href="/screen" className="hover:text-white transition-colors">Screen</Link>
+                <Link href="/examples" className="hidden sm:inline hover:text-white transition-colors">Examples</Link>
+                <Link href="/dashboard" className="hidden sm:inline hover:text-white transition-colors">Dashboard</Link>
+                <Link href="/glossary" className="hidden md:inline hover:text-white transition-colors">Glossary</Link>
+                <Link href="/about" className="hidden md:inline hover:text-white transition-colors">About</Link>
+                <Link href="/pricing" className="hover:text-white transition-colors">Pricing</Link>
+                <NavAccount />
               </div>
             </div>
           </nav>
           <main className="pt-14">
             {children}
           </main>
+          <PaywallModal />
         </div>
       </body>
     </html>
