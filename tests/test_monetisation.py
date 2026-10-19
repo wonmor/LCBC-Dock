@@ -371,3 +371,21 @@ def test_sign_in_without_smtp_is_a_clear_503(client, monkeypatch):
     monkeypatch.setattr(routes, "send_login_email", lambda *a: False)
     r = client.post("/api/auth/request-link", json={"email": "nosmtp@example.org"})
     assert r.status_code == 503
+
+
+def test_portal_session_uses_moldock_configuration(monkeypatch):
+    from api import billing
+    sent = {}
+
+    def fake_post(path, params):
+        sent.update(params, _path=path)
+        return {"url": "https://billing.stripe.com/session/x"}
+
+    monkeypatch.setattr(billing, "_post", fake_post)
+    user = {"stripe_customer_id": "cus_123"}
+    monkeypatch.delenv("STRIPE_PORTAL_CONFIGURATION", raising=False)
+    billing.create_portal_session(user)
+    assert "configuration" not in sent
+    monkeypatch.setenv("STRIPE_PORTAL_CONFIGURATION", "bpc_moldock")
+    assert billing.create_portal_session(user) == "https://billing.stripe.com/session/x"
+    assert sent["configuration"] == "bpc_moldock" and sent["_path"] == "/billing_portal/sessions"

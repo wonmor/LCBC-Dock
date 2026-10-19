@@ -92,10 +92,16 @@ def create_checkout_session(user: dict, plan_key: str) -> str:
 def create_portal_session(user: dict) -> str:
     if not user.get("stripe_customer_id"):
         raise ValueError("No Stripe customer for this account yet")
-    session = _post("/billing_portal/sessions", {
+    params = {
         "customer": user["stripe_customer_id"],
         "return_url": f"{public_base_url()}/account",
-    })
+    }
+    # The Stripe account is shared with other apps; a MolDock-specific portal
+    # configuration keeps the headline and allowed actions MolDock's own.
+    configuration = os.environ.get("STRIPE_PORTAL_CONFIGURATION", "").strip()
+    if configuration:
+        params["configuration"] = configuration
+    session = _post("/billing_portal/sessions", params)
     return session["url"]
 
 
