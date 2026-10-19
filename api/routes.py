@@ -211,6 +211,12 @@ class LinkRequest(BaseModel):
     next: Optional[str] = None
 
 
+EMAIL_SIGNIN_UNAVAILABLE = (
+    "Email sign-in is temporarily unavailable. You can still dock without an "
+    "account; please try signing in again later."
+)
+
+
 @router.post("/api/auth/request-link")
 async def request_link(body: LinkRequest):
     email = (body.email or "").strip().lower()
@@ -218,14 +224,21 @@ async def request_link(body: LinkRequest):
         raise HTTPException(422, "Enter a valid email address")
     if acc.recent_login_requests(email) >= 5:
         raise HTTPException(429, "Too many sign-in emails. Try again in 15 minutes.")
+    dev_login = os.environ.get("MOLDOCK_DEV_LOGIN") == "1" and not smtp_configured()
+    if not smtp_configured() and not dev_login:
+        # No mail server: say so instead of telling the user to check an
+        # inbox that will never receive anything.
+        raise HTTPException(503, EMAIL_SIGNIN_UNAVAILABLE)
     token = acc.create_login_token(email)
     nxt = body.next if (body.next or "").startswith("/") else "/account"
     link = f"{billing.public_base_url()}/auth/verify?token={token}&next={nxt}"
     sent = send_login_email(email, link)
     resp = {"ok": True, "sent": sent}
     # Local development only: no SMTP → hand the link back so sign-in works.
-    if not sent and os.environ.get("MOLDOCK_DEV_LOGIN") == "1" and not smtp_configured():
+    if not sent and dev_login:
         resp["dev_link"] = link
+    elif not sent:
+        raise HTTPException(503, EMAIL_SIGNIN_UNAVAILABLE)
     return resp
 
 

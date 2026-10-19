@@ -355,3 +355,19 @@ def test_client_ip_uses_trusted_proxy_hop():
     from api.accounts import client_ip
     req = SimpleNamespace(headers={"x-forwarded-for": "6.6.6.6, 203.0.113.9"}, client=None)
     assert client_ip(req) == "203.0.113.9"  # left-most entry is client-controlled
+
+
+def test_sign_in_without_smtp_is_a_clear_503(client, monkeypatch):
+    from api import email_service, routes
+    monkeypatch.delenv("MOLDOCK_DEV_LOGIN", raising=False)
+    monkeypatch.setattr(email_service, "SMTP_USER", "")
+    monkeypatch.setattr(email_service, "SMTP_PASS", "")
+    r = client.post("/api/auth/request-link", json={"email": "nosmtp@example.org"})
+    assert r.status_code == 503
+    assert r.json()["detail"] == routes.EMAIL_SIGNIN_UNAVAILABLE
+    # A configured server that fails to deliver must not claim "check your inbox".
+    monkeypatch.setattr(email_service, "SMTP_USER", "u")
+    monkeypatch.setattr(email_service, "SMTP_PASS", "p")
+    monkeypatch.setattr(routes, "send_login_email", lambda *a: False)
+    r = client.post("/api/auth/request-link", json={"email": "nosmtp@example.org"})
+    assert r.status_code == 503
