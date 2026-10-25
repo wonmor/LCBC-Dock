@@ -119,7 +119,7 @@ export default function SiteSelector({
           >
             {ligands.map((h) => (
               <option key={h.label} value={`${h.resname}:${h.chain}:${h.resseq}`}>
-                {h.label} · {h.n_atoms} atoms
+                {h.label} | {h.n_atoms} atoms
               </option>
             ))}
           </select>
@@ -146,7 +146,7 @@ export default function SiteSelector({
                   site.pocket_rank === p.rank ? "border-white/40 bg-white/5" : "border-white/10"
                 }`}
               >
-                Pocket {p.rank} · {Math.round(p.volume_A3)} Å³ · buried {Math.round(p.buriedness * 100)}%
+                Pocket {p.rank} | {Math.round(p.volume_A3)} Å³ | buried {Math.round(p.buriedness * 100)}%
                 <span className="block text-gray-500 truncate">{p.residues.slice(0, 8).join(" ")}</span>
               </button>
             ))}

@@ -233,9 +233,9 @@ const Examples: FC = () => {
                   </div>
                   <div className="text-xs text-gray-500 mb-2">
                     <span className="font-mono">{ex.protein}</span>
-                    <span className="mx-1.5">·</span>
+                    <span className="mx-1.5">|</span>
                     {ex.proteinName}
-                    <span className="mx-1.5">·</span>
+                    <span className="mx-1.5">|</span>
                     CID {ex.ligandCid}
                   </div>
                   <p className="text-xs text-gray-500 leading-relaxed">
@@ -264,7 +264,7 @@ const Examples: FC = () => {
         </div>
 
         <p className="text-[10px] text-gray-600 text-center mt-8">
-          {EXAMPLES.length} curated examples · Tap to skip straight to docking
+          {EXAMPLES.length} curated examples | Tap to skip straight to docking
         </p>
       </div>
     </div>

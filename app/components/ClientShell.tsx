@@ -100,7 +100,7 @@ export function PaywallModal() {
         <p className="text-xs text-gray-400 mb-5">{pitch}</p>
         {pw.code === "quota_exceeded" && pw.resets_at && (
           <p className="text-[11px] text-gray-500 mb-4">
-            Used {pw.used_today}/{pw.jobs_per_day} today · resets{" "}
+            Used {pw.used_today}/{pw.jobs_per_day} today | resets{" "}
             {new Date(pw.resets_at).toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" })}
           </p>
         )}

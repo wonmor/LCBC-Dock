@@ -42,9 +42,9 @@ export default function BatchResults() {
       <div className="w-full max-w-4xl">
         <h1 className="text-3xl sm:text-4xl font-extralight text-center mb-1">{b.name}</h1>
         <p className="text-xs text-gray-500 text-center mb-6">
-          {b.protein_pdb_id} · {b.n_ligands} ligands · exhaustiveness {b.params.exhaustiveness} · site{" "}
+          {b.protein_pdb_id} | {b.n_ligands} ligands | exhaustiveness {b.params.exhaustiveness} | site{" "}
           {b.params.site?.mode}
-          {b.visibility === "private" && " · private"}
+          {b.visibility === "private" && " | private"}
         </p>
 
         <div className="border border-white/10 rounded-2xl p-4 mb-4">
@@ -54,7 +54,7 @@ export default function BatchResults() {
             </span>
             <span>
               {done}/{b.n_ligands}
-              {c.failed > 0 && <span className="text-red-400"> · {c.failed} failed</span>}
+              {c.failed > 0 && <span className="text-red-400"> | {c.failed} failed</span>}
             </span>
           </div>
           <div className="h-1.5 bg-white/10 rounded-full overflow-hidden">

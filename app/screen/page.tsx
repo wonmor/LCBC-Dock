@@ -116,7 +116,7 @@ export default function Screen() {
             />
             <p className="text-[10px] text-gray-500 mt-1">
               {nLigands} ligand{nLigands === 1 ? "" : "s"}
-              {acct && (cap ? ` · your plan screens up to ${cap} per batch` : " · sign in (free) to screen 5, Pro for 500")}
+              {acct && (cap ? ` | your plan screens up to ${cap} per batch` : " | sign in (free) to screen 5, Pro for 500")}
             </p>
           </div>
 

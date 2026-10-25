@@ -151,7 +151,7 @@ const Ligand: FC = () => {
                   >
                     <span className="text-sm">{mol.name}</span>
                     <span className="text-xs text-gray-500 ml-2">
-                      CID {mol.cid} &middot; {mol.formula} &middot; {mol.weight.toFixed(1)} g/mol
+                      CID {mol.cid} | {mol.formula} | {mol.weight.toFixed(1)} g/mol
                     </span>
                   </button>
                 ))}
@@ -230,7 +230,7 @@ const Ligand: FC = () => {
                     <div className="flex items-baseline justify-between mb-1">
                       <span className="text-[10px] text-gray-500">QED score</span>
                       <span className="text-xs font-mono">
-                        {druglikeness.qed.toFixed(2)} · {druglikeness.qed_label}
+                        {druglikeness.qed.toFixed(2)} | {druglikeness.qed_label}
                       </span>
                     </div>
                     <div className="h-1.5 bg-white/5 rounded-full overflow-hidden">

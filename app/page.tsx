@@ -118,11 +118,11 @@ export default function Home() {
             <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 mb-8">
               <div className="border border-white/10 rounded-2xl p-4 text-center">
                 <p className="text-2xl font-light">{stats.total_jobs}</p>
-                <p className="text-[10px] text-gray-500 mt-1">Jobs · 30 days</p>
+                <p className="text-[10px] text-gray-500 mt-1">Jobs | 30 days</p>
               </div>
               <div className="border border-white/10 rounded-2xl p-4 text-center">
                 <p className="text-2xl font-light">{stats.completed_jobs}</p>
-                <p className="text-[10px] text-gray-500 mt-1">Completed · 30 days</p>
+                <p className="text-[10px] text-gray-500 mt-1">Completed | 30 days</p>
               </div>
               <div className="border border-white/10 rounded-2xl p-4 text-center">
                 <p className="text-2xl font-light text-yellow-400">
@@ -217,7 +217,7 @@ export default function Home() {
                     </span>
                   </div>
                   <p className="text-[11px] text-gray-500 truncate">
-                    {ex.protein} · {ex.proteinName}
+                    {ex.protein} | {ex.proteinName}
                   </p>
                   <p className="text-[11px] text-gray-600 truncate">
                     {ex.description}
@@ -241,7 +241,7 @@ export default function Home() {
           <section className="mb-10" aria-labelledby="top-countries">
             <div className="flex items-baseline justify-between mb-1">
               <h2 id="top-countries" className="text-lg font-light">Top countries</h2>
-              <span className="text-[10px] text-gray-500">docking jobs completed · last 30 days</span>
+              <span className="text-[10px] text-gray-500">docking jobs completed | last 30 days</span>
             </div>
             <p className="text-[10px] text-gray-600 mb-4" title={leaderboardNote}>
               Unique jobs by submitter country; repeat submissions of the same complex count once.
@@ -274,7 +274,7 @@ export default function Home() {
         )}
 
         <footer className="text-center text-xs text-gray-600 mt-4">
-          Built by John Wonmo Seong &middot; UC Irvine &times; Seoul National University
+          Built by John Wonmo Seong | UC Irvine &times; Seoul National University
         </footer>
       </div>
     </div>

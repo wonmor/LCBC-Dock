@@ -46,7 +46,7 @@ function Row({ label, value, on = true }: { label: string; value?: string; on?: 
       <Check on={on} />
       <span className={on ? "" : "text-gray-600"}>
         {label}
-        {value && <span className="text-gray-500"> · {value}</span>}
+        {value && <span className="text-gray-500"> | {value}</span>}
       </span>
     </li>
   );
@@ -176,7 +176,7 @@ export default function Pricing() {
             </p>
             <p className="text-[11px] text-gray-500 mb-5">
               {annual ? `${formatUSD(Math.round(yearly / 12))}/month billed yearly` : "cancel any time"}
-              {cat?.trial_days ? ` · ${cat.trial_days}-day free trial` : ""}
+              {cat?.trial_days ? ` | ${cat.trial_days}-day free trial` : ""}
             </p>
             <ul className="space-y-2 flex-1">
               <Row label={`${pl?.jobs_per_day ?? 300} dockings a day`} value="priority queue" />
@@ -212,7 +212,7 @@ export default function Pricing() {
               <span className="text-sm text-gray-500"> / seat / year</span>
             </p>
             <p className="text-[11px] text-gray-500 mb-5">
-              from {lab?.min_seats ?? 5} seats · invoiced, PO accepted
+              from {lab?.min_seats ?? 5} seats | invoiced, PO accepted
             </p>
             <ul className="space-y-2 flex-1">
               <Row label="Everything in Pro for every seat" />

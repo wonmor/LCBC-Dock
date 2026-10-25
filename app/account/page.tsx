@@ -265,7 +265,7 @@ function AccountView() {
             {jobs.batches.map((b: any) => (
               <li key={b.batch_id} className="flex justify-between text-xs">
                 <Link href={`/screen/${b.batch_id}`} className="hover:text-white text-gray-300">
-                  {b.name} <span className="text-gray-500">· {b.n_ligands} ligands</span>
+                  {b.name} <span className="text-gray-500">| {b.n_ligands} ligands</span>
                 </Link>
                 <span className="text-gray-600">{b.created_at.slice(0, 10)}</span>
               </li>
