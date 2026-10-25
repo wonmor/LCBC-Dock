@@ -7,17 +7,36 @@
 	objects = {
 
 /* Begin PBXBuildFile section */
+		32B5F2465D983C124BECD312 /* Backend.swift in Sources */ = {isa = PBXBuildFile; fileRef = EAC1169CE311EBCB8D0A2A5B /* Backend.swift */; };
+		3D846CE0E89E7F5C1BE37F08 /* Assets.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = C3ED76CEB1B8AB0F3050323B /* Assets.xcassets */; };
 		8E9FF58A2BD2C98433C5EC6B /* AppEntry.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1B6A384B8DA4A2FCE3317A19 /* AppEntry.swift */; };
+		A137AB0687FF86B0F5D4AE9A /* AccountView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 5FE460D1DA6F0E50AAB1A96F /* AccountView.swift */; };
+		D05F1B9A6BD60F99AC7033F7 /* ProView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 455BA9215D4A4243ECF0F830 /* ProView.swift */; };
+		DCD19D8FE9274CC43DAB1B40 /* AccountStore.swift in Sources */ = {isa = PBXBuildFile; fileRef = CA9AEB172E0046BC5C74F1B6 /* AccountStore.swift */; };
 		DF60CFF6297914A40291D424 /* ContentView.swift in Sources */ = {isa = PBXBuildFile; fileRef = CAEF5B34020C590DE81AC0C3 /* ContentView.swift */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXFileReference section */
 		1B6A384B8DA4A2FCE3317A19 /* AppEntry.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AppEntry.swift; sourceTree = "<group>"; };
 		4515EE540686586CFBFBF969 /* MolDockMac.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = MolDockMac.app; sourceTree = BUILT_PRODUCTS_DIR; };
+		455BA9215D4A4243ECF0F830 /* ProView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ProView.swift; sourceTree = "<group>"; };
+		5FE460D1DA6F0E50AAB1A96F /* AccountView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AccountView.swift; sourceTree = "<group>"; };
+		8E1230320BD1AA43AD282142 /* MolDock.storekit */ = {isa = PBXFileReference; path = MolDock.storekit; sourceTree = "<group>"; };
+		C3ED76CEB1B8AB0F3050323B /* Assets.xcassets */ = {isa = PBXFileReference; lastKnownFileType = folder.assetcatalog; path = Assets.xcassets; sourceTree = "<group>"; };
+		CA9AEB172E0046BC5C74F1B6 /* AccountStore.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AccountStore.swift; sourceTree = "<group>"; };
 		CAEF5B34020C590DE81AC0C3 /* ContentView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ContentView.swift; sourceTree = "<group>"; };
+		EAC1169CE311EBCB8D0A2A5B /* Backend.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Backend.swift; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXGroup section */
+		0835D8DCBB34A30C157ACEB9 /* StoreKit */ = {
+			isa = PBXGroup;
+			children = (
+				8E1230320BD1AA43AD282142 /* MolDock.storekit */,
+			);
+			path = StoreKit;
+			sourceTree = "<group>";
+		};
 		34E04721E7A66100231CBF43 /* Products */ = {
 			isa = PBXGroup;
 			children = (
@@ -38,6 +57,7 @@
 			isa = PBXGroup;
 			children = (
 				5DF44F5380E77D56FF8A4C6E /* Sources */,
+				0835D8DCBB34A30C157ACEB9 /* StoreKit */,
 				34E04721E7A66100231CBF43 /* Products */,
 			);
 			sourceTree = "<group>";
@@ -45,8 +65,13 @@
 		EDC2FEF0B4DB0E210F3CCEAB /* MolDockMac */ = {
 			isa = PBXGroup;
 			children = (
+				CA9AEB172E0046BC5C74F1B6 /* AccountStore.swift */,
+				5FE460D1DA6F0E50AAB1A96F /* AccountView.swift */,
 				1B6A384B8DA4A2FCE3317A19 /* AppEntry.swift */,
+				C3ED76CEB1B8AB0F3050323B /* Assets.xcassets */,
+				EAC1169CE311EBCB8D0A2A5B /* Backend.swift */,
 				CAEF5B34020C590DE81AC0C3 /* ContentView.swift */,
+				455BA9215D4A4243ECF0F830 /* ProView.swift */,
 			);
 			path = MolDockMac;
 			sourceTree = "<group>";
@@ -59,6 +84,7 @@
 			buildConfigurationList = 33CE6F6DFDEC1CF72C2DE22C /* Build configuration list for PBXNativeTarget "MolDockMac" */;
 			buildPhases = (
 				0CF769B329BB3180D17D79D3 /* Sources */,
+				66CC3B836AD0BCE4F291B6BD /* Resources */,
 			);
 			buildRules = (
 			);
@@ -105,13 +131,28 @@
 		};
 /* End PBXProject section */
 
+/* Begin PBXResourcesBuildPhase section */
+		66CC3B836AD0BCE4F291B6BD /* Resources */ = {
+			isa = PBXResourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				3D846CE0E89E7F5C1BE37F08 /* Assets.xcassets in Resources */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+/* End PBXResourcesBuildPhase section */
+
 /* Begin PBXSourcesBuildPhase section */
 		0CF769B329BB3180D17D79D3 /* Sources */ = {
 			isa = PBXSourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				DCD19D8FE9274CC43DAB1B40 /* AccountStore.swift in Sources */,
+				A137AB0687FF86B0F5D4AE9A /* AccountView.swift in Sources */,
 				8E9FF58A2BD2C98433C5EC6B /* AppEntry.swift in Sources */,
+				32B5F2465D983C124BECD312 /* Backend.swift in Sources */,
 				DF60CFF6297914A40291D424 /* ContentView.swift in Sources */,
+				D05F1B9A6BD60F99AC7033F7 /* ProView.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -124,7 +165,7 @@
 				ALWAYS_EMBED_SWIFT_STANDARD_LIBRARIES = NO;
 				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
 				COMBINE_HIDPI_IMAGES = YES;
-				CURRENT_PROJECT_VERSION = 1;
+				CURRENT_PROJECT_VERSION = 3;
 				INFOPLIST_FILE = Generated/Info.plist;
 				LD_RUNPATH_SEARCH_PATHS = (
 					"$(inherited)",
@@ -272,7 +313,7 @@
 				ALWAYS_EMBED_SWIFT_STANDARD_LIBRARIES = NO;
 				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
 				COMBINE_HIDPI_IMAGES = YES;
-				CURRENT_PROJECT_VERSION = 1;
+				CURRENT_PROJECT_VERSION = 3;
 				INFOPLIST_FILE = Generated/Info.plist;
 				LD_RUNPATH_SEARCH_PATHS = (
 					"$(inherited)",

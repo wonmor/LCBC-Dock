@@ -5,10 +5,12 @@ import AppKit
 struct MolDockMacApp: App {
     @NSApplicationDelegateAdaptor(AppDelegate.self) private var appDelegate
     @Environment(\.openWindow) private var openWindow
+    @StateObject private var store = AccountStore()
 
     var body: some Scene {
         WindowGroup("MolDock", id: "main") {
             ContentView()
+                .environmentObject(store)
                 .frame(minWidth: 980, minHeight: 640)
                 .preferredColorScheme(.dark)
         }

@@ -38,6 +38,9 @@ targets:
       - path: Sources/MolDockMac
         excludes:
           - "**/*.md"
+      # Local StoreKit testing only (scheme Run option); not shipped.
+      - path: StoreKit/MolDock.storekit
+        buildPhase: none
     info:
       path: Generated/Info.plist
       properties:
@@ -46,6 +49,11 @@ targets:
         NSHumanReadableCopyright: "© 2026 John Seong"
         NSAppTransportSecurity:
           NSAllowsArbitraryLoadsInWebContent: true
+        # dockit://auth?token=... from the sign-in email (same scheme as
+        # the phone app; the web verify page hands the token over).
+        CFBundleURLTypes:
+          - CFBundleURLName: com.johnseong.dock-it.auth
+            CFBundleURLSchemes: [dockit]
     settings:
       base:
         # Same as iOS MolDock — App Store Connect treats them as one
@@ -54,7 +62,7 @@ targets:
         PRODUCT_BUNDLE_IDENTIFIER: com.johnseong.dock-it
         PRODUCT_NAME: MolDock
         MARKETING_VERSION: "1.0"
-        CURRENT_PROJECT_VERSION: "2"
+        CURRENT_PROJECT_VERSION: "3"
         ALWAYS_EMBED_SWIFT_STANDARD_LIBRARIES: "NO"
         ASSETCATALOG_COMPILER_APPICON_NAME: AppIcon
 
@@ -65,5 +73,6 @@ schemes:
         MolDockMac: all
     run:
       config: Debug
+      storeKitConfiguration: StoreKit/MolDock.storekit
     archive:
       config: Release

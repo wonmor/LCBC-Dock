@@ -9,6 +9,8 @@ struct ContentView: View {
         case search = "Search"
         case docking = "Docking"
         case results = "Results"
+        case pro = "MolDock Pro"
+        case account = "Account"
         case about = "About"
 
         var id: String { rawValue }
@@ -16,7 +18,9 @@ struct ContentView: View {
             switch self {
             case .search:  return "magnifyingglass"
             case .docking: return "atom"
-            case .results: return "list.bullet.rectangle"
+            case .results: return "chart.bar.xaxis"
+            case .pro:     return "sparkles"
+            case .account: return "person"
             case .about:   return "info.circle"
             }
         }
@@ -28,12 +32,15 @@ struct ContentView: View {
                 return "Configure AutoDock Vina parameters and run a docking job. The server-side runner is shared with iOS; we just need the SwiftUI form."
             case .results:
                 return "Visualize binding poses + scores in a native 3D viewer. SceneKit candidate; RealityKit on macOS gets brittle outside immersive contexts."
+            case .pro, .account:
+                return ""
             case .about:
                 return "Credits, version, support links."
             }
         }
     }
 
+    @EnvironmentObject private var store: AccountStore
     @State private var section: Section? = .search
 
     var body: some View {
@@ -44,14 +51,26 @@ struct ContentView: View {
             .navigationTitle("MolDock")
             .frame(minWidth: 200)
         } detail: {
-            if let s = section {
+            switch section {
+            case .pro:
+                ProView(showAccount: { section = .account })
+            case .account:
+                AccountView(showPro: { section = .pro })
+            case .some(let s):
                 PlaceholderView(section: s)
-            } else {
+            case .none:
                 Text("Pick a section").foregroundColor(.secondary)
             }
         }
+        // dockit:// links reuse this window instead of opening another.
+        .handlesExternalEvents(preferring: ["*"], allowing: ["*"])
+        .onOpenURL { url in
+            Task { await store.open(url: url) }
+            section = .account
+        }
     }
 }
+
 
 private struct PlaceholderView: View {
     let section: ContentView.Section
