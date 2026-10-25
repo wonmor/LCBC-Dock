@@ -45,6 +45,7 @@
         }
       ],
       "./plugins/withPageSize16K",
+      "./plugins/withPodDeploymentTarget",
       "expo-secure-store",
       "expo-iap"
     ],
