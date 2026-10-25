@@ -219,6 +219,21 @@ def test_play_purchase_is_bound_to_the_buying_account(client, google, monkeypatc
     assert client.get("/api/account", headers=h2).json()["user_id"] == a["user_id"]
 
 
+def test_signed_out_purchase_moves_to_the_account_signed_in_later(client, google, monkeypatch):
+    # Bought before signing in: the server keeps it on an e-mail-less account.
+    google.subs["tok-anon"] = _sub()
+    r = client.post("/api/play/verify", json={"purchase_token": "tok-anon"})
+    anon = {"Authorization": f"Bearer {r.json()['session_token']}"}
+    anon_token = client.get("/api/account", headers=anon).json()["app_account_token"]
+    # Even if a later purchase on that anonymous account carries its token,
+    google.subs["tok-anon"] = _sub(account=anon_token)
+    # signing in with e-mail and restoring claims it.
+    h, me = _sign_in(client, monkeypatch, "late@example.org")
+    r = client.post("/api/play/verify", json={"purchase_token": "tok-anon"}, headers=h)
+    assert r.status_code == 200 and r.json()["tier"] == "pro"
+    assert client.get("/api/account", headers=anon).json()["tier"] == "free"
+
+
 def test_play_upgrade_token_replaces_linked_token(client, google, monkeypatch):
     h, a = _sign_in(client, monkeypatch, "upgrader@example.org")
     google.subs["tok-m"] = _sub(account=a["app_account_token"])

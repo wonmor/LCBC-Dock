@@ -436,6 +436,13 @@ def _mask_email(email: Optional[str]) -> str:
     return f"{name[:1]}***@{domain}"
 
 
+_STORE_COLUMNS = {
+    "storekit_original_tx": ("storekit_original_tx", "storekit_product_id", "storekit_expires_at"),
+    "play_purchase_token": ("play_purchase_token", "play_product_id", "play_base_plan",
+                            "play_expires_at", "play_order_id", "play_checked_at"),
+}
+
+
 def _bind_store_purchase(ident: acc.Identity, column: str, keys: list[str],
                          account_token: str) -> dict:
     """Pick the MolDock account a verified store purchase belongs to.
@@ -444,14 +451,16 @@ def _bind_store_purchase(ident: acc.Identity, column: str, keys: list[str],
     transaction id / Play purchase token); `keys` are this purchase's key
     plus any it replaced. The purchase's account token (appAccountToken /
     obfuscatedAccountId) wins: a signed-in user cannot claim a subscription
-    bought for another account, and an anonymous restore signs into the
-    account that bought it. One store subscription → one MolDock account.
+    bought for another e-mail account, and an anonymous restore signs into
+    the account that bought it. A purchase made signed-out lives on an
+    e-mail-less account; signing in and restoring moves it onto the real
+    account. One store subscription → one MolDock account.
     """
     keys = [k for k in keys if k]
     owner = acc.user_for_app_account_token(account_token)
     user = ident.user
     if user:
-        if owner and owner["user_id"] != user["user_id"]:
+        if owner and owner["user_id"] != user["user_id"] and owner.get("email"):
             masked = _mask_email(owner.get("email"))
             raise HTTPException(409, "This subscription belongs to another MolDock account"
                                 + (f" ({masked})" if masked else "")
@@ -471,9 +480,11 @@ def _bind_store_purchase(ident: acc.Identity, column: str, keys: list[str],
             conn.commit()
             conn.close()
             user = acc.get_user(uid)
+    # Moving the subscription takes its entitlement off the previous holder.
+    cleared = ", ".join(f"{c}=NULL" for c in _STORE_COLUMNS[column])
     conn = get_db()
     marks = ",".join("?" * len(keys))
-    conn.execute(f"UPDATE users SET {column}=NULL WHERE {column} IN ({marks}) AND user_id!=?",
+    conn.execute(f"UPDATE users SET {cleared} WHERE {column} IN ({marks}) AND user_id!=?",
                  (*keys, user["user_id"]))
     conn.commit()
     conn.close()
