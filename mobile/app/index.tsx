@@ -189,7 +189,7 @@ export default function Home() {
                 </View>
               </View>
               <Text style={styles.exMeta} numberOfLines={1}>
-                {ex.protein} · {ex.proteinName}
+                {ex.protein} | {ex.proteinName}
               </Text>
               <Text style={styles.exDesc} numberOfLines={1}>
                 {ex.description}
@@ -221,7 +221,7 @@ export default function Home() {
         </View>
 
         <Text style={styles.footer}>
-          Built by John Wonmo Seong · UC Irvine × Seoul National University
+          Built by John Wonmo Seong | UC Irvine × Seoul National University
         </Text>
       </ScrollView>
     </SafeAreaView>

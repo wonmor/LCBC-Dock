@@ -61,7 +61,7 @@ export default function Ligand() {
         </Text>
         <Text style={styles.sub}>
           {selected
-            ? `CID ${selected.cid} · ${selected.formula}`
+            ? `CID ${selected.cid} | ${selected.formula}`
             : "Search PubChem — 100M+ compounds"}
         </Text>
 
@@ -88,7 +88,7 @@ export default function Ligand() {
                   >
                     <Text style={styles.molName}>{mol.name}</Text>
                     <Text style={styles.molMeta}>
-                      CID {mol.cid} · {mol.formula} · {mol.weight.toFixed(1)} g/mol
+                      CID {mol.cid} | {mol.formula} | {mol.weight.toFixed(1)} g/mol
                     </Text>
                   </Pressable>
                 ))}

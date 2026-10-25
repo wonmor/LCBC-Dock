@@ -264,7 +264,7 @@ export default function Examples() {
                   </View>
                 </View>
                 <Text style={styles.meta}>
-                  {ex.protein} · {ex.proteinName} · CID {ex.ligandCid}
+                  {ex.protein} | {ex.proteinName} | CID {ex.ligandCid}
                 </Text>
                 <Text style={styles.desc}>{ex.description}</Text>
               </View>
@@ -282,7 +282,7 @@ export default function Examples() {
         )}
 
         <Text style={styles.footnote}>
-          {EXAMPLES.length} curated examples · Tap to skip straight to docking
+          {EXAMPLES.length} curated examples | Tap to skip straight to docking
         </Text>
       </ScrollView>
     </SafeAreaView>
