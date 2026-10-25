@@ -38,8 +38,8 @@
         {
           "android": {
             "kotlinVersion": "1.9.25",
-            "targetSdkVersion": 35,
-            "compileSdkVersion": 35,
+            "targetSdkVersion": 36,
+            "compileSdkVersion": 36,
             "ndkVersion": "27.1.12297006"
           }
         }
