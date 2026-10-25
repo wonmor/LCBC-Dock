@@ -177,13 +177,16 @@ def _send_html(to_email: str, subject: str, html_body: str) -> bool:
         return False
 
 
-def send_login_email(to_email: str, link: str) -> bool:
+def send_login_email(to_email: str, link: str, code: str | None = None) -> bool:
+    code_block = "" if not code else f"""
+        <p style="color:#9ca3af;margin-top:24px;">Signing in on the MolDock phone app? Enter this code:</p>
+        <p style="font-size:32px;letter-spacing:8px;font-weight:600;margin:8px 0 16px;">{code}</p>"""
     html = f"""
     <html><body style="font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;background:#000;color:#fff;padding:40px;">
       <div style="max-width:560px;margin:0 auto;background:#111;border-radius:16px;padding:32px;">
         <h1 style="font-weight:300;font-size:26px;margin:0 0 8px;">Mol<b>Dock</b></h1>
         <p style="color:#9ca3af;">Click to sign in. The link works once and expires in 30 minutes.</p>
-        <a href="{link}" style="display:inline-block;background:#fff;color:#000;padding:12px 24px;border-radius:999px;text-decoration:none;font-weight:600;margin:16px 0;">Sign in to MolDock</a>
+        <a href="{link}" style="display:inline-block;background:#fff;color:#000;padding:12px 24px;border-radius:999px;text-decoration:none;font-weight:600;margin:16px 0;">Sign in to MolDock</a>{code_block}
         <p style="color:#6b7280;font-size:12px;">If you didn't ask for this, ignore this email.</p>
       </div></body></html>"""
     return _send_html(to_email, "Your MolDock sign-in link", html)

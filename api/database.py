@@ -92,11 +92,32 @@ def init_db():
         conn.execute("ALTER TABLE batches ADD COLUMN receptor_pdb_gz BLOB")
     except Exception:
         pass
+    # Phone app purchases: app_account_token is the UUID handed to StoreKit
+    # (appAccountToken) and Play Billing (obfuscatedAccountId) so a store
+    # purchase names the MolDock account it was bought for.
+    for ddl in (
+        "ALTER TABLE users ADD COLUMN app_account_token TEXT",
+        "ALTER TABLE users ADD COLUMN play_purchase_token TEXT",
+        "ALTER TABLE users ADD COLUMN play_product_id TEXT",
+        "ALTER TABLE users ADD COLUMN play_base_plan TEXT",
+        "ALTER TABLE users ADD COLUMN play_expires_at TEXT",
+        "ALTER TABLE users ADD COLUMN play_order_id TEXT",
+        "ALTER TABLE users ADD COLUMN play_checked_at TEXT",
+        # Phone sign-in: a 6-digit code mailed alongside the magic link.
+        "ALTER TABLE login_tokens ADD COLUMN code_hash TEXT",
+        "ALTER TABLE login_tokens ADD COLUMN attempts INTEGER DEFAULT 0",
+    ):
+        try:
+            conn.execute(ddl)
+        except Exception:
+            pass
     for ddl in (
         "CREATE INDEX IF NOT EXISTS ix_jobs_status ON docking_jobs(status, priority, created_at)",
         "CREATE INDEX IF NOT EXISTS ix_jobs_owner ON docking_jobs(owner_user_id, created_at)",
         "CREATE INDEX IF NOT EXISTS ix_jobs_client ON docking_jobs(client_hash, created_at)",
         "CREATE INDEX IF NOT EXISTS ix_jobs_batch ON docking_jobs(batch_id)",
+        "CREATE UNIQUE INDEX IF NOT EXISTS ix_users_app_account_token ON users(app_account_token)",
+        "CREATE INDEX IF NOT EXISTS ix_users_play_token ON users(play_purchase_token)",
     ):
         conn.execute(ddl)
     try:

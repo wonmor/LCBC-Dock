@@ -14,8 +14,8 @@ the REST API:
                 (see storekit.py), so the app works without an e-mail.
 
     tier      = max(active Stripe subscription, active StoreKit
-                subscription, Lab org seat), else free (signed in) or
-                anonymous.
+                subscription, active Google Play subscription, Lab org
+                seat), else free (signed in) or anonymous.
 
 Quotas are counted from docking_jobs itself (jobs created today, UTC, by
 this identity, failed jobs refunded), so there is no separate counter that
@@ -143,6 +143,33 @@ def get_or_create_user(email: str) -> dict:
     return get_user_by_email(email)  # type: ignore[return-value]
 
 
+def ensure_app_account_token(user_id: str) -> str:
+    """A stable random UUID per account, handed to the phone app to pass as
+    StoreKit `appAccountToken` / Play `obfuscatedAccountId`, so every store
+    purchase names the MolDock account it was bought for. Random (not
+    derived from the e-mail) so it carries no personal data."""
+    user = get_user(user_id) or {}
+    if user.get("app_account_token"):
+        return user["app_account_token"]
+    token = str(uuid.uuid4())
+    conn = get_db()
+    conn.execute("UPDATE users SET app_account_token=? WHERE user_id=? AND app_account_token IS NULL",
+                 (token, user_id))
+    conn.commit()
+    conn.close()
+    return (get_user(user_id) or {}).get("app_account_token") or token
+
+
+def user_for_app_account_token(token: Optional[str]) -> Optional[dict]:
+    token = (token or "").strip().lower()
+    if not token:
+        return None
+    conn = get_db()
+    row = conn.execute("SELECT user_id FROM users WHERE lower(app_account_token)=?", (token,)).fetchone()
+    conn.close()
+    return get_user(row["user_id"]) if row else None
+
+
 def update_user(user_id: str, **fields) -> None:
     if not fields:
         return
@@ -173,6 +200,48 @@ def create_login_token(email: str) -> str:
     conn.commit()
     conn.close()
     return token
+
+
+LOGIN_CODE_ATTEMPTS = 5
+
+
+def attach_login_code(token: str) -> str:
+    """Phone sign-in: a 6-digit code for the same one-shot login token, for
+    when the e-mail is read somewhere the app link can't open. Five wrong
+    guesses burn the token."""
+    code = f"{secrets.randbelow(1_000_000):06d}"
+    conn = get_db()
+    row = conn.execute("SELECT email FROM login_tokens WHERE token_hash=?", (_hash(token),)).fetchone()
+    conn.execute("UPDATE login_tokens SET code_hash=? WHERE token_hash=?",
+                 (_hash(f"{row['email']}:{code}"), _hash(token)))
+    conn.commit()
+    conn.close()
+    return code
+
+
+def consume_login_code(email: str, code: str) -> Optional[dict]:
+    """One-shot like consume_login_token. Only the newest live token for the
+    e-mail is considered, and each wrong code counts against it."""
+    email = (email or "").lower().strip()
+    code = "".join(ch for ch in (code or "") if ch.isdigit())
+    conn = get_db()
+    row = conn.execute(
+        "SELECT * FROM login_tokens WHERE email=? AND used=0 AND code_hash IS NOT NULL AND expires_at >= ? "
+        "ORDER BY created_at DESC LIMIT 1", (email, _now().isoformat())).fetchone()
+    if not row:
+        conn.close()
+        return None
+    if len(code) != 6 or _hash(f"{email}:{code}") != row["code_hash"]:
+        attempts = (row["attempts"] or 0) + 1
+        conn.execute("UPDATE login_tokens SET attempts=?, used=? WHERE token_hash=?",
+                     (attempts, 1 if attempts >= LOGIN_CODE_ATTEMPTS else 0, row["token_hash"]))
+        conn.commit()
+        conn.close()
+        return None
+    conn.execute("UPDATE login_tokens SET used=1 WHERE token_hash=?", (row["token_hash"],))
+    conn.commit()
+    conn.close()
+    return get_or_create_user(email)
 
 
 def recent_login_requests(email: str, minutes: int = 15) -> int:
@@ -341,6 +410,10 @@ def tier_for_user(user: Optional[dict], now: Optional[datetime] = None) -> tuple
     if sk and user.get("storekit_expires_at") and user["storekit_expires_at"] > now_iso:
         tier = plans.higher(tier, sk)
         sources.append("app_store")
+    gp = plans.PLAY_PRODUCTS.get(user.get("play_product_id") or "")
+    if gp and user.get("play_expires_at") and user["play_expires_at"] > now_iso:
+        tier = plans.higher(tier, gp)
+        sources.append("google_play")
     if user.get("org_id"):
         org = get_org(user["org_id"])
         if org and (not org.get("expires_at") or org["expires_at"] > now_iso):
@@ -383,9 +456,42 @@ def resolve_identity(request: Request) -> Identity:
     if auth.lower().startswith("bearer "):
         user = _user_for_session(auth[7:].strip())
         if user:
+            user = _refresh_play_if_lapsed(user)
             tier, sources = tier_for_user(user)
             return Identity(user, tier, sources, ch, ip, "session")
     return Identity(None, plans.TIER_ANON, [], ch, ip, "anonymous")
+
+
+def _refresh_play_if_lapsed(user: dict) -> dict:
+    """RTDN-free renewal: once a stored Google Play expiry has passed, ask
+    Google again (at most every PLAY_RECHECK_MINUTES) and carry the new
+    expiry forward if the subscription renewed. Never raises."""
+    if not user.get("play_purchase_token") or not user.get("play_product_id"):
+        return user
+    now = _now()
+    if user.get("play_expires_at") and user["play_expires_at"] > now.isoformat():
+        return user
+    from api import playbilling
+    checked = user.get("play_checked_at")
+    if checked and checked > (now - timedelta(minutes=playbilling.recheck_minutes())).isoformat():
+        return user
+    if not playbilling.configured():
+        return user
+    fields = {"play_checked_at": now.isoformat()}
+    try:
+        ent = playbilling.entitlement(playbilling.fetch_subscription(user["play_purchase_token"]),
+                                      user["play_purchase_token"])
+        if ent["tier"]:
+            fields.update(play_expires_at=playbilling.stored_expiry(ent),
+                          play_base_plan=ent["base_plan_id"] or user.get("play_base_plan"),
+                          play_order_id=ent["order_id"] or user.get("play_order_id"))
+    except playbilling.PlayVerificationError:
+        fields["play_expires_at"] = None
+    except Exception:
+        import logging
+        logging.getLogger(__name__).warning("Play renewal re-check failed", exc_info=True)
+    update_user(user["user_id"], **fields)
+    return get_user(user["user_id"]) or user
 
 
 def require_user(request: Request) -> Identity:
@@ -521,5 +627,9 @@ def account_summary(ident: Identity) -> dict:
             "has_customer": bool(u.get("stripe_customer_id")),
         },
         "app_store": {"product_id": u.get("storekit_product_id"), "expires_at": u.get("storekit_expires_at")},
+        "google_play": {"product_id": u.get("play_product_id"), "base_plan": u.get("play_base_plan"),
+                        "expires_at": u.get("play_expires_at")},
+        # Pass as StoreKit appAccountToken / Play obfuscatedAccountId.
+        "app_account_token": ensure_app_account_token(ident.user_id) if ident.user_id else None,
         "org": get_org(u["org_id"]) if u.get("org_id") else None,
     }

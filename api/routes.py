@@ -209,6 +209,7 @@ async def account(request: Request):
 class LinkRequest(BaseModel):
     email: str
     next: Optional[str] = None
+    client: Optional[str] = None  # "app": phone app (adds a code, opens the app)
 
 
 EMAIL_SIGNIN_UNAVAILABLE = (
@@ -231,12 +232,21 @@ async def request_link(body: LinkRequest):
         raise HTTPException(503, EMAIL_SIGNIN_UNAVAILABLE)
     token = acc.create_login_token(email)
     nxt = body.next if (body.next or "").startswith("/") else "/account"
-    link = f"{billing.public_base_url()}/auth/verify?token={token}&next={nxt}"
-    sent = send_login_email(email, link)
+    code = None
+    if body.client == "app":
+        # The web verify page hands the token to the app (dockit://auth);
+        # the code covers e-mail read on another device.
+        code = acc.attach_login_code(token)
+        link = f"{billing.public_base_url()}/auth/verify?token={token}&app=1"
+    else:
+        link = f"{billing.public_base_url()}/auth/verify?token={token}&next={nxt}"
+    sent = send_login_email(email, link, code)
     resp = {"ok": True, "sent": sent}
     # Local development only: no SMTP → hand the link back so sign-in works.
     if not sent and dev_login:
         resp["dev_link"] = link
+        if code:
+            resp["dev_code"] = code
     elif not sent:
         raise HTTPException(503, EMAIL_SIGNIN_UNAVAILABLE)
     return resp
@@ -247,6 +257,21 @@ async def verify_link(token: str = Query(..., min_length=10)):
     user = acc.consume_login_token(token)
     if not user:
         raise HTTPException(400, "This sign-in link is invalid, used or expired.")
+    session = acc.create_session(user["user_id"])
+    tier, sources = acc.tier_for_user(user)
+    return {"session_token": session, "email": user["email"], "tier": tier}
+
+
+class CodeRequest(BaseModel):
+    email: str
+    code: str
+
+
+@router.post("/api/auth/verify-code")
+async def verify_code(body: CodeRequest):
+    user = acc.consume_login_code(body.email, body.code)
+    if not user:
+        raise HTTPException(400, "That code is wrong or has expired. Request a new one.")
     session = acc.create_session(user["user_id"])
     tier, sources = acc.tier_for_user(user)
     return {"session_token": session, "email": user["email"], "tier": tier}
@@ -402,7 +427,65 @@ async def lab_quote(body: LabQuote):
     return {"ok": True, "quote_id": qid}
 
 
-# --- StoreKit (iOS / Mac) ---------------------------------------------------
+# --- Store purchases (App Store + Google Play) ------------------------------
+
+def _mask_email(email: Optional[str]) -> str:
+    if not email or "@" not in email:
+        return ""
+    name, _, domain = email.partition("@")
+    return f"{name[:1]}***@{domain}"
+
+
+def _bind_store_purchase(ident: acc.Identity, column: str, keys: list[str],
+                         account_token: str) -> dict:
+    """Pick the MolDock account a verified store purchase belongs to.
+
+    `column` holds the store's subscription key (App Store original
+    transaction id / Play purchase token); `keys` are this purchase's key
+    plus any it replaced. The purchase's account token (appAccountToken /
+    obfuscatedAccountId) wins: a signed-in user cannot claim a subscription
+    bought for another account, and an anonymous restore signs into the
+    account that bought it. One store subscription → one MolDock account.
+    """
+    keys = [k for k in keys if k]
+    owner = acc.user_for_app_account_token(account_token)
+    user = ident.user
+    if user:
+        if owner and owner["user_id"] != user["user_id"]:
+            masked = _mask_email(owner.get("email"))
+            raise HTTPException(409, "This subscription belongs to another MolDock account"
+                                + (f" ({masked})" if masked else "")
+                                + ". Sign in with that account to use it.")
+    else:
+        user = owner
+        if not user:
+            conn = get_db()
+            marks = ",".join("?" * len(keys))
+            row = conn.execute(f"SELECT user_id FROM users WHERE {column} IN ({marks})", keys).fetchone()
+            conn.close()
+            user = acc.get_user(row["user_id"]) if row else None
+        if not user:
+            uid = "u_" + uuid.uuid4().hex[:20]
+            conn = get_db()
+            conn.execute("INSERT INTO users (user_id, created_at) VALUES (?, ?)", (uid, datetime.utcnow().isoformat()))
+            conn.commit()
+            conn.close()
+            user = acc.get_user(uid)
+    conn = get_db()
+    marks = ",".join("?" * len(keys))
+    conn.execute(f"UPDATE users SET {column}=NULL WHERE {column} IN ({marks}) AND user_id!=?",
+                 (*keys, user["user_id"]))
+    conn.commit()
+    conn.close()
+    return user
+
+
+def _purchase_response(ident: acc.Identity, user: dict, ent: dict) -> dict:
+    out = {"ok": True, "tier": acc.tier_for_user(acc.get_user(user["user_id"]))[0], "entitlement": ent}
+    if not ident.user:
+        out["session_token"] = acc.create_session(user["user_id"])
+    return out
+
 
 class StoreKitBody(BaseModel):
     jws: str
@@ -417,30 +500,43 @@ async def storekit_verify(body: StoreKitBody, request: Request):
         raise HTTPException(400, str(e))
     ident = acc.resolve_identity(request)
     otx = ent["original_transaction_id"]
-    user = ident.user
-    if not user:
-        conn = get_db()
-        row = conn.execute("SELECT user_id FROM users WHERE storekit_original_tx=?", (otx,)).fetchone()
-        if row:
-            user = acc.get_user(row["user_id"])
-        else:
-            uid = "u_" + uuid.uuid4().hex[:20]
-            conn.execute("INSERT INTO users (user_id, created_at) VALUES (?, ?)", (uid, datetime.utcnow().isoformat()))
-            conn.commit()
-            user = acc.get_user(uid)
-        conn.close()
-    conn = get_db()
-    # One App Store subscription → one MolDock account.
-    conn.execute("UPDATE users SET storekit_original_tx=NULL WHERE storekit_original_tx=? AND user_id!=?",
-                 (otx, user["user_id"]))
-    conn.commit()
-    conn.close()
+    user = _bind_store_purchase(ident, "storekit_original_tx", [otx], ent.get("app_account_token", ""))
     acc.update_user(user["user_id"], storekit_original_tx=otx, storekit_product_id=ent["product_id"],
                     storekit_expires_at=(ent["expires_at"] or "")[:19] or None)
-    out = {"ok": True, "tier": acc.tier_for_user(acc.get_user(user["user_id"]))[0], "entitlement": ent}
-    if not ident.user:
-        out["session_token"] = acc.create_session(user["user_id"])
-    return out
+    return _purchase_response(ident, user, ent)
+
+
+class PlayBody(BaseModel):
+    purchase_token: str
+    product_id: Optional[str] = None
+
+
+@router.post("/api/play/verify")
+async def play_verify(body: PlayBody, request: Request):
+    """Android: verify a Play Billing subscription with Google and grant
+    its tier to the account (see playbilling.py)."""
+    from api import playbilling
+    try:
+        ent = playbilling.verify_purchase(body.purchase_token)
+    except playbilling.PlayVerificationError as e:
+        raise HTTPException(400, str(e))
+    except playbilling.PlayNotConfigured:
+        logger.error("POST /api/play/verify but GOOGLE_PLAY_SERVICE_ACCOUNT_JSON is unset")
+        raise HTTPException(503, "Google Play purchases can't be verified right now. Please try again later.")
+    except playbilling.PlayUnavailable as e:
+        logger.error("Play verification unavailable: %s", e)
+        raise HTTPException(502, "Google Play could not be reached. Please try again shortly.")
+    ident = acc.resolve_identity(request)
+    token = ent["purchase_token"]
+    user = _bind_store_purchase(ident, "play_purchase_token", [token, ent["linked_purchase_token"]],
+                                ent["account_token"])
+    acc.update_user(user["user_id"], play_purchase_token=token, play_product_id=ent["product_id"],
+                    play_base_plan=ent["base_plan_id"] or None, play_order_id=ent["order_id"] or None,
+                    play_expires_at=playbilling.stored_expiry(ent),
+                    play_checked_at=datetime.utcnow().isoformat())
+    # The purchase token is the user's secret; don't echo it back.
+    public = {k: v for k, v in ent.items() if k not in ("purchase_token", "linked_purchase_token")}
+    return _purchase_response(ident, user, public)
 
 
 # --- Admin (Lab orgs) -------------------------------------------------------

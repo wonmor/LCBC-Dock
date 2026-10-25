@@ -10,11 +10,20 @@ function Verify() {
   const router = useRouter();
   const [err, setErr] = useState<string | null>(null);
   const started = useRef(false);
+  const token = params.get("token");
+  // Requested from the phone app: hand the one-shot token to the app
+  // instead of spending it here, unless the visitor chooses the web.
+  const [appHandoff, setAppHandoff] = useState(params.get("app") === "1");
+  const appUrl = token ? `dockit://auth?token=${encodeURIComponent(token)}` : "";
 
   useEffect(() => {
+    if (appHandoff && appUrl) window.location.href = appUrl;
+  }, [appHandoff, appUrl]);
+
+  useEffect(() => {
+    if (appHandoff) return;
     if (started.current) return; // links are one-shot; StrictMode runs effects twice
     started.current = true;
-    const token = params.get("token");
     const next = params.get("next");
     if (!token) {
       setErr("Missing sign-in token.");
@@ -27,7 +36,24 @@ function Verify() {
         router.replace(next && next.startsWith("/") ? next : "/account");
       })
       .catch((e) => setErr(errorText(e, "This link is invalid or expired.")));
-  }, [params, router]);
+  }, [params, router, token, appHandoff]);
+
+  if (appHandoff && token) {
+    return (
+      <div className="flex flex-col items-center min-h-screen px-6 pt-32 text-center">
+        <p className="text-sm text-gray-300 mb-6">Open MolDock on this device to finish signing in.</p>
+        <a href={appUrl} className="px-6 py-3 rounded-full bg-white text-black text-sm font-semibold mb-4">
+          Open the MolDock app
+        </a>
+        <p className="text-xs text-gray-500 mb-6 max-w-xs">
+          Reading this on another device? Enter the 6-digit code from the email in the app instead.
+        </p>
+        <button onClick={() => setAppHandoff(false)} className="text-xs text-gray-400 underline">
+          Sign in on this website instead
+        </button>
+      </div>
+    );
+  }
 
   return (
     <div className="flex flex-col items-center min-h-screen px-6 pt-32 text-center">

@@ -205,4 +205,6 @@ def verify_transaction_jws(jws: str, now: datetime | None = None,
         "purchase_date": purchase.isoformat() if purchase else None,
         "environment": payload.get("environment") or "Production",
         "ownership": payload.get("inAppOwnershipType") or "",
+        # Set by the phone app from /api/account → app_account_token.
+        "app_account_token": str(payload.get("appAccountToken") or "").lower(),
     }

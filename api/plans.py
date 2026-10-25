@@ -100,6 +100,14 @@ STOREKIT_PRODUCTS = {
     "com.johnseong.dockit.pro.annual": TIER_PRO,
 }
 
+# Google Play subscription product ids (Android app, package
+# com.johnseong.dock_it). One subscription, two base plans: `monthly` and
+# `annual`. See playbilling.py.
+PLAY_PRODUCTS = {
+    "moldock_pro": TIER_PRO,
+}
+PLAY_BASE_PLANS = ("monthly", "annual")
+
 
 def get_plan(key: Optional[str]) -> Optional[Plan]:
     p = _BY_KEY.get((key or "").strip().lower())
@@ -187,4 +195,5 @@ def public_catalog() -> dict:
         "trial_days": trial_days(),
         "promo_codes": promo_codes_enabled(),
         "storekit_products": sorted(STOREKIT_PRODUCTS),
+        "play_products": {pid: list(PLAY_BASE_PLANS) for pid in sorted(PLAY_PRODUCTS)},
     }

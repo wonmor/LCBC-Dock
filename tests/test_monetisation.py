@@ -255,8 +255,7 @@ def test_webhook_lifecycle(client, monkeypatch):
 
 # ------------------------------------------------------------- storekit --
 
-@pytest.fixture(scope="module")
-def apple_like_chain():
+def make_apple_like_chain():
     from cryptography import x509
     from cryptography.hazmat.primitives import hashes, serialization
     from cryptography.hazmat.primitives.asymmetric import ec
@@ -281,6 +280,11 @@ def apple_like_chain():
     leaf = _mk("Leaf", "WWDR", ik, lk, oid="1.2.840.113635.100.6.11.1")
     der = lambda c: c.public_bytes(serialization.Encoding.DER)
     return SimpleNamespace(root=root, leaf_key=lk, x5c=[base64.b64encode(der(c)).decode() for c in (leaf, inter, root)])
+
+
+@pytest.fixture(scope="module")
+def apple_like_chain():
+    return make_apple_like_chain()
 
 
 def _jws(chain, **over):
