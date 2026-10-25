@@ -1,7 +1,17 @@
 import axios from "axios";
+import { getSessionToken } from "./session";
 
 // Mobile apps don't have CORS restrictions, so we call APIs directly
-const BACKEND_BASE = "https://lcbc-server.apps.johnseong.com";
+export const BACKEND_BASE = "https://lcbc-server.apps.johnseong.com";
+
+// MolDock backend calls carry the signed-in session so the server applies
+// the account's plan (limits are enforced server-side, never in the app).
+export const backend = axios.create({ baseURL: BACKEND_BASE, timeout: 20000 });
+backend.interceptors.request.use((config) => {
+  const token = getSessionToken();
+  if (token) config.headers.Authorization = `Bearer ${token}`;
+  return config;
+});
 
 const RCSB_SEARCH = "https://search.rcsb.org/rcsbsearch/v2/query";
 const PUBCHEM_BASE = "https://pubchem.ncbi.nlm.nih.gov/rest";
@@ -156,7 +166,7 @@ export async function submitDockingJob(params: {
   exhaustiveness: number;
   email?: string;
 }) {
-  const resp = await axios.post(`${BACKEND_BASE}/api/dock`, {
+  const resp = await backend.post("/api/dock", {
     ...params,
     center_x: 0,
     center_y: 0,
@@ -172,12 +182,12 @@ export async function submitDockingJob(params: {
 }
 
 export async function getJobStatus(jobId: string) {
-  const resp = await axios.get(`${BACKEND_BASE}/api/jobs/${jobId}`);
+  const resp = await backend.get(`/api/jobs/${jobId}`);
   return resp.data;
 }
 
 export async function getResults(jobId: string) {
-  const resp = await axios.get(`${BACKEND_BASE}/api/results/${jobId}`);
+  const resp = await backend.get(`/api/results/${jobId}`);
   return resp.data;
 }
 
@@ -202,6 +212,6 @@ export interface Stats {
 }
 
 export async function getStats(): Promise<Stats> {
-  const resp = await axios.get(`${BACKEND_BASE}/api/stats`, { timeout: 5000 });
+  const resp = await backend.get("/api/stats", { timeout: 5000 });
   return resp.data;
 }

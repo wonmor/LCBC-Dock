@@ -209,6 +209,12 @@ export default function Home() {
           <Pressable onPress={() => router.push("/dashboard")}>
             <Text style={styles.navLink}>Dashboard</Text>
           </Pressable>
+          <Pressable onPress={() => router.push("/pro")}>
+            <Text style={styles.navLink}>Pro</Text>
+          </Pressable>
+          <Pressable onPress={() => router.push("/account")}>
+            <Text style={styles.navLink}>Account</Text>
+          </Pressable>
           <Pressable onPress={() => router.push("/about")}>
             <Text style={styles.navLink}>About</Text>
           </Pressable>

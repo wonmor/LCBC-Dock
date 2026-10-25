@@ -44,7 +44,9 @@
           }
         }
       ],
-      "./plugins/withPageSize16K"
+      "./plugins/withPageSize16K",
+      "expo-secure-store",
+      "expo-iap"
     ],
     "extra": {
       "router": {

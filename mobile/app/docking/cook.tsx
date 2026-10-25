@@ -12,6 +12,8 @@ import { SafeAreaView } from "react-native-safe-area-context";
 import Slider from "@react-native-community/slider";
 import StepIndicator from "@/components/StepIndicator";
 import { submitDockingJob } from "@/lib/api";
+import { useAccount } from "@/lib/AccountContext";
+import { errorText, isPaid, paywallOf } from "@/lib/account";
 
 export default function Cook() {
   const router = useRouter();
@@ -25,11 +27,17 @@ export default function Cook() {
   const [exhaustiveness, setExhaustiveness] = useState(4);
   const [submitting, setSubmitting] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [upsell, setUpsell] = useState(false);
+  const { account, refresh } = useAccount();
+  // Limits are enforced by the server; this only explains them up front.
+  const maxExh = account?.limits.max_exhaustiveness ?? 8;
+  const capped = exhaustiveness > maxExh;
 
   const handleSubmit = async () => {
     if (!proteinState || !ligandCid) return;
     setSubmitting(true);
     setError(null);
+    setUpsell(false);
 
     try {
       const data = await submitDockingJob({
@@ -39,14 +47,15 @@ export default function Cook() {
         exhaustiveness,
         email: email || undefined,
       });
+      refresh();
       router.replace({
         pathname: "/dashboard",
         params: { jobId: data.job_id },
       });
     } catch (err: any) {
-      setError(
-        err.response?.data?.detail || "Failed to submit. Is the backend running?"
-      );
+      setError(errorText(err, "Failed to submit. Is the backend running?"));
+      const pw = paywallOf(err);
+      setUpsell(!!pw && !isPaid(account) && pw.code !== "invalid_params");
       setSubmitting(false);
     }
   };
@@ -95,6 +104,14 @@ export default function Cook() {
           <Text style={styles.footnote}>
             Lower = faster, higher = more accurate. Default 4 for quick results.
           </Text>
+          {capped && (
+            <Pressable onPress={() => router.push("/pro")}>
+              <Text style={styles.capNote}>
+                Your plan runs up to {maxExh}, so this job will use {maxExh}.
+                {isPaid(account) ? "" : " MolDock Pro goes up to 32."}
+              </Text>
+            </Pressable>
+          )}
         </View>
 
         {/* Email */}
@@ -112,6 +129,11 @@ export default function Cook() {
         </View>
 
         {error && <Text style={styles.error}>{error}</Text>}
+        {upsell && (
+          <Pressable style={styles.upsellBtn} onPress={() => router.push("/pro")}>
+            <Text style={styles.upsellText}>See MolDock Pro</Text>
+          </Pressable>
+        )}
 
         <Pressable
           style={[styles.submitBtn, (submitting || !proteinState || !ligandCid) && styles.disabled]}
@@ -196,6 +218,23 @@ const styles = StyleSheet.create({
     fontSize: 14,
     color: "#fff",
     marginTop: 4,
+  },
+  capNote: {
+    color: "#facc15",
+    fontSize: 11,
+    textAlign: "center",
+    marginTop: 8,
+  },
+  upsellBtn: {
+    borderWidth: 1,
+    borderColor: "rgba(255,255,255,0.3)",
+    paddingVertical: 12,
+    borderRadius: 50,
+    alignItems: "center",
+  },
+  upsellText: {
+    color: "#fff",
+    fontSize: 13,
   },
   error: {
     color: "#f87171",
