@@ -81,7 +81,7 @@ struct AccountView: View {
 
                 switch step {
                 case .email:
-                    TextField("you@university.edu", text: $email)
+                    TextField("Email", text: $email, prompt: Text(verbatim: "you@university.edu"))
                         .textFieldStyle(.roundedBorder)
                         .onSubmit(sendCode)
                     Button(working ? "Sending..." : "Email me a code", action: sendCode)

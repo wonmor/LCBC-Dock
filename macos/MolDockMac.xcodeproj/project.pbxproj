@@ -7,25 +7,43 @@
 	objects = {
 
 /* Begin PBXBuildFile section */
+		252DBB8E1FCBDE31E03BE62B /* DockView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 5E6A3198A69420DD97DD56DC /* DockView.swift */; };
+		30E4E532747E64F60D7524CC /* DockingModels.swift in Sources */ = {isa = PBXBuildFile; fileRef = 73948492C5D46E767825DE0E /* DockingModels.swift */; };
 		32B5F2465D983C124BECD312 /* Backend.swift in Sources */ = {isa = PBXBuildFile; fileRef = EAC1169CE311EBCB8D0A2A5B /* Backend.swift */; };
 		3D846CE0E89E7F5C1BE37F08 /* Assets.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = C3ED76CEB1B8AB0F3050323B /* Assets.xcassets */; };
+		6CD3B7A324B92F92243B8281 /* AppModel.swift in Sources */ = {isa = PBXBuildFile; fileRef = FBC68D51305A44ED8F36F96B /* AppModel.swift */; };
+		73C6ABF86799ECF99D2A960E /* MoleculeView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 00715D0138D15E5FFB4BC97E /* MoleculeView.swift */; };
+		76CAF5E4295BCA55C960C2D5 /* ExamplesView.swift in Sources */ = {isa = PBXBuildFile; fileRef = AA3E3CAE333E7D75364A3364 /* ExamplesView.swift */; };
 		8E9FF58A2BD2C98433C5EC6B /* AppEntry.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1B6A384B8DA4A2FCE3317A19 /* AppEntry.swift */; };
+		9058CDEF6857DFA3D869D1E2 /* ScreenView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 09C1867877775A3C3BA9F611 /* ScreenView.swift */; };
 		A137AB0687FF86B0F5D4AE9A /* AccountView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 5FE460D1DA6F0E50AAB1A96F /* AccountView.swift */; };
+		C247736542F12956B64AA7DA /* SiteSelectorView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 8003F0B32FEF6CC2D81D0DD7 /* SiteSelectorView.swift */; };
+		C8E0CAF52C4BA43ED195F794 /* JobDetailView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1B0A6CA36AD5D426B8CDFF08 /* JobDetailView.swift */; };
 		D05F1B9A6BD60F99AC7033F7 /* ProView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 455BA9215D4A4243ECF0F830 /* ProView.swift */; };
 		DCD19D8FE9274CC43DAB1B40 /* AccountStore.swift in Sources */ = {isa = PBXBuildFile; fileRef = CA9AEB172E0046BC5C74F1B6 /* AccountStore.swift */; };
 		DF60CFF6297914A40291D424 /* ContentView.swift in Sources */ = {isa = PBXBuildFile; fileRef = CAEF5B34020C590DE81AC0C3 /* ContentView.swift */; };
+		E0923478BC51E9F6C4EB570B /* ResultsView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 61F5ECD2D564F1494B4F9E4A /* ResultsView.swift */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXFileReference section */
+		00715D0138D15E5FFB4BC97E /* MoleculeView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MoleculeView.swift; sourceTree = "<group>"; };
+		09C1867877775A3C3BA9F611 /* ScreenView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ScreenView.swift; sourceTree = "<group>"; };
+		1B0A6CA36AD5D426B8CDFF08 /* JobDetailView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = JobDetailView.swift; sourceTree = "<group>"; };
 		1B6A384B8DA4A2FCE3317A19 /* AppEntry.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AppEntry.swift; sourceTree = "<group>"; };
 		4515EE540686586CFBFBF969 /* MolDockMac.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = MolDockMac.app; sourceTree = BUILT_PRODUCTS_DIR; };
 		455BA9215D4A4243ECF0F830 /* ProView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ProView.swift; sourceTree = "<group>"; };
+		5E6A3198A69420DD97DD56DC /* DockView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DockView.swift; sourceTree = "<group>"; };
 		5FE460D1DA6F0E50AAB1A96F /* AccountView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AccountView.swift; sourceTree = "<group>"; };
+		61F5ECD2D564F1494B4F9E4A /* ResultsView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ResultsView.swift; sourceTree = "<group>"; };
+		73948492C5D46E767825DE0E /* DockingModels.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DockingModels.swift; sourceTree = "<group>"; };
+		8003F0B32FEF6CC2D81D0DD7 /* SiteSelectorView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SiteSelectorView.swift; sourceTree = "<group>"; };
 		8E1230320BD1AA43AD282142 /* MolDock.storekit */ = {isa = PBXFileReference; path = MolDock.storekit; sourceTree = "<group>"; };
+		AA3E3CAE333E7D75364A3364 /* ExamplesView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ExamplesView.swift; sourceTree = "<group>"; };
 		C3ED76CEB1B8AB0F3050323B /* Assets.xcassets */ = {isa = PBXFileReference; lastKnownFileType = folder.assetcatalog; path = Assets.xcassets; sourceTree = "<group>"; };
 		CA9AEB172E0046BC5C74F1B6 /* AccountStore.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AccountStore.swift; sourceTree = "<group>"; };
 		CAEF5B34020C590DE81AC0C3 /* ContentView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ContentView.swift; sourceTree = "<group>"; };
 		EAC1169CE311EBCB8D0A2A5B /* Backend.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Backend.swift; sourceTree = "<group>"; };
+		FBC68D51305A44ED8F36F96B /* AppModel.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AppModel.swift; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXGroup section */
@@ -68,10 +86,19 @@
 				CA9AEB172E0046BC5C74F1B6 /* AccountStore.swift */,
 				5FE460D1DA6F0E50AAB1A96F /* AccountView.swift */,
 				1B6A384B8DA4A2FCE3317A19 /* AppEntry.swift */,
+				FBC68D51305A44ED8F36F96B /* AppModel.swift */,
 				C3ED76CEB1B8AB0F3050323B /* Assets.xcassets */,
 				EAC1169CE311EBCB8D0A2A5B /* Backend.swift */,
 				CAEF5B34020C590DE81AC0C3 /* ContentView.swift */,
+				73948492C5D46E767825DE0E /* DockingModels.swift */,
+				5E6A3198A69420DD97DD56DC /* DockView.swift */,
+				AA3E3CAE333E7D75364A3364 /* ExamplesView.swift */,
+				1B0A6CA36AD5D426B8CDFF08 /* JobDetailView.swift */,
+				00715D0138D15E5FFB4BC97E /* MoleculeView.swift */,
 				455BA9215D4A4243ECF0F830 /* ProView.swift */,
+				61F5ECD2D564F1494B4F9E4A /* ResultsView.swift */,
+				09C1867877775A3C3BA9F611 /* ScreenView.swift */,
+				8003F0B32FEF6CC2D81D0DD7 /* SiteSelectorView.swift */,
 			);
 			path = MolDockMac;
 			sourceTree = "<group>";
@@ -150,9 +177,18 @@
 				DCD19D8FE9274CC43DAB1B40 /* AccountStore.swift in Sources */,
 				A137AB0687FF86B0F5D4AE9A /* AccountView.swift in Sources */,
 				8E9FF58A2BD2C98433C5EC6B /* AppEntry.swift in Sources */,
+				6CD3B7A324B92F92243B8281 /* AppModel.swift in Sources */,
 				32B5F2465D983C124BECD312 /* Backend.swift in Sources */,
 				DF60CFF6297914A40291D424 /* ContentView.swift in Sources */,
+				252DBB8E1FCBDE31E03BE62B /* DockView.swift in Sources */,
+				30E4E532747E64F60D7524CC /* DockingModels.swift in Sources */,
+				76CAF5E4295BCA55C960C2D5 /* ExamplesView.swift in Sources */,
+				C8E0CAF52C4BA43ED195F794 /* JobDetailView.swift in Sources */,
+				73C6ABF86799ECF99D2A960E /* MoleculeView.swift in Sources */,
 				D05F1B9A6BD60F99AC7033F7 /* ProView.swift in Sources */,
+				E0923478BC51E9F6C4EB570B /* ResultsView.swift in Sources */,
+				9058CDEF6857DFA3D869D1E2 /* ScreenView.swift in Sources */,
+				C247736542F12956B64AA7DA /* SiteSelectorView.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -165,7 +201,7 @@
 				ALWAYS_EMBED_SWIFT_STANDARD_LIBRARIES = NO;
 				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
 				COMBINE_HIDPI_IMAGES = YES;
-				CURRENT_PROJECT_VERSION = 3;
+				CURRENT_PROJECT_VERSION = 4;
 				INFOPLIST_FILE = Generated/Info.plist;
 				LD_RUNPATH_SEARCH_PATHS = (
 					"$(inherited)",
@@ -313,7 +349,7 @@
 				ALWAYS_EMBED_SWIFT_STANDARD_LIBRARIES = NO;
 				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
 				COMBINE_HIDPI_IMAGES = YES;
-				CURRENT_PROJECT_VERSION = 3;
+				CURRENT_PROJECT_VERSION = 4;
 				INFOPLIST_FILE = Generated/Info.plist;
 				LD_RUNPATH_SEARCH_PATHS = (
 					"$(inherited)",

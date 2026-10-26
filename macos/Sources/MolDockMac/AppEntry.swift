@@ -6,14 +6,17 @@ struct MolDockMacApp: App {
     @NSApplicationDelegateAdaptor(AppDelegate.self) private var appDelegate
     @Environment(\.openWindow) private var openWindow
     @StateObject private var store = AccountStore()
+    @StateObject private var app = AppModel()
 
     var body: some Scene {
         WindowGroup("MolDock", id: "main") {
             ContentView()
                 .environmentObject(store)
+                .environmentObject(app)
                 .frame(minWidth: 980, minHeight: 640)
                 .preferredColorScheme(.dark)
         }
+        .defaultSize(width: 1280, height: 960)
         .windowStyle(.titleBar)
         .commands {
             // Replace New (we're not a document app) — keeps the File

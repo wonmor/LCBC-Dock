@@ -10,6 +10,7 @@ enum Backend {
     struct Failure: LocalizedError {
         let status: Int          // 0 = never reached the server
         let detail: String?
+        var paywall = false      // 401/402/429 carrying a plan limit (accounts.PaywallError)
 
         var isRejection: Bool { status >= 400 && status < 500 }
         var errorDescription: String? {
@@ -24,16 +25,29 @@ enum Backend {
         return d
     }()
 
-    static func get<T: Decodable>(_ path: String, as type: T.Type = T.self) async throws -> T {
-        try await send("GET", path, body: nil)
+    static func get<T: Decodable>(_ path: String, query: [String: String] = [:], timeout: TimeInterval = 20,
+                                  as type: T.Type = T.self) async throws -> T {
+        try decoder.decode(T.self, from: await data("GET", path, query: query, body: nil, timeout: timeout))
     }
 
-    static func post<T: Decodable>(_ path: String, _ body: [String: String] = [:], as type: T.Type = T.self) async throws -> T {
-        try await send("POST", path, body: body)
+    static func post<T: Decodable>(_ path: String, _ body: [String: Any] = [:], timeout: TimeInterval = 20,
+                                   as type: T.Type = T.self) async throws -> T {
+        try decoder.decode(T.self, from: await data("POST", path, query: [:], body: body, timeout: timeout))
     }
 
-    private static func send<T: Decodable>(_ method: String, _ path: String, body: [String: String]?) async throws -> T {
-        var req = URLRequest(url: base.appendingPathComponent(path), timeoutInterval: 20)
+    /// Raw body (downloads, PDB text, SVG). Carries the session so private
+    /// jobs work.
+    static func raw(_ path: String, query: [String: String] = [:], timeout: TimeInterval = 60) async throws -> Data {
+        try await data("GET", path, query: query, body: nil, timeout: timeout)
+    }
+
+    private static func data(_ method: String, _ path: String, query: [String: String],
+                             body: [String: Any]?, timeout: TimeInterval) async throws -> Data {
+        var comps = URLComponents(url: base.appendingPathComponent(path), resolvingAgainstBaseURL: false)!
+        if !query.isEmpty {
+            comps.queryItems = query.sorted { $0.key < $1.key }.map { URLQueryItem(name: $0.key, value: $0.value) }
+        }
+        var req = URLRequest(url: comps.url!, timeoutInterval: timeout)
         req.httpMethod = method
         req.setValue("application/json", forHTTPHeaderField: "Accept")
         if let token = Session.token {
@@ -53,9 +67,13 @@ enum Backend {
         let status = (response as? HTTPURLResponse)?.statusCode ?? 0
         guard (200..<300).contains(status) else {
             let json = try? JSONSerialization.jsonObject(with: data) as? [String: Any]
-            throw Failure(status: status, detail: json?["detail"] as? String)
+            var detail = json?["detail"] as? String
+            if detail == nil, let list = json?["detail"] as? [[String: Any]] {
+                detail = list.first?["msg"] as? String   // FastAPI validation error
+            }
+            throw Failure(status: status, detail: detail, paywall: json?["paywall"] != nil)
         }
-        return try decoder.decode(T.self, from: data)
+        return data
     }
 }
 
@@ -67,6 +85,9 @@ struct PlanLimits: Decodable {
     var maxNumModes: Int?
     var maxBoxEdge: Double?
     var maxBatchLigands: Int?
+    var maxActive: Int? = nil
+    var privateJobs: Bool? = nil
+    var allPoseInteractions: Bool? = nil
 
     static let proFallback = PlanLimits(jobsPerDay: 300, maxExhaustiveness: 32, maxNumModes: 20,
                                         maxBoxEdge: 40, maxBatchLigands: 500)
@@ -86,6 +107,7 @@ struct AccountSummary: Decodable {
     var email: String?
     var tier: String
     var sources: [String]
+    var limits: PlanLimits?
     var usage: Usage?
     var appStore: AppStore?
     var appAccountToken: String?

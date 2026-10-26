@@ -102,8 +102,7 @@ final class AccountStore: ObservableObject {
               let token = URLComponents(url: url, resolvingAgainstBaseURL: false)?
                 .queryItems?.first(where: { $0.name == "token" })?.value else { return }
         do {
-            let reply: SessionReply = try await Backend.get(
-                "/api/auth/verify?token=\(token.addingPercentEncoding(withAllowedCharacters: .urlQueryAllowed) ?? token)")
+            let reply: SessionReply = try await Backend.get("/api/auth/verify", query: ["token": token])
             await signIn(sessionToken: reply.sessionToken)
             notice = "Signed in."
         } catch {
