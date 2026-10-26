@@ -7,8 +7,8 @@ const MARKER = "# withPodDeploymentTarget";
 
 // Newer Xcode refuses pod targets below iOS 15 (async-storage's resource
 // bundle defaults to 9.0), so raise every pod target to the app's minimum.
-// fmt 11.0's consteval format strings don't compile with Xcode 26's clang
-// in C++20, so build that one pod as C++17.
+// fmt 11.0's consteval format strings don't compile with Xcode 26's clang,
+// and fmt hard-codes FMT_USE_CONSTEVAL, so switch it off in the pod's header.
 module.exports = function withPodDeploymentTarget(config) {
   return withDangerousMod(config, [
     "ios",
@@ -26,7 +26,15 @@ module.exports = function withPodDeploymentTarget(config) {
             `        if c.build_settings['IPHONEOS_DEPLOYMENT_TARGET'].to_f < ${TARGET}\n` +
             `          c.build_settings['IPHONEOS_DEPLOYMENT_TARGET'] = '${TARGET}'\n` +
             `        end\n` +
-            `        c.build_settings['CLANG_CXX_LANGUAGE_STANDARD'] = 'c++17' if t.name == 'fmt'\n` +
+            `      end\n` +
+            `    end\n` +
+            `    fmt_base = File.join(installer.sandbox.root.to_s, 'fmt', 'include', 'fmt', 'base.h')\n` +
+            `    if File.exist?(fmt_base)\n` +
+            `      src = File.read(fmt_base)\n` +
+            `      patched = src.gsub('#  define FMT_USE_CONSTEVAL 1', '#  define FMT_USE_CONSTEVAL 0')\n` +
+            `      if patched != src\n` +
+            `        File.chmod(0644, fmt_base)\n` +
+            `        File.write(fmt_base, patched)\n` +
             `      end\n` +
             `    end\n`
         );
