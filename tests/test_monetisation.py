@@ -393,3 +393,30 @@ def test_portal_session_uses_moldock_configuration(monkeypatch):
     monkeypatch.setenv("STRIPE_PORTAL_CONFIGURATION", "bpc_moldock")
     assert billing.create_portal_session(user) == "https://billing.stripe.com/session/x"
     assert sent["configuration"] == "bpc_moldock" and sent["_path"] == "/billing_portal/sessions"
+
+
+def test_lab_quote_emails_requester(client, db, monkeypatch):
+    sent = []
+    monkeypatch.setattr("api.routes.send_lab_quote_customer",
+                        lambda rec, cents, min_seats, reply_to=None: sent.append((rec, cents, min_seats)) or True)
+    body = {"name": "Prof Kim", "email": "kim@uni.edu", "institution": "Kim Lab", "seats": 3}
+    r = client.post("/api/lab-quote", json=body)
+    assert r.status_code == 200 and r.json()["quote_emailed"] is True
+    rec, cents, min_seats = sent[0]
+    assert rec["email"] == "kim@uni.edu" and cents == 6900 and min_seats == 5
+    for _ in range(5):
+        client.post("/api/lab-quote", json=body)
+    assert len(sent) == 3  # at most three quotes per address a day
+
+
+def test_lab_quote_customer_email_totals(monkeypatch):
+    from api import email_service
+    captured = {}
+    monkeypatch.setattr(email_service, "_send_html",
+                        lambda to, subject, html, reply_to=None: captured.update(to=to, html=html, reply_to=reply_to) or True)
+    rec = {"quote_id": "q_abc", "name": "A <b>", "email": "a@b.edu", "institution": "Lab",
+           "seats": 2, "message": "", "created_at": "2026-10-26T12:00:00"}
+    assert email_service.send_lab_quote_customer(rec, 6900, 5, reply_to="sales@x.com")
+    assert "$345.00 per year" in captured["html"] and "start at 5 seats" in captured["html"]
+    assert "A &lt;b&gt;" in captured["html"] and captured["reply_to"] == "sales@x.com"
+    assert "\u00b7" not in captured["html"] and "\u2022" not in captured["html"]

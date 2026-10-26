@@ -26,7 +26,7 @@ from api import prep as P
 from api import sites as S
 from api.analysis import interaction_svg, split_models
 from api.database import create_job, get_db, get_job_full
-from api.email_service import send_lab_quote_email, send_login_email, smtp_configured
+from api.email_service import send_lab_quote_customer, send_lab_quote_email, send_login_email, smtp_configured
 from api.models import BatchRequest, DockingRequest, JobStatus
 
 logger = logging.getLogger(__name__)
@@ -424,7 +424,17 @@ async def lab_quote(body: LabQuote):
     owner = os.environ.get("SALES_EMAIL") or os.environ.get("SMTP_USER")
     if owner:
         send_lab_quote_email(owner, rec)
-    return {"ok": True, "quote_id": qid}
+    # Send the requester their quote right away, but only a few per address a day
+    # so the form can't be used to mail strangers.
+    conn = get_db()
+    recent = conn.execute("SELECT COUNT(*) FROM lab_quotes WHERE lower(email) = lower(?) AND created_at > ?",
+                          (rec["email"], (datetime.utcnow() - timedelta(days=1)).isoformat())).fetchone()[0]
+    conn.close()
+    sent = False
+    if recent <= 3:
+        sent = send_lab_quote_customer(rec, int(os.environ.get("LAB_SEAT_PRICE_CENTS", "6900") or 6900),
+                                       5, reply_to=owner)
+    return {"ok": True, "quote_id": qid, "quote_emailed": sent}
 
 
 # --- Store purchases (App Store + Google Play) ------------------------------

@@ -235,9 +235,9 @@ export default function Pricing() {
           className="mt-12 max-w-xl mx-auto border border-white/10 rounded-2xl p-6"
         >
           <h2 className="text-lg font-light mb-1">Lab or institution quote</h2>
-          <p className="text-[11px] text-gray-500 mb-4">We reply within two working days with an invoice-ready quote.</p>
+          <p className="text-[11px] text-gray-500 mb-4">Your quote arrives by email right away. Reply to it to get an invoice.</p>
           {quoteState === "sent" ? (
-            <p className="text-sm text-emerald-400">Thanks — we&apos;ll be in touch at {quote.email}.</p>
+            <p className="text-sm text-emerald-400">Your quote is on its way to {quote.email}. Reply to it when you&apos;re ready for an invoice.</p>
           ) : (
             <div className="grid gap-3 sm:grid-cols-2">
               {(["name", "email", "institution"] as const).map((k) => (

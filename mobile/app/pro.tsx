@@ -12,6 +12,7 @@ import { loadOffers, manageSubscriptions, type Offer, type PlanKey } from "@/lib
 
 const PRIVACY_URL = "https://wonmor.github.io/LCBC-Dock/privacy.html";
 const APPLE_EULA_URL = "https://www.apple.com/legal/internet-services/itunes/dev/stdeula/";
+const LAB_QUOTE_URL = "https://lcbc-client.apps.johnseong.com/pricing#lab-quote";
 const PLAY_TERMS_URL = "https://play.google.com/about/play-terms/";
 
 const IS_IOS = Platform.OS === "ios";
@@ -159,6 +160,16 @@ export default function Pro() {
           <Text style={styles.restoreText}>Restore purchases</Text>
         </Pressable>
 
+        <View style={styles.labBox}>
+          <Text style={styles.labTitle}>For labs and classrooms</Text>
+          <Text style={styles.labBody}>
+            Shared seats for a whole lab, course or department, invoiced to your institution.
+          </Text>
+          <Pressable onPress={() => open(LAB_QUOTE_URL)}>
+            <Text style={styles.legalLink}>Request a quote</Text>
+          </Pressable>
+        </View>
+
         <Text style={styles.terms}>
           MolDock Pro is an auto-renewing subscription
           {monthly && annual ? ` (${monthly.price} per month or ${annual.price} per year)` : ""}.
@@ -241,6 +252,9 @@ const styles = StyleSheet.create({
   notice: { color: "#86efac", fontSize: 12, textAlign: "center" },
   error: { color: "#f87171", fontSize: 12, textAlign: "center" },
   restoreBtn: { alignSelf: "center", paddingVertical: 8 },
+  labBox: { marginTop: 16, gap: 4 },
+  labTitle: { color: "#f3f4f6", fontSize: 15, fontWeight: "600" },
+  labBody: { color: "#9ca3af", fontSize: 13, lineHeight: 18 },
   restoreText: { color: "#9ca3af", fontSize: 13 },
   terms: { color: "#4b5563", fontSize: 10, lineHeight: 15, textAlign: "center" },
   legalRow: { flexDirection: "row", justifyContent: "center", alignItems: "center", gap: 10 },

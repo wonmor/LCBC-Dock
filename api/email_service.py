@@ -1,5 +1,6 @@
 import os
 import smtplib
+from datetime import datetime, timedelta
 from email.mime.text import MIMEText
 from email.mime.multipart import MIMEMultipart
 import logging
@@ -157,7 +158,7 @@ def smtp_configured() -> bool:
     return bool(SMTP_USER and SMTP_PASS)
 
 
-def _send_html(to_email: str, subject: str, html_body: str) -> bool:
+def _send_html(to_email: str, subject: str, html_body: str, reply_to: str | None = None) -> bool:
     if not smtp_configured():
         logger.warning("SMTP credentials not configured, skipping email")
         return False
@@ -165,6 +166,8 @@ def _send_html(to_email: str, subject: str, html_body: str) -> bool:
     msg["Subject"] = subject
     msg["From"] = FROM_EMAIL
     msg["To"] = to_email
+    if reply_to:
+        msg["Reply-To"] = reply_to
     msg.attach(MIMEText(html_body, "html"))
     try:
         with smtplib.SMTP(SMTP_HOST, SMTP_PORT) as server:
@@ -198,3 +201,45 @@ def send_lab_quote_email(owner_email: str, quote: dict) -> bool:
                    f"<td>{_html.escape(str(v))}</td></tr>" for k, v in quote.items())
     html = f"<html><body style='font-family:sans-serif'><h2>New MolDock Lab quote request</h2><table>{rows}</table></body></html>"
     return _send_html(owner_email, f"MolDock Lab quote: {str(quote.get('institution', ''))[:80]}", html)
+
+
+def send_lab_quote_customer(quote: dict, seat_price_cents: int, min_seats: int,
+                            reply_to: str | None = None) -> bool:
+    """The automatic quote the requester receives right after asking for one."""
+    import html as _html
+    seats = max(int(quote["seats"]), min_seats)
+    total = seats * seat_price_cents
+    issued = datetime.fromisoformat(quote["created_at"])
+    valid_until = (issued + timedelta(days=30)).strftime("%B %d, %Y")
+    money = lambda cents: f"${cents / 100:,.2f}"
+    esc = lambda v: _html.escape(str(v))
+    min_note = ("" if int(quote["seats"]) >= min_seats else
+                f"<p style='color:#9ca3af;font-size:13px;'>Lab plans start at {min_seats} seats, "
+                f"so this quote is for {min_seats}.</p>")
+    row = lambda k, v: (f"<tr><td style='color:#9ca3af;padding:6px 16px 6px 0'>{k}</td>"
+                        f"<td style='padding:6px 0'>{v}</td></tr>")
+    html = f"""
+    <html><body style="font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;background:#000;color:#fff;padding:40px;">
+      <div style="max-width:600px;margin:0 auto;background:#111;border-radius:16px;padding:32px;">
+        <h1 style="font-weight:300;font-size:26px;margin:0 0 8px;">Mol<b>Dock</b> Lab quote</h1>
+        <p style="color:#9ca3af;">Hi {esc(quote["name"])}, thanks for your interest. Here is your quote for {esc(quote["institution"])}.</p>
+        <table style="border-collapse:collapse;margin:16px 0;">
+          {row("Quote", esc(quote["quote_id"]))}
+          {row("Seats", f"{seats}")}
+          {row("Price per seat", f"{money(seat_price_cents)} per year")}
+          {row("Total", f"<b>{money(total)} per year</b> (USD, before any applicable tax)")}
+          {row("Valid until", valid_until)}
+        </table>
+        {min_note}
+        <p style="margin-top:20px;"><b>Every seat includes</b></p>
+        <ul style="color:#d1d5db;line-height:1.7;padding-left:20px;">
+          <li>Everything in MolDock Pro: 1,000 dockings a day per seat with the highest queue priority</li>
+          <li>Virtual screening of up to 2,000 ligands per batch</li>
+          <li>Private results shared inside your lab, kept until you delete them</li>
+          <li>REST API keys, and the same plan on the web, iPhone, iPad, Android and Mac apps</li>
+          <li>A PI or admin who adds and removes seats from the account page</li>
+        </ul>
+        <p style="margin-top:20px;"><b>To accept</b>, reply to this email with the billing contact and, if your institution needs one, a purchase order number. We'll send a Stripe invoice (card, ACH or wire) and switch on the seats as soon as it's paid. Course and classroom discounts are available on request.</p>
+        <p style="color:#6b7280;font-size:12px;margin-top:24px;">Quote {esc(quote["quote_id"])}, issued {issued.strftime("%B %d, %Y")}. If you didn't request this quote, you can ignore this email.</p>
+      </div></body></html>"""
+    return _send_html(quote["email"], f"Your MolDock Lab quote {quote['quote_id']}", html, reply_to=reply_to)

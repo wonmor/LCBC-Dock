@@ -13,6 +13,7 @@ struct ProView: View {
     static let privacyURL = URL(string: "https://wonmor.github.io/LCBC-Dock/privacy.html")!
     static let eulaURL = URL(string: "https://www.apple.com/legal/internet-services/itunes/dev/stdeula/")!
     static let manageURL = URL(string: "https://apps.apple.com/account/subscriptions")!
+    static let labQuoteURL = URL(string: "https://lcbc-client.apps.johnseong.com/pricing#lab-quote")!
 
     private var features: [(String, String)] {
         let p = proLimits, f = freeLimits
@@ -62,6 +63,16 @@ struct ProView: View {
                 Button("Restore Purchases") { Task { await store.restore() } }
                     .buttonStyle(.link)
                     .disabled(store.busy)
+
+                VStack(alignment: .leading, spacing: 4) {
+                    Text("For labs and classrooms").font(.headline)
+                    Text("Shared seats for a whole lab, course or department, invoiced to your institution.")
+                        .font(.callout)
+                        .foregroundColor(.secondary)
+                        .fixedSize(horizontal: false, vertical: true)
+                    Link("Request a quote", destination: Self.labQuoteURL)
+                }
+                .padding(.top, 8)
 
                 Text(terms)
                     .font(.caption)
