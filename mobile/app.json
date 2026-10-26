@@ -16,7 +16,7 @@
     "ios": {
       "supportsTablet": true,
       "bundleIdentifier": "com.johnseong.dock-it",
-      "buildNumber": "2",
+      "buildNumber": "11",
       "infoPlist": {
         "ITSAppUsesNonExemptEncryption": false
       }
@@ -47,7 +47,8 @@
       "./plugins/withPageSize16K",
       "./plugins/withPodDeploymentTarget",
       "expo-secure-store",
-      "expo-iap"
+      "expo-iap",
+      "./plugins/withSceneLifecycle"
     ],
     "extra": {
       "router": {
