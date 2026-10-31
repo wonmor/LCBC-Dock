@@ -84,3 +84,11 @@ export async function signOutOnServer(): Promise<void> {
     // Signing out locally is what matters.
   }
 }
+
+/** Permanently deletes the signed-in account on the server. Returns whether an
+ *  App Store / Google Play subscription was active (it must be cancelled in the
+ *  store; deleting the account cannot stop the store's billing). */
+export async function deleteAccountOnServer(): Promise<{ storeSubscriptionActive: boolean }> {
+  const resp = await backend.delete("/api/account");
+  return { storeSubscriptionActive: !!resp.data?.store_subscription_active };
+}

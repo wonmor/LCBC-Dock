@@ -420,3 +420,27 @@ def test_lab_quote_customer_email_totals(monkeypatch):
     assert "$345.00 per year" in captured["html"] and "start at 5 seats" in captured["html"]
     assert "A &lt;b&gt;" in captured["html"] and captured["reply_to"] == "sales@x.com"
     assert "\u00b7" not in captured["html"] and "\u2022" not in captured["html"]
+
+
+def test_delete_account_removes_user_sessions_and_jobs(client, monkeypatch):
+    from api import accounts as acc
+    from api.database import get_db
+    h = _sign_in(client, "gone@example.org", monkeypatch)
+    user = acc.get_user_by_email("gone@example.org")
+    conn = get_db()
+    conn.execute(
+        "INSERT INTO docking_jobs (job_id, status, protein_pdb_id, ligand_cid, ligand_name, created_at, owner_user_id) "
+        "VALUES ('j-owned', 'completed', '1IEP', 5291, 'Imatinib', '2026-10-31T00:00:00', ?)", (user["user_id"],))
+    conn.commit()
+    conn.close()
+
+    assert client.delete("/api/account").status_code == 401
+    r = client.delete("/api/account", headers=h)
+    assert r.status_code == 200, r.text
+    assert r.json()["deleted"] is True and r.json()["jobs_deleted"] == 1
+    assert acc.get_user_by_email("gone@example.org") is None
+    conn = get_db()
+    assert conn.execute("SELECT COUNT(*) FROM docking_jobs WHERE job_id='j-owned'").fetchone()[0] == 0
+    conn.close()
+    # The session died with the account.
+    assert client.get("/api/account", headers=h).json()["signed_in"] is False

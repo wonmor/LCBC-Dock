@@ -3,7 +3,7 @@ import type { ReactNode } from "react";
 import { Platform } from "react-native";
 import type { Purchase } from "expo-iap";
 import { loadSession, saveSession } from "./session";
-import { AccountSummary, errorText, fetchAccount, signOutOnServer } from "./account";
+import { AccountSummary, deleteAccountOnServer, errorText, fetchAccount, signOutOnServer } from "./account";
 import * as Store from "./purchases";
 
 interface AccountState {
@@ -15,6 +15,8 @@ interface AccountState {
   refresh: () => Promise<AccountSummary | null>;
   signIn: (sessionToken: string) => Promise<void>;
   signOut: () => Promise<void>;
+  /** Deletes the account on the server, then forgets the session. Throws on failure. */
+  deleteAccount: () => Promise<{ storeSubscriptionActive: boolean }>;
   purchase: (offer: Store.Offer) => Promise<void>;
   restore: () => Promise<void>;
   clearMessages: () => void;
@@ -129,6 +131,15 @@ export function AccountProvider({ children }: { children: ReactNode }) {
     await refresh();
   }, [refresh]);
 
+  const deleteAccount = useCallback(async () => {
+    const result = await deleteAccountOnServer();
+    await saveSession(null);
+    setNotice(null);
+    setError(null);
+    await refresh();
+    return result;
+  }, [refresh]);
+
   const purchase = useCallback(
     async (offer: Store.Offer) => {
       setError(null);
@@ -168,8 +179,8 @@ export function AccountProvider({ children }: { children: ReactNode }) {
   }, []);
 
   const value = useMemo(
-    () => ({ ready, account, busy, notice, error, refresh, signIn, signOut, purchase, restore, clearMessages }),
-    [ready, account, busy, notice, error, refresh, signIn, signOut, purchase, restore, clearMessages]
+    () => ({ ready, account, busy, notice, error, refresh, signIn, signOut, deleteAccount, purchase, restore, clearMessages }),
+    [ready, account, busy, notice, error, refresh, signIn, signOut, deleteAccount, purchase, restore, clearMessages]
   );
 
   return <AccountContext.Provider value={value}>{children}</AccountContext.Provider>;

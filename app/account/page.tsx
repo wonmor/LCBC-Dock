@@ -142,6 +142,16 @@ function AccountView() {
     setToken(null);
     window.location.href = "/";
   };
+  const deleteAccount = async () => {
+    if (!window.confirm("Permanently delete your MolDock account, API keys and saved jobs? A subscription bought through the App Store or Google Play must be cancelled there.")) return;
+    try {
+      await axios.delete(`${API_BASE}/api/account`);
+      setToken(null);
+      window.location.href = "/";
+    } catch (e) {
+      window.alert(errorText(e, "Couldn't delete your account. Try again."));
+    }
+  };
 
   return (
     <div className="w-full max-w-2xl space-y-4">
@@ -294,6 +304,9 @@ function AccountView() {
 
       <button onClick={signOut} className="block mx-auto text-xs text-gray-500 hover:text-white pt-2">
         Sign out
+      </button>
+      <button onClick={deleteAccount} className="block mx-auto text-xs text-red-400 hover:text-red-300 underline">
+        Delete account
       </button>
     </div>
   );

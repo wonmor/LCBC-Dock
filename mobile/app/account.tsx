@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { View, Text, ScrollView, StyleSheet } from "react-native";
+import { View, Text, ScrollView, Alert, Platform, StyleSheet } from "react-native";
 import { useRouter, useLocalSearchParams } from "expo-router";
 import { SafeAreaView } from "react-native-safe-area-context";
 import * as WebBrowser from "expo-web-browser";
@@ -22,7 +22,8 @@ const TIER_LABEL: Record<string, string> = {
 export default function Account() {
   const router = useRouter();
   const { next } = useLocalSearchParams<{ next?: string }>();
-  const { ready, account, signIn, signOut } = useAccount();
+  const { ready, account, signIn, signOut, deleteAccount } = useAccount();
+  const [deleted, setDeleted] = useState<string | null>(null);
 
   const [email, setEmail] = useState("");
   const [code, setCode] = useState("");
@@ -74,6 +75,39 @@ export default function Account() {
     } else {
       await WebBrowser.openBrowserAsync(WEB_ACCOUNT_URL);
     }
+  };
+
+  const STORE = Platform.OS === "ios" ? "the App Store (Settings, Apple ID, Subscriptions)" : "Google Play (Payments & subscriptions)";
+
+  const confirmDelete = () => {
+    Alert.alert(
+      "Delete your account?",
+      "This permanently deletes your MolDock account, your sign-in, API keys and the docking jobs saved to it. " +
+        `It does not cancel a subscription bought through ${STORE}; cancel that there.`,
+      [
+        { text: "Cancel", style: "cancel" },
+        {
+          text: "Delete account",
+          style: "destructive",
+          onPress: async () => {
+            setWorking(true);
+            setError(null);
+            try {
+              const r = await deleteAccount();
+              setDeleted(
+                r.storeSubscriptionActive
+                  ? `Your account is deleted. Your subscription is still active in ${STORE}; cancel it there to stop renewals.`
+                  : "Your account and its data are deleted."
+              );
+            } catch (e) {
+              setError(errorText(e, "Couldn't delete your account. Check your connection and try again."));
+            } finally {
+              setWorking(false);
+            }
+          },
+        },
+      ]
+    );
   };
 
   if (!ready) {
@@ -163,9 +197,17 @@ export default function Account() {
           </View>
         )}
 
+        {deleted && <Message kind="notice" text={deleted} />}
+
         {account?.signed_in && (
-          <View style={{ marginTop: space.xl }}>
+          <View style={{ marginTop: space.xl, gap: 12 }}>
             <TextLink title="Sign out" icon="log-out-outline" onPress={signOut} />
+            <SectionTitle title="Delete account" />
+            <Text style={type.caption}>
+              Permanently deletes your account, sign-in, API keys and the docking jobs saved to it.
+            </Text>
+            {error && hasEmail && <Message kind="error" text={error} />}
+            <BarButton title="Delete account" icon="trash-outline" kind="secondary" onPress={confirmDelete} disabled={working} />
           </View>
         )}
       </ScrollView>

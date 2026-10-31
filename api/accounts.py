@@ -296,6 +296,32 @@ def _user_for_session(token: str) -> Optional[dict]:
     return get_user(row["user_id"])
 
 
+def delete_account(user_id: str) -> dict:
+    """Permanently delete a MolDock account (App Store 5.1.1(v), Google Play
+    account-deletion policy): the user row, sessions, API keys, pending
+    sign-in tokens, the account's jobs and batches, and lab quotes sent from
+    its email. Jobs submitted anonymously with this email for a notification
+    keep their science but lose the address. Store subscriptions are billed
+    by Apple or Google and must be cancelled there; the caller says so."""
+    user = get_user(user_id)
+    if not user:
+        return {"deleted": False}
+    email = user.get("email")
+    conn = get_db()
+    jobs = conn.execute("DELETE FROM docking_jobs WHERE owner_user_id=?", (user_id,)).rowcount
+    conn.execute("DELETE FROM batches WHERE owner_user_id=?", (user_id,))
+    conn.execute("DELETE FROM sessions WHERE user_id=?", (user_id,))
+    conn.execute("DELETE FROM api_keys WHERE user_id=?", (user_id,))
+    if email:
+        conn.execute("DELETE FROM login_tokens WHERE email=?", (email,))
+        conn.execute("DELETE FROM lab_quotes WHERE email=?", (email,))
+        conn.execute("UPDATE docking_jobs SET email=NULL WHERE email=?", (email,))
+    conn.execute("DELETE FROM users WHERE user_id=?", (user_id,))
+    conn.commit()
+    conn.close()
+    return {"deleted": True, "jobs_deleted": jobs}
+
+
 # ---------------------------------------------------------------------------
 # API keys (Pro / Lab)
 # ---------------------------------------------------------------------------

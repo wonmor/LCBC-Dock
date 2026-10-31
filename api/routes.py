@@ -285,6 +285,19 @@ async def logout(request: Request):
     return {"ok": True}
 
 
+@router.delete("/api/account")
+async def delete_account(request: Request):
+    """Delete the signed-in account and everything stored with it."""
+    ident = acc.require_user(request)
+    if "stripe" in ident.sources:
+        raise HTTPException(409, "Cancel your MolDock Pro subscription on the website (Account, Manage billing) "
+                                 "before deleting your account, so you aren't charged again.")
+    active_store = [s for s in ident.sources if s in ("app_store", "google_play")]
+    result = acc.delete_account(ident.user_id)
+    result["store_subscription_active"] = bool(active_store)
+    return result
+
+
 @router.get("/api/account/jobs")
 async def my_jobs(request: Request, limit: int = Query(100, ge=1, le=500)):
     ident = acc.require_user(request)
