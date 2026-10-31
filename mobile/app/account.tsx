@@ -1,12 +1,14 @@
 import { useState } from "react";
-import { View, Text, TextInput, Pressable, ScrollView, StyleSheet } from "react-native";
+import { View, Text, ScrollView, StyleSheet } from "react-native";
 import { useRouter, useLocalSearchParams } from "expo-router";
 import { SafeAreaView } from "react-native-safe-area-context";
 import * as WebBrowser from "expo-web-browser";
 import Spinner from "@/components/Spinner";
+import { BarButton, BoxedInput, KeyValue, Message, Panel, ScreenHeading, SectionTitle, TextLink } from "@/components/Bauhaus";
 import { useAccount } from "@/lib/AccountContext";
 import { errorText, isPaid, requestSignInCode, verifySignInCode } from "@/lib/account";
 import { manageSubscriptions } from "@/lib/purchases";
+import { palette, type, space, maxContent } from "@/lib/theme";
 
 const WEB_ACCOUNT_URL = "https://lcbc-client.apps.johnseong.com/account";
 
@@ -83,50 +85,40 @@ export default function Account() {
   }
 
   return (
-    <SafeAreaView style={styles.safe} edges={["bottom"]}>
+    <SafeAreaView style={styles.safe} edges={["bottom", "left", "right"]}>
       <ScrollView contentContainerStyle={styles.content} keyboardShouldPersistTaps="handled">
-        <Text style={styles.heading}>Account</Text>
+        <ScreenHeading title="Account" subtitle={account?.signed_in ? undefined : "Sign in to carry your plan across devices."} />
 
         {account?.signed_in && (
-          <View style={styles.card}>
-            <Text style={styles.label}>Signed in as</Text>
-            <Text style={styles.value}>{account.email ?? "This device (no email yet)"}</Text>
-            <View style={styles.divider} />
-            <Text style={styles.label}>Plan</Text>
-            <Text style={styles.value}>{TIER_LABEL[account.tier] ?? account.tier}</Text>
-            <Text style={styles.meta}>
-              {account.usage.used_today} of {account.usage.jobs_per_day} dockings used today
-            </Text>
+          <View style={{ gap: 12 }}>
+            <Panel style={{ paddingVertical: 4 }}>
+              <KeyValue label="Signed in as" value={account.email ?? "This device (no email yet)"} />
+              <KeyValue label="Plan" value={TIER_LABEL[account.tier] ?? account.tier} />
+              <KeyValue label="Today" value={`${account.usage.used_today} of ${account.usage.jobs_per_day} dockings`} last />
+            </Panel>
             {isPaid(account) ? (
-              <Pressable style={styles.secondaryBtn} onPress={manage}>
-                <Text style={styles.secondaryText}>Manage subscription</Text>
-              </Pressable>
+              <BarButton title="Manage subscription" icon="settings-outline" kind="secondary" onPress={manage} />
             ) : (
-              <Pressable style={styles.primaryBtn} onPress={() => router.push("/pro")}>
-                <Text style={styles.primaryText}>Upgrade to MolDock Pro</Text>
-              </Pressable>
+              <BarButton title="Upgrade to MolDock Pro" icon="star" kind="pro" onPress={() => router.push("/pro")} />
             )}
           </View>
         )}
 
         {!hasEmail && (
-          <View style={styles.card}>
-            <Text style={styles.title}>
-              {account?.signed_in ? "Add your email" : "Sign in with email"}
-            </Text>
-            <Text style={styles.body}>
-              Your MolDock account carries your plan to the web app and your other devices. No
-              password: we email you a link and a 6-digit code.
+          <View style={{ gap: 12, marginTop: account?.signed_in ? space.xl : 0 }}>
+            <SectionTitle title={account?.signed_in ? "Add your email" : "Sign in with email"} />
+            <Text style={type.body}>
+              Your MolDock account carries your plan to the web app and your other devices. No password: we email
+              you a link and a 6-digit code.
             </Text>
 
             {step === "email" ? (
               <>
-                <TextInput
-                  style={styles.input}
+                <BoxedInput
+                  icon="mail-outline"
                   value={email}
                   onChangeText={setEmail}
                   placeholder="you@university.edu"
-                  placeholderTextColor="#4b5563"
                   keyboardType="email-address"
                   autoCapitalize="none"
                   autoCorrect={false}
@@ -134,57 +126,47 @@ export default function Account() {
                   returnKeyType="send"
                   onSubmitEditing={sendCode}
                 />
-                <Pressable
-                  style={[styles.primaryBtn, working && styles.disabled]}
-                  onPress={sendCode}
-                  disabled={working}
-                >
-                  <Text style={styles.primaryText}>{working ? "Sending..." : "Email me a code"}</Text>
-                </Pressable>
+                <BarButton title={working ? "Sending..." : "Email me a code"} icon="send" kind="action" onPress={sendCode} disabled={working} />
               </>
             ) : (
               <>
-                <Text style={styles.meta}>
-                  Sent to {email}. Tap the link in the email on this phone, or enter the code.
-                </Text>
-                <TextInput
-                  style={[styles.input, styles.codeInput]}
+                <Text style={type.caption}>Sent to {email}. Tap the link in the email on this device, or enter the code.</Text>
+                <BoxedInput
+                  large
                   value={code}
                   onChangeText={(t) => setCode(t.replace(/[^0-9]/g, "").slice(0, 6))}
                   placeholder="123456"
-                  placeholderTextColor="#4b5563"
                   keyboardType="number-pad"
                   textContentType="oneTimeCode"
                   autoComplete="one-time-code"
                   returnKeyType="done"
                   onSubmitEditing={submitCode}
                 />
-                <Pressable
-                  style={[styles.primaryBtn, (working || code.length !== 6) && styles.disabled]}
+                <BarButton
+                  title={working ? "Checking..." : "Sign in"}
+                  icon="log-in-outline"
+                  kind="action"
                   onPress={submitCode}
                   disabled={working || code.length !== 6}
-                >
-                  <Text style={styles.primaryText}>{working ? "Checking..." : "Sign in"}</Text>
-                </Pressable>
-                <Pressable
+                />
+                <TextLink
+                  title="Use a different email"
                   onPress={() => {
                     setStep("email");
                     setCode("");
                     setError(null);
                   }}
-                >
-                  <Text style={styles.link}>Use a different email</Text>
-                </Pressable>
+                />
               </>
             )}
-            {error && <Text style={styles.error}>{error}</Text>}
+            {error && <Message kind="error" text={error} />}
           </View>
         )}
 
         {account?.signed_in && (
-          <Pressable onPress={signOut}>
-            <Text style={styles.signOut}>Sign out</Text>
-          </Pressable>
+          <View style={{ marginTop: space.xl }}>
+            <TextLink title="Sign out" icon="log-out-outline" onPress={signOut} />
+          </View>
         )}
       </ScrollView>
     </SafeAreaView>
@@ -192,64 +174,6 @@ export default function Account() {
 }
 
 const styles = StyleSheet.create({
-  safe: { flex: 1, backgroundColor: "#000" },
-  content: {
-    paddingHorizontal: 24,
-    paddingTop: 8,
-    paddingBottom: 40,
-    gap: 16,
-    maxWidth: 600,
-    alignSelf: "center",
-    width: "100%",
-  },
-  heading: {
-    fontSize: 32,
-    fontWeight: "200",
-    color: "#fff",
-    textAlign: "center",
-    marginBottom: 16,
-  },
-  card: {
-    borderWidth: 1,
-    borderColor: "rgba(255,255,255,0.1)",
-    borderRadius: 16,
-    padding: 20,
-    gap: 8,
-  },
-  title: { color: "#fff", fontSize: 16, fontWeight: "500" },
-  body: { color: "#9ca3af", fontSize: 13, lineHeight: 20 },
-  label: { color: "#6b7280", fontSize: 11 },
-  value: { color: "#fff", fontSize: 15 },
-  meta: { color: "#6b7280", fontSize: 12, lineHeight: 18 },
-  divider: { height: 1, backgroundColor: "rgba(255,255,255,0.08)", marginVertical: 8 },
-  input: {
-    borderBottomWidth: 1,
-    borderBottomColor: "rgba(255,255,255,0.15)",
-    paddingVertical: 10,
-    fontSize: 15,
-    color: "#fff",
-    marginVertical: 8,
-  },
-  codeInput: { fontSize: 24, letterSpacing: 8, textAlign: "center" },
-  primaryBtn: {
-    backgroundColor: "#fff",
-    paddingVertical: 14,
-    borderRadius: 50,
-    alignItems: "center",
-    marginTop: 8,
-  },
-  primaryText: { color: "#000", fontSize: 14, fontWeight: "500" },
-  secondaryBtn: {
-    borderWidth: 1,
-    borderColor: "rgba(255,255,255,0.2)",
-    paddingVertical: 12,
-    borderRadius: 50,
-    alignItems: "center",
-    marginTop: 8,
-  },
-  secondaryText: { color: "#fff", fontSize: 13 },
-  disabled: { opacity: 0.3 },
-  link: { color: "#9ca3af", fontSize: 12, textAlign: "center", marginTop: 12 },
-  error: { color: "#f87171", fontSize: 12, textAlign: "center", marginTop: 8 },
-  signOut: { color: "#6b7280", fontSize: 12, textAlign: "center", marginTop: 8 },
+  safe: { flex: 1, backgroundColor: palette.ground },
+  content: { padding: space.m, paddingBottom: space.xl, maxWidth: maxContent, alignSelf: "center", width: "100%" },
 });

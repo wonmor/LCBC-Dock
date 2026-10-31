@@ -1,25 +1,10 @@
 import { useState, useMemo } from "react";
-import {
-  View,
-  Text,
-  TextInput,
-  Pressable,
-  ScrollView,
-  Image,
-  StyleSheet,
-} from "react-native";
+import { View, Text, ScrollView, StyleSheet } from "react-native";
 import { useRouter } from "expo-router";
 import { SafeAreaView } from "react-native-safe-area-context";
-import { getMoleculeImageUrl } from "@/lib/api";
-
-interface Example {
-  protein: string;
-  proteinName: string;
-  ligandCid: number;
-  ligandName: string;
-  category: string;
-  description: string;
-}
+import ExampleCard, { type Example } from "@/components/ExampleCard";
+import { BoxedInput, Rule, TagButton } from "@/components/Bauhaus";
+import { palette, type, space, rule, maxContent } from "@/lib/theme";
 
 const EXAMPLES: Example[] = [
   {
@@ -194,95 +179,44 @@ export default function Examples() {
   }, [search, category]);
 
   return (
-    <SafeAreaView style={styles.safe} edges={["bottom"]}>
+    <SafeAreaView style={styles.safe} edges={["bottom", "left", "right"]}>
       <View style={styles.searchArea}>
-        <TextInput
-          style={styles.input}
+        <BoxedInput
+          icon="search"
           value={search}
           onChangeText={setSearch}
-          placeholder="Search examples (e.g. cancer, aspirin...)"
-          placeholderTextColor="#4b5563"
+          placeholder="Search drugs, targets, diseases"
           autoCapitalize="none"
           autoCorrect={false}
         />
-
-        <ScrollView
-          horizontal
-          showsHorizontalScrollIndicator={false}
-          contentContainerStyle={styles.pills}
-        >
+        <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={styles.pills} style={{ flexGrow: 0 }}>
           {CATEGORIES.map((cat) => (
-            <Pressable
-              key={cat}
-              style={[
-                styles.pill,
-                category === cat ? styles.pillActive : styles.pillInactive,
-              ]}
-              onPress={() => setCategory(cat)}
-            >
-              <Text
-                style={[
-                  styles.pillText,
-                  category === cat
-                    ? styles.pillTextActive
-                    : styles.pillTextInactive,
-                ]}
-              >
-                {cat}
-              </Text>
-            </Pressable>
+            <TagButton key={cat} title={cat} selected={category === cat} onPress={() => setCategory(cat)} />
           ))}
         </ScrollView>
       </View>
+      <Rule thickness={rule.thick} />
 
-      <ScrollView
-        style={styles.list}
-        contentContainerStyle={styles.listContent}
-        keyboardShouldPersistTaps="handled"
-      >
+      <ScrollView style={styles.list} contentContainerStyle={styles.listContent} keyboardShouldPersistTaps="handled">
         {filtered.map((ex) => (
-          <Pressable
+          <ExampleCard
             key={`${ex.protein}-${ex.ligandCid}`}
-            style={styles.card}
+            ex={ex}
+            showCid
+            lines={3}
             onPress={() =>
               router.push({
                 pathname: "/docking/cook",
-                params: {
-                  proteinState: ex.protein,
-                  ligandCid: String(ex.ligandCid),
-                  ligandName: ex.ligandName,
-                },
+                params: { proteinState: ex.protein, ligandCid: String(ex.ligandCid), ligandName: ex.ligandName },
               })
             }
-          >
-            <View style={styles.cardRow}>
-              <View style={styles.cardInfo}>
-                <View style={styles.titleRow}>
-                  <Text style={styles.ligandName}>{ex.ligandName}</Text>
-                  <View style={styles.catBadge}>
-                    <Text style={styles.catText}>{ex.category}</Text>
-                  </View>
-                </View>
-                <Text style={styles.meta}>
-                  {ex.protein} | {ex.proteinName} | CID {ex.ligandCid}
-                </Text>
-                <Text style={styles.desc}>{ex.description}</Text>
-              </View>
-              <Image
-                source={{ uri: getMoleculeImageUrl(ex.ligandCid) }}
-                style={styles.thumb}
-                resizeMode="contain"
-              />
-            </View>
-          </Pressable>
+          />
         ))}
 
-        {filtered.length === 0 && (
-          <Text style={styles.empty}>No examples match your search.</Text>
-        )}
+        {filtered.length === 0 && <Text style={[type.caption, styles.empty]}>No examples match your search.</Text>}
 
-        <Text style={styles.footnote}>
-          {EXAMPLES.length} curated examples | Tap to skip straight to docking
+        <Text style={[type.caption, styles.footnote]}>
+          {EXAMPLES.length} curated examples. Tap one to go straight to docking.
         </Text>
       </ScrollView>
     </SafeAreaView>
@@ -290,114 +224,18 @@ export default function Examples() {
 }
 
 const styles = StyleSheet.create({
-  safe: { flex: 1, backgroundColor: "#000" },
-  searchArea: {
-    paddingHorizontal: 24,
-    paddingTop: 8,
-    paddingBottom: 12,
-  },
-  input: {
-    backgroundColor: "rgba(255,255,255,0.05)",
-    borderWidth: 1,
-    borderColor: "rgba(255,255,255,0.1)",
-    borderRadius: 12,
-    paddingHorizontal: 16,
-    paddingVertical: 14,
-    fontSize: 14,
-    color: "#fff",
-    marginBottom: 12,
-  },
-  pills: {
-    flexDirection: "row",
-    gap: 8,
-    paddingRight: 24,
-  },
-  pill: {
-    paddingHorizontal: 14,
-    paddingVertical: 6,
-    borderRadius: 50,
-  },
-  pillActive: {
-    backgroundColor: "#fff",
-  },
-  pillInactive: {
-    backgroundColor: "rgba(255,255,255,0.05)",
-  },
-  pillText: {
-    fontSize: 11,
-  },
-  pillTextActive: {
-    color: "#000",
-  },
-  pillTextInactive: {
-    color: "#9ca3af",
-  },
+  safe: { flex: 1, backgroundColor: palette.ground },
+  searchArea: { paddingHorizontal: space.m, paddingTop: space.m, paddingBottom: 12, gap: 12 },
+  pills: { flexDirection: "row", gap: space.s, paddingRight: space.m },
   list: { flex: 1 },
   listContent: {
-    paddingHorizontal: 24,
-    paddingBottom: 32,
-    gap: 10,
+    padding: space.m,
+    paddingBottom: space.xl,
+    gap: space.s,
+    maxWidth: maxContent,
+    alignSelf: "center",
+    width: "100%",
   },
-  card: {
-    borderWidth: 1,
-    borderColor: "rgba(255,255,255,0.1)",
-    borderRadius: 16,
-    padding: 16,
-  },
-  cardRow: {
-    flexDirection: "row",
-    gap: 12,
-  },
-  cardInfo: {
-    flex: 1,
-  },
-  titleRow: {
-    flexDirection: "row",
-    alignItems: "center",
-    gap: 8,
-    marginBottom: 4,
-  },
-  ligandName: {
-    color: "#fff",
-    fontSize: 14,
-    fontWeight: "500",
-  },
-  catBadge: {
-    backgroundColor: "rgba(255,255,255,0.05)",
-    paddingHorizontal: 8,
-    paddingVertical: 2,
-    borderRadius: 50,
-  },
-  catText: {
-    color: "#9ca3af",
-    fontSize: 10,
-  },
-  meta: {
-    color: "#6b7280",
-    fontSize: 11,
-    marginBottom: 6,
-  },
-  desc: {
-    color: "#6b7280",
-    fontSize: 11,
-    lineHeight: 16,
-  },
-  thumb: {
-    width: 52,
-    height: 52,
-    borderRadius: 10,
-    backgroundColor: "#fff",
-  },
-  empty: {
-    color: "#6b7280",
-    fontSize: 12,
-    textAlign: "center",
-    paddingVertical: 32,
-  },
-  footnote: {
-    color: "#4b5563",
-    fontSize: 10,
-    textAlign: "center",
-    marginTop: 16,
-  },
+  empty: { textAlign: "center", paddingVertical: space.xl },
+  footnote: { textAlign: "center", marginTop: space.m },
 });

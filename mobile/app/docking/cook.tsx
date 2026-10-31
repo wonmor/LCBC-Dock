@@ -1,19 +1,14 @@
 import { useState } from "react";
-import {
-  View,
-  Text,
-  TextInput,
-  Pressable,
-  ScrollView,
-  StyleSheet,
-} from "react-native";
+import { View, Text, ScrollView, StyleSheet } from "react-native";
 import { useRouter, useLocalSearchParams } from "expo-router";
 import { SafeAreaView } from "react-native-safe-area-context";
 import Slider from "@react-native-community/slider";
 import StepIndicator from "@/components/StepIndicator";
+import { BarButton, BottomBar, BoxedInput, IconButton, Message, Panel, ScreenHeading, SectionTitle } from "@/components/Bauhaus";
 import { submitDockingJob } from "@/lib/api";
 import { useAccount } from "@/lib/AccountContext";
 import { errorText, isPaid, paywallOf } from "@/lib/account";
+import { palette, type, space, rule, fonts, maxContent } from "@/lib/theme";
 
 export default function Cook() {
   const router = useRouter();
@@ -60,217 +55,105 @@ export default function Cook() {
     }
   };
 
+  const protein = (proteinState ?? "").toUpperCase();
+
   return (
-    <SafeAreaView style={styles.safe} edges={["bottom"]}>
-      <ScrollView
-        style={styles.scroll}
-        contentContainerStyle={styles.content}
-        keyboardShouldPersistTaps="handled"
-      >
-        <Text style={styles.heading}>Dock</Text>
-        <Text style={styles.sub}>
-          {(proteinState ?? "").toUpperCase()} + {ligandName}
-        </Text>
+    <SafeAreaView style={styles.safe} edges={["left", "right"]}>
+      <ScrollView style={{ flex: 1 }} contentContainerStyle={styles.content} keyboardShouldPersistTaps="handled">
+        <ScreenHeading eyebrow="Step 4 of 4" title="Dock" subtitle={`${protein} + ${ligandName ?? ""}`} />
 
         {/* Summary */}
-        <View style={styles.card}>
-          <View style={styles.row}>
-            <View style={styles.col}>
-              <Text style={styles.label}>Protein</Text>
-              <Text style={styles.value}>{(proteinState ?? "").toUpperCase()}</Text>
-            </View>
-            <View style={styles.col}>
-              <Text style={styles.label}>Ligand</Text>
-              <Text style={styles.value}>{ligandName}</Text>
-            </View>
+        <View style={styles.pair}>
+          <View style={[styles.pairCell, { backgroundColor: palette.ink }]}>
+            <Text style={[type.label, { color: palette.ground }]}>Protein</Text>
+            <Text style={[styles.pairValue, { color: palette.ground }]} numberOfLines={1} adjustsFontSizeToFit>
+              {protein}
+            </Text>
+          </View>
+          <View style={[styles.pairCell, styles.pairRight]}>
+            <Text style={type.label}>Ligand</Text>
+            <Text style={styles.pairValue} numberOfLines={1} adjustsFontSizeToFit>
+              {ligandName}
+            </Text>
           </View>
         </View>
 
         {/* Exhaustiveness */}
-        <View style={styles.card}>
-          <Text style={styles.label}>Exhaustiveness (1–32)</Text>
-          <Slider
-            style={{ marginTop: 8 }}
-            minimumValue={1}
-            maximumValue={32}
-            step={1}
-            value={exhaustiveness}
-            onValueChange={setExhaustiveness}
-            minimumTrackTintColor="#fff"
-            maximumTrackTintColor="rgba(255,255,255,0.1)"
-            thumbTintColor="#fff"
-          />
-          <Text style={styles.sliderValue}>{exhaustiveness}</Text>
-          <Text style={styles.footnote}>
-            Lower = faster, higher = more accurate. Default 4 for quick results.
-          </Text>
-          {capped && (
-            <Pressable onPress={() => router.push("/pro")}>
-              <Text style={styles.capNote}>
-                Your plan runs up to {maxExh}, so this job will use {maxExh}.
-                {isPaid(account) ? "" : " MolDock Pro goes up to 32."}
-              </Text>
-            </Pressable>
-          )}
+        <SectionTitle title="Exhaustiveness" accessory={<Text style={styles.exhValue}>{exhaustiveness}</Text>} />
+        <Slider
+          minimumValue={1}
+          maximumValue={32}
+          step={1}
+          value={exhaustiveness}
+          onValueChange={setExhaustiveness}
+          minimumTrackTintColor={palette.blue}
+          maximumTrackTintColor={palette.ink}
+          thumbTintColor={palette.blue}
+          accessibilityLabel="Exhaustiveness"
+        />
+        <View style={styles.scale}>
+          <Text style={type.label}>1 Faster</Text>
+          <Text style={type.label}>32 More thorough</Text>
         </View>
+        <Text style={[type.caption, { marginTop: space.s }]}>
+          Higher values search more poses and take longer. 4 gives quick results.
+        </Text>
+        {capped && (
+          <View style={{ marginTop: 12 }}>
+            <Message
+              kind="attention"
+              text={`Your plan runs up to ${maxExh}, so this job will use ${maxExh}.${isPaid(account) ? "" : " MolDock Pro goes up to 32."}`}
+              onPress={isPaid(account) ? undefined : () => router.push("/pro")}
+            />
+          </View>
+        )}
 
         {/* Email */}
-        <View style={styles.card}>
-          <Text style={styles.label}>Email (optional)</Text>
-          <TextInput
-            style={styles.emailInput}
+        <View style={{ marginTop: space.xl }}>
+          <SectionTitle title="Email (optional)" />
+          <BoxedInput
+            icon="mail-outline"
             value={email}
             onChangeText={setEmail}
-            placeholder="Notify me when done"
-            placeholderTextColor="#4b5563"
+            placeholder="Notify me when it's done"
             keyboardType="email-address"
             autoCapitalize="none"
           />
         </View>
 
-        {error && <Text style={styles.error}>{error}</Text>}
-        {upsell && (
-          <Pressable style={styles.upsellBtn} onPress={() => router.push("/pro")}>
-            <Text style={styles.upsellText}>See MolDock Pro</Text>
-          </Pressable>
-        )}
+        <View style={{ gap: 12, marginTop: space.l }}>
+          {error && <Message kind="error" text={error} />}
+          {upsell && <BarButton title="See MolDock Pro" icon="star" kind="pro" onPress={() => router.push("/pro")} />}
 
-        <Pressable
-          style={[styles.submitBtn, (submitting || !proteinState || !ligandCid) && styles.disabled]}
-          onPress={handleSubmit}
-          disabled={submitting || !proteinState || !ligandCid}
-        >
-          <Text style={styles.submitText}>
-            {submitting ? "Submitting..." : "Start Docking"}
+          <BarButton
+            title={submitting ? "Submitting..." : "Start docking"}
+            icon="play"
+            kind="action"
+            onPress={handleSubmit}
+            disabled={submitting || !proteinState || !ligandCid}
+          />
+
+          <Text style={[type.caption, { textAlign: "center" }]}>
+            The grid box is centred on the protein automatically. Powered by AutoDock Vina.
           </Text>
-        </Pressable>
-
-        <Text style={styles.footnote}>
-          Grid center auto-computed from protein. Powered by AutoDock Vina.
-        </Text>
+        </View>
       </ScrollView>
 
-      <View style={styles.bottomBar}>
+      <BottomBar>
         <StepIndicator current={3} />
-        <Pressable onPress={() => router.back()}>
-          <Text style={styles.backText}>Back</Text>
-        </Pressable>
-      </View>
+        <IconButton icon="arrow-back" label="Back" onPress={() => router.back()} />
+      </BottomBar>
     </SafeAreaView>
   );
 }
 
 const styles = StyleSheet.create({
-  safe: { flex: 1, backgroundColor: "#000" },
-  scroll: { flex: 1 },
-  content: {
-    paddingHorizontal: 24,
-    paddingTop: 8,
-    paddingBottom: 24,
-    gap: 12,
-    maxWidth: 600,
-    alignSelf: "center",
-    width: "100%",
-  },
-  heading: {
-    fontSize: 32,
-    fontWeight: "200",
-    color: "#fff",
-    textAlign: "center",
-    marginBottom: 4,
-  },
-  sub: {
-    fontSize: 11,
-    color: "#6b7280",
-    textAlign: "center",
-    marginBottom: 20,
-  },
-  card: {
-    borderWidth: 1,
-    borderColor: "rgba(255,255,255,0.1)",
-    borderRadius: 16,
-    padding: 20,
-  },
-  row: {
-    flexDirection: "row",
-    gap: 16,
-  },
-  col: { flex: 1 },
-  label: {
-    color: "#6b7280",
-    fontSize: 11,
-  },
-  value: {
-    color: "#fff",
-    fontSize: 14,
-    marginTop: 2,
-  },
-  sliderValue: {
-    color: "#9ca3af",
-    fontSize: 12,
-    textAlign: "right",
-    marginTop: 4,
-  },
-  emailInput: {
-    borderBottomWidth: 1,
-    borderBottomColor: "rgba(255,255,255,0.1)",
-    paddingVertical: 10,
-    fontSize: 14,
-    color: "#fff",
-    marginTop: 4,
-  },
-  capNote: {
-    color: "#facc15",
-    fontSize: 11,
-    textAlign: "center",
-    marginTop: 8,
-  },
-  upsellBtn: {
-    borderWidth: 1,
-    borderColor: "rgba(255,255,255,0.3)",
-    paddingVertical: 12,
-    borderRadius: 50,
-    alignItems: "center",
-  },
-  upsellText: {
-    color: "#fff",
-    fontSize: 13,
-  },
-  error: {
-    color: "#f87171",
-    fontSize: 12,
-    textAlign: "center",
-  },
-  submitBtn: {
-    backgroundColor: "#fff",
-    paddingVertical: 14,
-    borderRadius: 50,
-    alignItems: "center",
-  },
-  disabled: {
-    opacity: 0.3,
-  },
-  submitText: {
-    color: "#000",
-    fontSize: 14,
-    fontWeight: "500",
-  },
-  footnote: {
-    color: "#4b5563",
-    fontSize: 10,
-    textAlign: "center",
-  },
-  bottomBar: {
-    flexDirection: "row",
-    justifyContent: "space-between",
-    alignItems: "center",
-    paddingHorizontal: 24,
-    paddingVertical: 16,
-    borderTopWidth: 1,
-    borderTopColor: "rgba(255,255,255,0.05)",
-  },
-  backText: {
-    color: "#6b7280",
-    fontSize: 12,
-  },
+  safe: { flex: 1, backgroundColor: palette.ground },
+  content: { padding: space.m, paddingBottom: space.xl, maxWidth: maxContent, alignSelf: "center", width: "100%" },
+  pair: { flexDirection: "row", borderWidth: rule.regular, borderColor: palette.ink, marginBottom: space.xl },
+  pairCell: { flex: 1, padding: 12, gap: 2 },
+  pairRight: { borderLeftWidth: rule.regular, borderLeftColor: palette.ink },
+  pairValue: { fontFamily: fonts.bold, fontSize: 22, color: palette.ink },
+  exhValue: { fontFamily: fonts.bold, fontSize: 22, color: palette.blue },
+  scale: { flexDirection: "row", justifyContent: "space-between" },
 });

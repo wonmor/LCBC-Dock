@@ -1,6 +1,8 @@
 import { useState } from "react";
-import { View, Text, Pressable, StyleSheet } from "react-native";
+import { View, StyleSheet } from "react-native";
 import { WebView } from "react-native-webview";
+import { Segmented, TagButton } from "@/components/Bauhaus";
+import { palette, rule, space } from "@/lib/theme";
 
 interface Props {
   pdbId?: string;
@@ -9,18 +11,22 @@ interface Props {
   height?: number;
 }
 
+type ViewStyleName = "cartoon" | "stick" | "surface";
+
+/** 3Dmol.js viewer. The viewport stays dark so molecules read clearly; the
+ *  Bauhaus chrome is the black frame and the controls below it. */
 export default function ProteinViewer({ pdbId, pdbData, ligandPdb, height = 400 }: Props) {
-  const [style, setStyle] = useState<"cartoon" | "stick" | "surface">("cartoon");
+  const [style, setStyle] = useState<ViewStyleName>("cartoon");
   const [spinning, setSpinning] = useState(true);
 
   const html = buildViewerHtml(pdbId, pdbData, ligandPdb, style, spinning);
 
   return (
-    <View>
+    <View style={styles.wrap}>
       <View style={[styles.viewer, { height }]}>
         <WebView
           source={{ html }}
-          style={{ flex: 1, backgroundColor: "#0a0a0a" }}
+          style={{ flex: 1, backgroundColor: palette.viewport }}
           javaScriptEnabled
           originWhitelist={["*"]}
           scrollEnabled={false}
@@ -28,25 +34,24 @@ export default function ProteinViewer({ pdbId, pdbData, ligandPdb, height = 400 
       </View>
 
       <View style={styles.controls}>
-        {(["cartoon", "stick", "surface"] as const).map((s) => (
-          <Pressable
-            key={s}
-            style={[styles.btn, style === s && styles.btnActive]}
-            onPress={() => setStyle(s)}
-          >
-            <Text style={[styles.btnText, style === s && styles.btnTextActive]}>
-              {s.charAt(0).toUpperCase() + s.slice(1)}
-            </Text>
-          </Pressable>
-        ))}
-        <Pressable
-          style={[styles.btn, spinning && styles.btnSpin]}
+        <View style={{ flex: 1 }}>
+          <Segmented
+            value={style}
+            onChange={setStyle}
+            options={[
+              { value: "cartoon", label: "Cartoon" },
+              { value: "stick", label: "Stick" },
+              { value: "surface", label: "Surface" },
+            ]}
+          />
+        </View>
+        <TagButton
+          title={spinning ? "Stop" : "Spin"}
+          icon={spinning ? "pause" : "sync"}
+          selected={spinning}
           onPress={() => setSpinning(!spinning)}
-        >
-          <Text style={[styles.btnText, spinning && { color: "#fff" }]}>
-            {spinning ? "Stop" : "Spin"}
-          </Text>
-        </Pressable>
+          style={{ minHeight: 44 }}
+        />
       </View>
     </View>
   );
@@ -131,34 +136,12 @@ function buildViewerHtml(
 }
 
 const styles = StyleSheet.create({
+  wrap: { gap: space.s },
   viewer: {
-    borderRadius: 16,
     overflow: "hidden",
-    backgroundColor: "#0a0a0a",
+    backgroundColor: palette.viewport,
+    borderWidth: rule.regular,
+    borderColor: palette.ink,
   },
-  controls: {
-    flexDirection: "row",
-    gap: 6,
-    marginTop: 8,
-    justifyContent: "center",
-  },
-  btn: {
-    paddingHorizontal: 12,
-    paddingVertical: 6,
-    borderRadius: 50,
-    backgroundColor: "rgba(255,255,255,0.05)",
-  },
-  btnActive: {
-    backgroundColor: "#fff",
-  },
-  btnSpin: {
-    backgroundColor: "rgba(255,255,255,0.15)",
-  },
-  btnText: {
-    fontSize: 10,
-    color: "#9ca3af",
-  },
-  btnTextActive: {
-    color: "#000",
-  },
+  controls: { flexDirection: "row", gap: space.s, alignItems: "stretch" },
 });

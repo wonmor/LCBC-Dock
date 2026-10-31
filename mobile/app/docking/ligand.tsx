@@ -1,18 +1,13 @@
 import { useState, useRef } from "react";
-import {
-  View,
-  Text,
-  TextInput,
-  Pressable,
-  Image,
-  ScrollView,
-  StyleSheet,
-} from "react-native";
+import { View, Text, Pressable, Image, ScrollView, StyleSheet } from "react-native";
 import { useRouter, useLocalSearchParams } from "expo-router";
 import { SafeAreaView } from "react-native-safe-area-context";
+import { Ionicons } from "@expo/vector-icons";
 import StepIndicator from "@/components/StepIndicator";
 import Spinner from "@/components/Spinner";
+import { BarButton, BottomBar, BoxedInput, IconButton, KeyValue, Message, Panel, ScreenHeading, TextLink } from "@/components/Bauhaus";
 import { searchMolecules, getMoleculeImageUrl, type Molecule } from "@/lib/api";
+import { palette, type, space, rule, fonts, maxContent } from "@/lib/theme";
 
 export default function Ligand() {
   const router = useRouter();
@@ -50,272 +45,116 @@ export default function Ligand() {
   };
 
   return (
-    <SafeAreaView style={styles.safe} edges={["bottom"]}>
-      <ScrollView
-        style={styles.scroll}
-        contentContainerStyle={styles.content}
-        keyboardShouldPersistTaps="handled"
-      >
-        <Text style={styles.heading}>
-          {selected ? selected.name : "Ligand"}
-        </Text>
-        <Text style={styles.sub}>
-          {selected
-            ? `CID ${selected.cid} | ${selected.formula}`
-            : "Search PubChem — 100M+ compounds"}
-        </Text>
+    <SafeAreaView style={styles.safe} edges={["left", "right"]}>
+      <ScrollView style={{ flex: 1 }} contentContainerStyle={styles.content} keyboardShouldPersistTaps="handled">
+        <ScreenHeading
+          eyebrow="Step 3 of 4"
+          title={selected ? selected.name : "Choose a ligand"}
+          subtitle={selected ? `CID ${selected.cid} | ${selected.formula}` : "Search PubChem, more than 100 million compounds"}
+        />
 
         {!selected && (
-          <>
-            <TextInput
-              style={styles.input}
+          <View style={{ gap: 12 }}>
+            <BoxedInput
+              icon="search"
               value={query}
               onChangeText={handleInput}
-              placeholder="Search by name (e.g. aspirin, caffeine)"
-              placeholderTextColor="#4b5563"
+              placeholder="Name, e.g. aspirin or caffeine"
               autoCapitalize="none"
               autoCorrect={false}
             />
             {loading && <Spinner label="Searching PubChem..." />}
-            {error && !loading && <Text style={styles.error}>{error}</Text>}
+            {error && !loading && <Message kind="error" text={error} />}
             {results.length > 0 && !loading && (
               <View style={styles.list}>
-                {results.map((mol) => (
+                {results.map((mol, i) => (
                   <Pressable
                     key={mol.cid}
-                    style={styles.listItem}
+                    style={({ pressed }) => [styles.listItem, i > 0 && styles.listRule, pressed && { backgroundColor: palette.groundSoft }]}
                     onPress={() => setSelected(mol)}
+                    accessibilityRole="button"
                   >
-                    <Text style={styles.molName}>{mol.name}</Text>
-                    <Text style={styles.molMeta}>
-                      CID {mol.cid} | {mol.formula} | {mol.weight.toFixed(1)} g/mol
-                    </Text>
+                    <View style={{ flex: 1 }}>
+                      <Text style={type.bodyBold}>{mol.name}</Text>
+                      <Text style={type.caption}>
+                        CID {mol.cid} | {mol.formula} | {mol.weight.toFixed(1)} g/mol
+                      </Text>
+                    </View>
+                    <Ionicons name="chevron-forward" size={20} color={palette.ink} />
                   </Pressable>
                 ))}
               </View>
             )}
-          </>
+          </View>
         )}
 
         {selected && (
-          <>
+          <View style={{ gap: 12 }}>
             <View style={styles.imageCard}>
-              <Image
-                source={{ uri: getMoleculeImageUrl(selected.cid) }}
-                style={styles.molImage}
-                resizeMode="contain"
-              />
+              <Image source={{ uri: getMoleculeImageUrl(selected.cid) }} style={styles.molImage} resizeMode="contain" />
             </View>
 
-            <View style={styles.detailCard}>
-              <View style={styles.detailRow}>
-                <View style={styles.detailCol}>
-                  <Text style={styles.detailLabel}>PubChem CID</Text>
-                  <Text style={styles.detailValue}>{selected.cid}</Text>
-                </View>
-                <View style={styles.detailCol}>
-                  <Text style={styles.detailLabel}>Formula</Text>
-                  <Text style={styles.detailValue}>{selected.formula}</Text>
-                </View>
-              </View>
-              <View style={styles.detailCol}>
-                <Text style={styles.detailLabel}>Weight</Text>
-                <Text style={styles.detailValue}>
-                  {selected.weight.toFixed(2)} g/mol
-                </Text>
-              </View>
+            <Panel style={{ paddingVertical: 4 }}>
+              <KeyValue label="PubChem CID" value={String(selected.cid)} />
+              <KeyValue label="Formula" value={selected.formula} />
+              <KeyValue label="Weight" value={`${selected.weight.toFixed(2)} g/mol`} last={!selected.smiles} />
               {selected.smiles ? (
-                <View style={{ marginTop: 12 }}>
-                  <Text style={styles.detailLabel}>SMILES</Text>
+                <View style={{ paddingVertical: 10, gap: 6 }}>
+                  <Text style={type.label}>SMILES</Text>
                   <View style={styles.smilesBox}>
-                    <Text style={styles.smilesText}>{selected.smiles}</Text>
+                    <Text style={type.mono} selectable>
+                      {selected.smiles}
+                    </Text>
                   </View>
                 </View>
               ) : null}
-            </View>
+            </Panel>
 
-            <Pressable
+            <TextLink
+              title="Search again"
+              icon="search"
               onPress={() => {
                 setSelected(null);
                 setQuery("");
                 setResults([]);
               }}
-            >
-              <Text style={styles.searchAgain}>Search again</Text>
-            </Pressable>
-          </>
+            />
+          </View>
         )}
       </ScrollView>
 
-      <View style={styles.bottomBar}>
+      <BottomBar>
         <StepIndicator current={2} />
         <View style={styles.actions}>
-          <Pressable onPress={() => router.back()}>
-            <Text style={styles.backText}>Back</Text>
-          </Pressable>
+          <IconButton icon="arrow-back" label="Back" onPress={() => router.back()} />
           {selected && proteinState && (
-            <Pressable
-              style={styles.nextBtn}
+            <BarButton
+              title="Next"
+              icon="arrow-forward"
+              kind="action"
+              style={{ flex: 1 }}
               onPress={() =>
                 router.push({
                   pathname: "/docking/cook",
-                  params: {
-                    proteinState,
-                    ligandCid: String(selected.cid),
-                    ligandName: selected.name,
-                  },
+                  params: { proteinState, ligandCid: String(selected.cid), ligandName: selected.name },
                 })
               }
-            >
-              <Text style={styles.nextText}>Next</Text>
-            </Pressable>
+            />
           )}
         </View>
-      </View>
+      </BottomBar>
     </SafeAreaView>
   );
 }
 
 const styles = StyleSheet.create({
-  safe: { flex: 1, backgroundColor: "#000" },
-  scroll: { flex: 1 },
-  content: {
-    paddingHorizontal: 24,
-    paddingTop: 8,
-    paddingBottom: 24,
-    maxWidth: 600,
-    alignSelf: "center",
-    width: "100%",
-  },
-  heading: {
-    fontSize: 32,
-    fontWeight: "200",
-    color: "#fff",
-    textAlign: "center",
-    marginBottom: 4,
-  },
-  sub: {
-    fontSize: 11,
-    color: "#6b7280",
-    textAlign: "center",
-    marginBottom: 24,
-  },
-  input: {
-    backgroundColor: "rgba(255,255,255,0.05)",
-    borderWidth: 1,
-    borderColor: "rgba(255,255,255,0.1)",
-    borderRadius: 12,
-    paddingHorizontal: 16,
-    paddingVertical: 14,
-    fontSize: 14,
-    color: "#fff",
-  },
-  error: {
-    color: "#f87171",
-    fontSize: 12,
-    textAlign: "center",
-    marginTop: 12,
-  },
-  list: {
-    marginTop: 12,
-    borderWidth: 1,
-    borderColor: "rgba(255,255,255,0.1)",
-    borderRadius: 12,
-    overflow: "hidden",
-  },
-  listItem: {
-    paddingHorizontal: 16,
-    paddingVertical: 14,
-    borderBottomWidth: 1,
-    borderBottomColor: "rgba(255,255,255,0.05)",
-  },
-  molName: {
-    color: "#fff",
-    fontSize: 14,
-  },
-  molMeta: {
-    color: "#6b7280",
-    fontSize: 11,
-    marginTop: 2,
-  },
-  imageCard: {
-    backgroundColor: "#fff",
-    borderRadius: 16,
-    padding: 16,
-    alignItems: "center",
-    marginBottom: 12,
-  },
-  molImage: {
-    width: 260,
-    height: 260,
-  },
-  detailCard: {
-    borderWidth: 1,
-    borderColor: "rgba(255,255,255,0.1)",
-    borderRadius: 16,
-    padding: 20,
-    marginBottom: 12,
-  },
-  detailRow: {
-    flexDirection: "row",
-    gap: 16,
-    marginBottom: 12,
-  },
-  detailCol: {
-    flex: 1,
-  },
-  detailLabel: {
-    color: "#6b7280",
-    fontSize: 11,
-  },
-  detailValue: {
-    color: "#fff",
-    fontSize: 14,
-    marginTop: 2,
-  },
-  smilesBox: {
-    backgroundColor: "rgba(255,255,255,0.05)",
-    borderRadius: 8,
-    padding: 8,
-    marginTop: 4,
-  },
-  smilesText: {
-    color: "#fff",
-    fontSize: 10,
-    fontFamily: "monospace",
-  },
-  searchAgain: {
-    color: "#6b7280",
-    fontSize: 12,
-    textAlign: "center",
-  },
-  bottomBar: {
-    flexDirection: "row",
-    justifyContent: "space-between",
-    alignItems: "center",
-    paddingHorizontal: 24,
-    paddingVertical: 16,
-    borderTopWidth: 1,
-    borderTopColor: "rgba(255,255,255,0.05)",
-  },
-  actions: {
-    flexDirection: "row",
-    alignItems: "center",
-    gap: 12,
-  },
-  backText: {
-    color: "#6b7280",
-    fontSize: 12,
-  },
-  nextBtn: {
-    backgroundColor: "#fff",
-    paddingHorizontal: 20,
-    paddingVertical: 10,
-    borderRadius: 50,
-  },
-  nextText: {
-    color: "#000",
-    fontSize: 12,
-    fontWeight: "500",
-  },
+  safe: { flex: 1, backgroundColor: palette.ground },
+  content: { padding: space.m, paddingBottom: space.xl, maxWidth: maxContent, alignSelf: "center", width: "100%" },
+  list: { borderWidth: rule.regular, borderColor: palette.ink },
+  listItem: { flexDirection: "row", alignItems: "center", gap: 12, paddingHorizontal: 12, paddingVertical: 12 },
+  listRule: { borderTopWidth: rule.thin, borderTopColor: palette.ink },
+  imageCard: { borderWidth: rule.regular, borderColor: palette.ink, backgroundColor: palette.ground, padding: space.m, alignItems: "center" },
+  molImage: { width: 240, height: 240 },
+  smilesBox: { backgroundColor: palette.groundSoft, padding: space.s, borderWidth: rule.thin, borderColor: palette.ink },
+  actions: { flexDirection: "row", gap: space.s, flex: 1, maxWidth: 240, justifyContent: "flex-end" },
 });

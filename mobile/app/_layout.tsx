@@ -1,27 +1,39 @@
+import { useEffect } from "react";
 import { Stack } from "expo-router";
 import { StatusBar } from "expo-status-bar";
+import { useFonts } from "expo-font";
+import * as SplashScreen from "expo-splash-screen";
 import { AccountProvider } from "@/lib/AccountContext";
+import { Header } from "@/components/Bauhaus";
+import { fontFiles, palette } from "@/lib/theme";
+
+SplashScreen.preventAutoHideAsync().catch(() => {});
 
 export default function RootLayout() {
+  const [loaded, failed] = useFonts(fontFiles);
+
+  useEffect(() => {
+    if (loaded || failed) SplashScreen.hideAsync().catch(() => {});
+  }, [loaded, failed]);
+
+  if (!loaded && !failed) return null;
+
   return (
     <AccountProvider>
-      <StatusBar style="light" />
+      <StatusBar style="dark" />
       <Stack
         screenOptions={{
-          headerStyle: { backgroundColor: "#000" },
-          headerTintColor: "#fff",
-          headerTitleStyle: { fontSize: 14, fontWeight: "300" },
-          headerBackTitle: "Back",
-          contentStyle: { backgroundColor: "#000" },
+          header: ({ navigation, options, back }) => (
+            <Header
+              title={typeof options.headerTitle === "string" ? options.headerTitle : ""}
+              canGoBack={!!back}
+              onBack={() => navigation.goBack()}
+            />
+          ),
+          contentStyle: { backgroundColor: palette.ground },
         }}
       >
-        <Stack.Screen
-          name="index"
-          options={{
-            headerTitle: "",
-            headerTransparent: true,
-          }}
-        />
+        <Stack.Screen name="index" options={{ headerShown: false }} />
         <Stack.Screen name="examples" options={{ headerTitle: "Examples" }} />
         <Stack.Screen name="docking/protein" options={{ headerTitle: "Protein" }} />
         <Stack.Screen name="docking/marinate" options={{ headerTitle: "Prepare" }} />

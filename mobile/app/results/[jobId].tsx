@@ -1,19 +1,14 @@
 import { useState, useEffect } from "react";
-import {
-  View,
-  Text,
-  Pressable,
-  ScrollView,
-  StyleSheet,
-  Alert,
-} from "react-native";
+import { View, Text, ScrollView, StyleSheet } from "react-native";
 import { useLocalSearchParams, useRouter } from "expo-router";
 import { SafeAreaView } from "react-native-safe-area-context";
 import * as WebBrowser from "expo-web-browser";
 import Spinner from "@/components/Spinner";
 import ProteinViewer from "@/components/ProteinViewer";
+import { BarButton, Message, ScreenHeading, SectionTitle, TextLink } from "@/components/Bauhaus";
 import { getResults, getDownloadUrl } from "@/lib/api";
 import { maybeRequestReview } from "@/lib/rateApp";
+import { palette, type, space, rule, fonts, maxContent } from "@/lib/theme";
 
 interface Pose {
   model: number;
@@ -52,30 +47,19 @@ export default function Results() {
 
   if (loading) {
     return (
-      <SafeAreaView style={styles.safe} edges={["bottom"]}>
-        <View style={styles.center}>
-          <Spinner />
-        </View>
+      <SafeAreaView style={[styles.safe, styles.center]} edges={["bottom"]}>
+        <Spinner label="Loading results..." />
       </SafeAreaView>
     );
   }
 
   if (error) {
     return (
-      <SafeAreaView style={styles.safe} edges={["bottom"]}>
-        <View style={styles.center}>
-          <Text style={styles.heading}>Results</Text>
-          <Text style={styles.error}>{error}</Text>
-          <Pressable
-            onPress={() =>
-              router.push({
-                pathname: "/dashboard",
-                params: { jobId },
-              })
-            }
-          >
-            <Text style={styles.link}>Back to Dashboard</Text>
-          </Pressable>
+      <SafeAreaView style={styles.safe} edges={["bottom", "left", "right"]}>
+        <View style={styles.content}>
+          <ScreenHeading title="Results" />
+          <Message kind="error" text={error} />
+          <TextLink title="Back to dashboard" icon="arrow-back" onPress={() => router.push({ pathname: "/dashboard", params: { jobId } })} />
         </View>
       </SafeAreaView>
     );
@@ -84,93 +68,65 @@ export default function Results() {
   if (!results) return null;
 
   return (
-    <SafeAreaView style={styles.safe} edges={["bottom"]}>
+    <SafeAreaView style={styles.safe} edges={["bottom", "left", "right"]}>
       <ScrollView contentContainerStyle={styles.content}>
-        <Text style={styles.heading}>Results</Text>
-        <Text style={styles.sub}>
-          {results.protein_pdb_id?.toUpperCase()} + {results.ligand_name}
-        </Text>
-
-        {/* 3D viewer with docked ligand */}
-        <View style={{ marginBottom: 16 }}>
-          <ProteinViewer
-            pdbId={results.protein_pdb_id}
-            ligandPdb={results.docked_pdb}
-            height={380}
-          />
-          <Text style={styles.viewerHint}>
-            Protein (rainbow) + docked ligand (green)
-          </Text>
-        </View>
+        <ScreenHeading
+          eyebrow="Docking results"
+          title={`${results.protein_pdb_id?.toUpperCase()} + ${results.ligand_name}`}
+        />
 
         {/* Best affinity */}
-        <View style={styles.affinityCard}>
-          <Text style={styles.affinityNum}>
-            {results.best_affinity} kcal/mol
+        <View style={styles.affinity}>
+          <View style={styles.affinityFill}>
+            <Text style={[type.label, { color: palette.ground }]}>Best binding affinity</Text>
+            <Text style={styles.affinityNum} numberOfLines={1} adjustsFontSizeToFit>
+              {results.best_affinity}
+            </Text>
+          </View>
+          <View style={styles.affinityUnit}>
+            <Text style={styles.unit}>kcal</Text>
+            <Text style={styles.unit}>/mol</Text>
+          </View>
+        </View>
+
+        {/* 3D viewer with docked ligand */}
+        <View style={{ marginBottom: space.l }}>
+          <ProteinViewer pdbId={results.protein_pdb_id} ligandPdb={results.docked_pdb} height={380} />
+          <Text style={[type.caption, { textAlign: "center", marginTop: 6 }]}>
+            Protein in rainbow cartoon, docked ligand in green
           </Text>
-          <Text style={styles.affinityLabel}>Best binding affinity</Text>
         </View>
 
         {/* Poses table */}
         {results.poses?.length > 0 && (
-          <View style={styles.tableCard}>
-            <View style={styles.tableHeader}>
-              <Text style={styles.tableHeaderText}>Pose</Text>
-              <Text style={styles.tableHeaderText}>Affinity (kcal/mol)</Text>
-            </View>
-            {results.poses.map((pose: Pose, i: number) => (
-              <View key={pose.model} style={styles.tableRow}>
-                <View style={styles.poseLabel}>
-                  <Text style={[styles.cellText, { fontFamily: "monospace" }]}>
-                    Model {pose.model}
-                  </Text>
+          <View style={{ marginBottom: space.l }}>
+            <SectionTitle title="Poses" accessory={<Text style={type.label}>kcal/mol</Text>} />
+            <View style={styles.table}>
+              {results.poses.map((pose: Pose, i: number) => (
+                <View key={pose.model} style={[styles.tableRow, i > 0 && styles.tableRule]}>
+                  <Text style={styles.cell}>Model {pose.model}</Text>
                   {i === 0 && (
                     <View style={styles.bestBadge}>
                       <Text style={styles.bestText}>BEST</Text>
                     </View>
                   )}
+                  <Text style={[styles.cellNum, i === 0 && { fontFamily: fonts.bold }]}>{pose.affinity}</Text>
                 </View>
-                <Text
-                  style={[styles.cellText, i === 0 && { color: "#4ade80" }]}
-                >
-                  {pose.affinity}
-                </Text>
-              </View>
-            ))}
+              ))}
+            </View>
           </View>
         )}
 
         {/* Downloads */}
+        <SectionTitle title="Download" />
         <View style={styles.downloadRow}>
-          <Pressable
-            style={styles.downloadPrimary}
-            onPress={() => handleDownload("pdb")}
-          >
-            <Text style={styles.downloadPrimaryText}>Download PDB</Text>
-          </Pressable>
-          <Pressable
-            style={styles.downloadSecondary}
-            onPress={() => handleDownload("pdbqt")}
-          >
-            <Text style={styles.downloadSecondaryText}>Download PDBQT</Text>
-          </Pressable>
+          <BarButton title="PDB" icon="download-outline" kind="action" style={{ flex: 1 }} onPress={() => handleDownload("pdb")} />
+          <BarButton title="PDBQT" icon="download-outline" kind="secondary" style={{ flex: 1 }} onPress={() => handleDownload("pdbqt")} />
         </View>
 
-        {/* Nav links */}
         <View style={styles.navRow}>
-          <Pressable
-            onPress={() =>
-              router.push({
-                pathname: "/dashboard",
-                params: { jobId },
-              })
-            }
-          >
-            <Text style={styles.link}>Dashboard</Text>
-          </Pressable>
-          <Pressable onPress={() => router.push("/docking/protein")}>
-            <Text style={styles.link}>New Docking</Text>
-          </Pressable>
+          <TextLink title="Dashboard" icon="pulse" onPress={() => router.push({ pathname: "/dashboard", params: { jobId } })} />
+          <TextLink title="New docking" icon="add" onPress={() => router.push("/docking/protein")} />
         </View>
       </ScrollView>
     </SafeAreaView>
@@ -178,148 +134,27 @@ export default function Results() {
 }
 
 const styles = StyleSheet.create({
-  safe: { flex: 1, backgroundColor: "#000" },
-  center: {
-    flex: 1,
-    alignItems: "center",
+  safe: { flex: 1, backgroundColor: palette.ground },
+  center: { alignItems: "center", justifyContent: "center" },
+  content: { padding: space.m, paddingBottom: space.xl, maxWidth: maxContent + 40, alignSelf: "center", width: "100%" },
+  affinity: { flexDirection: "row", borderWidth: rule.regular, borderColor: palette.ink, marginBottom: space.m },
+  affinityFill: { flex: 1, backgroundColor: palette.blue, padding: 12 },
+  affinityNum: { fontFamily: fonts.bold, fontSize: 44, lineHeight: 50, color: palette.ground },
+  affinityUnit: {
     justifyContent: "center",
-    paddingHorizontal: 24,
+    paddingHorizontal: space.m,
+    borderLeftWidth: rule.regular,
+    borderLeftColor: palette.ink,
+    backgroundColor: palette.ground,
   },
-  content: {
-    paddingHorizontal: 24,
-    paddingTop: 8,
-    paddingBottom: 32,
-    maxWidth: 700,
-    alignSelf: "center",
-    width: "100%",
-  },
-  heading: {
-    fontSize: 32,
-    fontWeight: "200",
-    color: "#fff",
-    textAlign: "center",
-    marginBottom: 4,
-  },
-  sub: {
-    fontSize: 11,
-    color: "#6b7280",
-    textAlign: "center",
-    marginBottom: 20,
-  },
-  viewerHint: {
-    color: "#4b5563",
-    fontSize: 10,
-    textAlign: "center",
-    marginTop: 6,
-  },
-  affinityCard: {
-    borderWidth: 1,
-    borderColor: "rgba(255,255,255,0.1)",
-    borderRadius: 16,
-    padding: 24,
-    alignItems: "center",
-    marginBottom: 12,
-  },
-  affinityNum: {
-    fontSize: 28,
-    fontWeight: "300",
-    color: "#4ade80",
-  },
-  affinityLabel: {
-    fontSize: 10,
-    color: "#6b7280",
-    marginTop: 4,
-  },
-  tableCard: {
-    borderWidth: 1,
-    borderColor: "rgba(255,255,255,0.1)",
-    borderRadius: 16,
-    overflow: "hidden",
-    marginBottom: 12,
-  },
-  tableHeader: {
-    flexDirection: "row",
-    justifyContent: "space-between",
-    paddingHorizontal: 16,
-    paddingVertical: 10,
-    borderBottomWidth: 1,
-    borderBottomColor: "rgba(255,255,255,0.05)",
-  },
-  tableHeaderText: {
-    color: "#6b7280",
-    fontSize: 11,
-  },
-  tableRow: {
-    flexDirection: "row",
-    justifyContent: "space-between",
-    alignItems: "center",
-    paddingHorizontal: 16,
-    paddingVertical: 10,
-    borderBottomWidth: 1,
-    borderBottomColor: "rgba(255,255,255,0.05)",
-  },
-  poseLabel: {
-    flexDirection: "row",
-    alignItems: "center",
-    gap: 8,
-  },
-  cellText: {
-    color: "#fff",
-    fontSize: 12,
-  },
-  bestBadge: {
-    backgroundColor: "rgba(74,222,128,0.2)",
-    paddingHorizontal: 6,
-    paddingVertical: 2,
-    borderRadius: 8,
-  },
-  bestText: {
-    color: "#4ade80",
-    fontSize: 9,
-    fontWeight: "600",
-  },
-  downloadRow: {
-    flexDirection: "row",
-    gap: 8,
-    marginBottom: 20,
-  },
-  downloadPrimary: {
-    flex: 1,
-    backgroundColor: "#fff",
-    paddingVertical: 12,
-    borderRadius: 50,
-    alignItems: "center",
-  },
-  downloadPrimaryText: {
-    color: "#000",
-    fontSize: 12,
-    fontWeight: "500",
-  },
-  downloadSecondary: {
-    flex: 1,
-    backgroundColor: "rgba(255,255,255,0.1)",
-    paddingVertical: 12,
-    borderRadius: 50,
-    alignItems: "center",
-  },
-  downloadSecondaryText: {
-    color: "#fff",
-    fontSize: 12,
-    fontWeight: "500",
-  },
-  navRow: {
-    flexDirection: "row",
-    justifyContent: "center",
-    gap: 24,
-  },
-  link: {
-    color: "#6b7280",
-    fontSize: 12,
-  },
-  error: {
-    color: "#f87171",
-    fontSize: 12,
-    textAlign: "center",
-    marginTop: 8,
-  },
+  unit: { fontFamily: fonts.semibold, fontSize: 18, color: palette.ink },
+  table: { borderWidth: rule.regular, borderColor: palette.ink },
+  tableRow: { flexDirection: "row", alignItems: "center", gap: space.s, paddingHorizontal: 12, minHeight: 44 },
+  tableRule: { borderTopWidth: rule.thin, borderTopColor: palette.ink },
+  cell: { fontFamily: fonts.medium, fontSize: 15, color: palette.ink },
+  cellNum: { flex: 1, textAlign: "right", fontFamily: fonts.medium, fontSize: 16, color: palette.ink },
+  bestBadge: { backgroundColor: palette.yellow, borderWidth: rule.regular, borderColor: palette.ink, paddingHorizontal: 6, paddingVertical: 1 },
+  bestText: { fontFamily: fonts.bold, fontSize: 11, letterSpacing: 1, color: palette.ink },
+  downloadRow: { flexDirection: "row", gap: space.s, marginBottom: space.l },
+  navRow: { flexDirection: "row", justifyContent: "center", gap: space.l },
 });

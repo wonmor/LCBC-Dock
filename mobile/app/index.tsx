@@ -1,26 +1,24 @@
 import { useState, useEffect, useMemo } from "react";
-import {
-  View,
-  Text,
-  TextInput,
-  Pressable,
-  ScrollView,
-  Image,
-  StyleSheet,
-} from "react-native";
+import { View, Text, Pressable, ScrollView, Image, StyleSheet } from "react-native";
 import { useRouter } from "expo-router";
 import { SafeAreaView } from "react-native-safe-area-context";
-import { getStats, getMoleculeImageUrl, type Stats } from "@/lib/api";
+import { Ionicons } from "@expo/vector-icons";
+import { getStats, type Stats } from "@/lib/api";
 import { useIsWide } from "@/lib/useLayout";
-
-interface Example {
-  protein: string;
-  proteinName: string;
-  ligandCid: number;
-  ligandName: string;
-  category: string;
-  description: string;
-}
+import { useAccount } from "@/lib/AccountContext";
+import { isPaid } from "@/lib/account";
+import ExampleCard, { type Example } from "@/components/ExampleCard";
+import {
+  BarButton,
+  BoxedInput,
+  GlyphTile,
+  Rule,
+  SectionTitle,
+  Stat,
+  TagButton,
+  type IconName,
+} from "@/components/Bauhaus";
+import { palette, type, space, rule, fonts, maxContent } from "@/lib/theme";
 
 const EXAMPLES: Example[] = [
   { protein: "1IEP", proteinName: "BCR-ABL Kinase", ligandCid: 5291, ligandName: "Imatinib", category: "Cancer", description: "First targeted tyrosine kinase inhibitor for CML." },
@@ -46,6 +44,7 @@ const CATEGORIES = ["All", ...Array.from(new Set(EXAMPLES.map((e) => e.category)
 export default function Home() {
   const router = useRouter();
   const isWide = useIsWide();
+  const { account } = useAccount();
   const [stats, setStats] = useState<Stats | null>(null);
   const [search, setSearch] = useState("");
   const [category, setCategory] = useState("All");
@@ -69,159 +68,126 @@ export default function Home() {
     });
   }, [search, category]);
 
+  const paid = isPaid(account);
+  const nav: { icon: IconName; title: string; detail: string; fill: string; href: "/dashboard" | "/pro" | "/account" | "/about" }[] = [
+    { icon: "pulse", title: "Dashboard", detail: "Track a docking job", fill: palette.blue, href: "/dashboard" },
+    {
+      icon: "star",
+      title: "MolDock Pro",
+      detail: paid ? "Your plan is active" : "Screening, private jobs, higher limits",
+      fill: palette.red,
+      href: "/pro",
+    },
+    { icon: "person", title: "Account", detail: account?.email ?? "Sign in with email", fill: palette.ink, href: "/account" },
+    { icon: "information", title: "About", detail: "Docking, data sources, contact", fill: palette.ground, href: "/about" },
+  ];
+
   return (
-    <SafeAreaView style={styles.safe}>
-      <ScrollView
-        style={styles.scroll}
-        contentContainerStyle={styles.content}
-        keyboardShouldPersistTaps="handled"
-      >
-        {/* Hero */}
-        <Text style={styles.title}>
-          Dock<Text style={styles.titleBold}>It</Text>
-        </Text>
-        <Text style={styles.subtitle}>
-          Molecular docking on the go.{"\n"}Powered by AutoDock Vina.
+    <SafeAreaView style={styles.safe} edges={["top", "left", "right"]}>
+      <ScrollView style={styles.scroll} contentContainerStyle={styles.content} keyboardShouldPersistTaps="handled">
+        {/* Masthead */}
+        <View style={styles.masthead}>
+          <Image source={require("../assets/brand-mark.png")} style={styles.mark} accessibilityIgnoresInvertColors />
+          <View style={{ flex: 1 }}>
+            <Text style={type.display} accessibilityRole="header">
+              MolDock
+            </Text>
+            <Text style={type.label}>Protein-ligand docking</Text>
+          </View>
+          <Pressable
+            onPress={() => router.push("/account")}
+            accessibilityRole="button"
+            accessibilityLabel="Account"
+            hitSlop={8}
+            style={styles.accountBtn}
+          >
+            <Ionicons name="person-circle-outline" size={28} color={palette.ink} />
+          </Pressable>
+        </View>
+        <Rule thickness={rule.heavy} />
+        <Text style={[type.body, styles.lede]}>
+          Pick a protein and a molecule. AutoDock Vina docks them on our server, then you explore the pose in 3D.
         </Text>
 
-        {/* Live stats */}
+        {/* Live server stats */}
         {stats && (
           <View style={styles.statsGrid}>
-            <View style={styles.statCard}>
-              <Text style={styles.statNum}>{stats.total_jobs}</Text>
-              <Text style={styles.statLabel}>Total Jobs</Text>
-            </View>
-            <View style={styles.statCard}>
-              <Text style={styles.statNum}>{stats.completed_jobs}</Text>
-              <Text style={styles.statLabel}>Completed</Text>
-            </View>
-            <View style={styles.statCard}>
-              <Text style={[styles.statNum, { color: "#facc15" }]}>
-                {stats.queue_length + stats.active_jobs}
-              </Text>
-              <Text style={styles.statLabel}>In Queue</Text>
-            </View>
-            <View style={styles.statCard}>
-              <Text style={styles.statNum}>
-                {stats.est_wait_minutes === 0 ? "<1" : `~${stats.est_wait_minutes}`}
-              </Text>
-              <Text style={styles.statLabel}>Est. Wait (min)</Text>
-            </View>
+            <Stat value={stats.total_jobs} label="Total jobs" />
+            <Stat value={stats.completed_jobs} label="Completed" />
+            <Stat value={stats.queue_length + stats.active_jobs} label="In queue" fill={palette.yellow} />
+            <Stat value={stats.est_wait_minutes === 0 ? "<1" : `~${stats.est_wait_minutes}`} label="Wait (min)" />
           </View>
         )}
 
-        {/* Section header */}
-        <View style={styles.sectionHeader}>
-          <Text style={styles.sectionTitle}>Famous Dockings</Text>
-          <Pressable
-            style={styles.customBtn}
-            onPress={() => router.push("/docking/protein")}
-          >
-            <Text style={styles.customBtnText}>Custom Docking</Text>
-          </Pressable>
-        </View>
-
-        {/* Search */}
-        <TextInput
-          style={styles.input}
-          value={search}
-          onChangeText={setSearch}
-          placeholder="Search examples (e.g. cancer, aspirin...)"
-          placeholderTextColor="#4b5563"
-          autoCapitalize="none"
-          autoCorrect={false}
+        <BarButton
+          title="Custom docking"
+          icon="add"
+          kind="action"
+          onPress={() => router.push("/docking/protein")}
+          style={{ marginBottom: space.xl }}
         />
 
-        {/* Category pills */}
-        <ScrollView
-          horizontal
-          showsHorizontalScrollIndicator={false}
-          contentContainerStyle={styles.pills}
-        >
+        <SectionTitle title="Famous dockings" accessory={<Text style={type.label}>{filtered.length} of {EXAMPLES.length}</Text>} />
+
+        <BoxedInput
+          icon="search"
+          value={search}
+          onChangeText={setSearch}
+          placeholder="Search drugs, targets, diseases"
+          autoCapitalize="none"
+          autoCorrect={false}
+          clearButtonMode="while-editing"
+        />
+
+        <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={styles.pills} style={styles.pillScroll}>
           {CATEGORIES.map((cat) => (
-            <Pressable
-              key={cat}
-              style={[
-                styles.pill,
-                category === cat ? styles.pillActive : styles.pillInactive,
-              ]}
-              onPress={() => setCategory(cat)}
-            >
-              <Text
-                style={[
-                  styles.pillText,
-                  category === cat ? styles.pillTextActive : styles.pillTextInactive,
-                ]}
-              >
-                {cat}
-              </Text>
-            </Pressable>
+            <TagButton key={cat} title={cat} selected={category === cat} onPress={() => setCategory(cat)} />
           ))}
         </ScrollView>
 
-        {/* Example cards */}
-        <View style={isWide ? styles.gridWide : undefined}>
-        {filtered.map((ex) => (
-          <Pressable
-            key={`${ex.protein}-${ex.ligandCid}`}
-            style={[styles.exCard, isWide && styles.exCardWide]}
-            onPress={() =>
-              router.push({
-                pathname: "/docking/cook",
-                params: {
-                  proteinState: ex.protein,
-                  ligandCid: String(ex.ligandCid),
-                  ligandName: ex.ligandName,
-                },
-              })
-            }
-          >
-            <Image
-              source={{ uri: getMoleculeImageUrl(ex.ligandCid) }}
-              style={styles.thumb}
-              resizeMode="contain"
+        <View style={[styles.list, isWide && styles.gridWide]}>
+          {filtered.map((ex) => (
+            <ExampleCard
+              key={`${ex.protein}-${ex.ligandCid}`}
+              ex={ex}
+              style={isWide ? styles.exCardWide : undefined}
+              onPress={() =>
+                router.push({
+                  pathname: "/docking/cook",
+                  params: { proteinState: ex.protein, ligandCid: String(ex.ligandCid), ligandName: ex.ligandName },
+                })
+              }
             />
-            <View style={styles.exInfo}>
-              <View style={styles.exTitleRow}>
-                <Text style={styles.exName}>{ex.ligandName}</Text>
-                <View style={styles.catBadge}>
-                  <Text style={styles.catText}>{ex.category}</Text>
+          ))}
+        </View>
+
+        {filtered.length === 0 && <Text style={[type.caption, styles.empty]}>No examples match your search.</Text>}
+
+        <View style={{ marginTop: space.xl }}>
+          <SectionTitle title="More" />
+          <View style={[styles.navGrid, isWide && styles.gridWide]}>
+            {nav.map((n) => (
+              <Pressable
+                key={n.title}
+                onPress={() => router.push(n.href)}
+                accessibilityRole="button"
+                style={({ pressed }) => [styles.navRow, isWide && styles.exCardWide, pressed && { backgroundColor: palette.groundSoft }]}
+              >
+                <GlyphTile icon={n.icon} fill={n.fill} size={40} />
+                <View style={{ flex: 1 }}>
+                  <Text style={type.bodyBold}>{n.title}</Text>
+                  <Text style={type.caption} numberOfLines={1}>
+                    {n.detail}
+                  </Text>
                 </View>
-              </View>
-              <Text style={styles.exMeta} numberOfLines={1}>
-                {ex.protein} | {ex.proteinName}
-              </Text>
-              <Text style={styles.exDesc} numberOfLines={1}>
-                {ex.description}
-              </Text>
-            </View>
-          </Pressable>
-        ))}
-
+                <Ionicons name="chevron-forward" size={20} color={palette.ink} />
+              </Pressable>
+            ))}
+          </View>
         </View>
 
-        {filtered.length === 0 && (
-          <Text style={styles.empty}>No examples match your search.</Text>
-        )}
-
-        {/* Nav links */}
-        <View style={styles.navRow}>
-          <Pressable onPress={() => router.push("/dashboard")}>
-            <Text style={styles.navLink}>Dashboard</Text>
-          </Pressable>
-          <Pressable onPress={() => router.push("/pro")}>
-            <Text style={styles.navLink}>Pro</Text>
-          </Pressable>
-          <Pressable onPress={() => router.push("/account")}>
-            <Text style={styles.navLink}>Account</Text>
-          </Pressable>
-          <Pressable onPress={() => router.push("/about")}>
-            <Text style={styles.navLink}>About</Text>
-          </Pressable>
-        </View>
-
-        <Text style={styles.footer}>
-          Built by John Wonmo Seong | UC Irvine × Seoul National University
+        <Text style={[type.caption, styles.footer]}>
+          Built by John Wonmo Seong | UC Irvine and Seoul National University
         </Text>
       </ScrollView>
     </SafeAreaView>
@@ -229,167 +195,36 @@ export default function Home() {
 }
 
 const styles = StyleSheet.create({
-  safe: { flex: 1, backgroundColor: "#000" },
+  safe: { flex: 1, backgroundColor: palette.ground },
   scroll: { flex: 1 },
   content: {
-    paddingHorizontal: 24,
-    paddingTop: 60,
-    paddingBottom: 32,
-    maxWidth: 800,
+    paddingHorizontal: space.m,
+    paddingTop: space.m,
+    paddingBottom: space.xl + space.m,
+    maxWidth: maxContent + 120,
     alignSelf: "center",
     width: "100%",
   },
-  title: {
-    fontSize: 48,
-    fontWeight: "200",
-    color: "#fff",
-    letterSpacing: 2,
-    textAlign: "center",
-    marginBottom: 8,
-  },
-  titleBold: { fontWeight: "600" },
-  subtitle: {
-    color: "#9ca3af",
-    fontSize: 15,
-    textAlign: "center",
-    lineHeight: 22,
-    marginBottom: 24,
-  },
-  statsGrid: {
-    flexDirection: "row",
-    flexWrap: "wrap",
-    gap: 8,
-    marginBottom: 24,
-  },
-  statCard: {
-    flex: 1,
-    minWidth: "45%",
-    borderWidth: 1,
-    borderColor: "rgba(255,255,255,0.1)",
-    borderRadius: 16,
-    padding: 14,
-    alignItems: "center",
-  },
-  statNum: {
-    fontSize: 22,
-    fontWeight: "300",
-    color: "#fff",
-  },
-  statLabel: {
-    fontSize: 10,
-    color: "#6b7280",
-    marginTop: 2,
-  },
-  sectionHeader: {
-    flexDirection: "row",
-    justifyContent: "space-between",
-    alignItems: "center",
-    marginBottom: 12,
-  },
-  sectionTitle: {
-    color: "#fff",
-    fontSize: 17,
-    fontWeight: "300",
-  },
-  customBtn: {
-    backgroundColor: "rgba(255,255,255,0.1)",
-    paddingHorizontal: 16,
-    paddingVertical: 8,
-    borderRadius: 50,
-  },
-  customBtnText: {
-    color: "#fff",
-    fontSize: 12,
-    fontWeight: "500",
-  },
-  input: {
-    backgroundColor: "rgba(255,255,255,0.05)",
-    borderWidth: 1,
-    borderColor: "rgba(255,255,255,0.1)",
-    borderRadius: 12,
-    paddingHorizontal: 16,
-    paddingVertical: 14,
-    fontSize: 14,
-    color: "#fff",
-    marginBottom: 10,
-  },
-  pills: {
-    flexDirection: "row",
-    gap: 8,
-    paddingBottom: 12,
-  },
-  pill: {
-    paddingHorizontal: 14,
-    paddingVertical: 6,
-    borderRadius: 50,
-  },
-  pillActive: { backgroundColor: "#fff" },
-  pillInactive: { backgroundColor: "rgba(255,255,255,0.05)" },
-  pillText: { fontSize: 11 },
-  pillTextActive: { color: "#000" },
-  pillTextInactive: { color: "#9ca3af" },
-  exCard: {
+  masthead: { flexDirection: "row", alignItems: "center", gap: 12, marginBottom: 12 },
+  mark: { width: 56, height: 56, borderWidth: rule.regular, borderColor: palette.ink },
+  accountBtn: { width: 44, height: 44, alignItems: "center", justifyContent: "center" },
+  lede: { marginTop: space.m, marginBottom: space.l },
+  statsGrid: { flexDirection: "row", flexWrap: "wrap", gap: space.s, marginBottom: space.l },
+  pills: { flexDirection: "row", gap: space.s },
+  pillScroll: { marginTop: 12, marginBottom: space.m, flexGrow: 0 },
+  list: { gap: space.s },
+  gridWide: { flexDirection: "row", flexWrap: "wrap", gap: space.s },
+  exCardWide: { width: "49.3%" },
+  empty: { textAlign: "center", paddingVertical: space.l },
+  navGrid: { gap: space.s },
+  navRow: {
     flexDirection: "row",
     alignItems: "center",
     gap: 12,
-    borderWidth: 1,
-    borderColor: "rgba(255,255,255,0.1)",
-    borderRadius: 16,
+    borderWidth: rule.regular,
+    borderColor: palette.ink,
     padding: 12,
-    marginBottom: 8,
+    backgroundColor: palette.ground,
   },
-  thumb: {
-    width: 44,
-    height: 44,
-    borderRadius: 10,
-    backgroundColor: "#fff",
-  },
-  exInfo: { flex: 1 },
-  exTitleRow: {
-    flexDirection: "row",
-    alignItems: "center",
-    gap: 6,
-    marginBottom: 2,
-  },
-  exName: {
-    color: "#fff",
-    fontSize: 14,
-    fontWeight: "500",
-  },
-  catBadge: {
-    backgroundColor: "rgba(255,255,255,0.05)",
-    paddingHorizontal: 6,
-    paddingVertical: 1,
-    borderRadius: 50,
-  },
-  catText: { color: "#9ca3af", fontSize: 9 },
-  exMeta: { color: "#6b7280", fontSize: 11 },
-  exDesc: { color: "#4b5563", fontSize: 11 },
-  gridWide: {
-    flexDirection: "row",
-    flexWrap: "wrap",
-    gap: 8,
-  },
-  exCardWide: {
-    width: "48.5%",
-  },
-  empty: {
-    color: "#6b7280",
-    fontSize: 12,
-    textAlign: "center",
-    paddingVertical: 24,
-  },
-  navRow: {
-    flexDirection: "row",
-    justifyContent: "center",
-    gap: 24,
-    marginTop: 20,
-    marginBottom: 12,
-  },
-  navLink: { color: "#9ca3af", fontSize: 13 },
-  footer: {
-    color: "#4b5563",
-    fontSize: 11,
-    textAlign: "center",
-  },
+  footer: { textAlign: "center", marginTop: space.xl, fontFamily: fonts.regular },
 });

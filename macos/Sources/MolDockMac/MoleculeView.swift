@@ -131,7 +131,7 @@ struct MoleculeView: NSViewRepresentable {
         let ligandCentre = centroid(heavyLigand) ?? centroid(protein.filter { $0.name == "CA" }) ?? .zero
 
         // Cα trace, one colour per chain.
-        let chainColours: [NSColor] = [.systemTeal, .systemIndigo, .systemPurple, .systemGreen, .systemOrange, .systemBlue]
+        let chainColours: [NSColor] = [.systemTeal, .systemBlue, .systemYellow, .systemGreen, .systemOrange, .systemRed]
         let trace = SCNNode()
         var chainIndex: [String: Int] = [:]
         var previous: Atom?

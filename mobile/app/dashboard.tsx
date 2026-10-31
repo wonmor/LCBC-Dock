@@ -1,9 +1,11 @@
 import { useState, useEffect, useRef } from "react";
-import { View, Text, TextInput, Pressable, StyleSheet } from "react-native";
+import { View, Text, ScrollView, ActivityIndicator, StyleSheet } from "react-native";
 import { useRouter, useLocalSearchParams } from "expo-router";
 import { SafeAreaView } from "react-native-safe-area-context";
 import Spinner from "@/components/Spinner";
+import { BarButton, BoxedInput, GlyphTile, KeyValue, Message, Panel, ScreenHeading } from "@/components/Bauhaus";
 import { getJobStatus } from "@/lib/api";
+import { palette, type, space, rule, fonts, maxContent } from "@/lib/theme";
 
 const statusLabel: Record<string, string> = {
   queued: "In Queue",
@@ -51,224 +53,100 @@ export default function Dashboard() {
 
   if (!jobId) {
     return (
-      <SafeAreaView style={styles.safe} edges={["bottom"]}>
-        <View style={styles.container}>
-          <Text style={styles.heading}>Dashboard</Text>
-          <TextInput
-            style={styles.input}
+      <SafeAreaView style={styles.safe} edges={["bottom", "left", "right"]}>
+        <ScrollView contentContainerStyle={styles.content} keyboardShouldPersistTaps="handled">
+          <ScreenHeading title="Track a job" subtitle="Paste the job ID from your confirmation email." />
+          <BoxedInput
+            icon="pricetag-outline"
             value={inputId}
             onChangeText={setInputId}
             onSubmitEditing={() => {
               if (inputId.trim()) setJobId(inputId.trim());
             }}
-            placeholder="Paste job ID..."
-            placeholderTextColor="#4b5563"
+            placeholder="Job ID"
             autoCapitalize="none"
             returnKeyType="go"
           />
-        </View>
+          <BarButton
+            title="Open job"
+            icon="arrow-forward"
+            kind="action"
+            disabled={!inputId.trim()}
+            onPress={() => setJobId(inputId.trim())}
+            style={{ marginTop: 12 }}
+          />
+        </ScrollView>
       </SafeAreaView>
     );
   }
 
-  return (
-    <SafeAreaView style={styles.safe} edges={["bottom"]}>
-      <View style={styles.container}>
-        <Text style={styles.heading}>Dashboard</Text>
-        <Text style={styles.jobIdText}>{jobId.slice(0, 8)}...</Text>
+  const running = job && job.status !== "completed" && job.status !== "failed";
+  const lines: string[] = job?.status_message ? job.status_message.split("\n").filter(Boolean) : [];
 
-        {error && <Text style={styles.error}>{error}</Text>}
+  return (
+    <SafeAreaView style={styles.safe} edges={["bottom", "left", "right"]}>
+      <ScrollView contentContainerStyle={styles.content}>
+        <ScreenHeading eyebrow={`Job ${jobId.slice(0, 8)}`} title={job ? `${job.protein_pdb_id?.toUpperCase()} + ${job.ligand_name}` : "Docking job"} />
+
+        {error && <Message kind="error" text={error} />}
         {!job && !error && <Spinner />}
 
         {job && (
-          <View style={styles.cardStack}>
+          <View style={{ gap: 12 }}>
             {/* Status */}
-            <View style={styles.card}>
-              {job.status === "completed" ? (
-                <Text style={styles.statusDone}>Complete</Text>
-              ) : job.status === "failed" ? (
-                <Text style={styles.statusFailed}>Failed</Text>
-              ) : (
-                <View style={{ alignItems: "center" }}>
-                  <Spinner label={statusLabel[job.status] || job.status} />
-                  {job.status_message ? (() => {
-                    const lines = job.status_message.split("\n").filter(Boolean);
-                    const current = lines[0] || "";
-                    const log = lines.slice(1);
-                    return (
-                      <View style={{ width: "100%", marginTop: 12 }}>
-                        <Text style={styles.statusCurrent}>{current}</Text>
-                        {log.length > 0 && (
-                          <View style={styles.logBox}>
-                            {log.map((line: string, i: number) => (
-                              <Text key={i} style={styles.logLine}>{line}</Text>
-                            ))}
-                          </View>
-                        )}
-                      </View>
-                    );
-                  })() : null}
+            {job.status === "completed" ? (
+              <Panel fill={palette.blue} style={styles.statusRow}>
+                <GlyphTile icon="checkmark" fill={palette.ground} />
+                <Text style={[styles.statusText, { color: palette.ground }]}>Complete</Text>
+              </Panel>
+            ) : job.status === "failed" ? (
+              <Message kind="error" text={job.error_message || "This docking job failed."} />
+            ) : (
+              <Panel fill={palette.yellow} style={{ gap: 10 }}>
+                <View style={styles.statusRow}>
+                  <ActivityIndicator color={palette.ink} />
+                  <Text style={styles.statusText}>{statusLabel[job.status] || job.status}</Text>
                 </View>
-              )}
-            </View>
-
-            {/* Details */}
-            <View style={styles.card}>
-              <View style={styles.detailRow}>
-                <Text style={styles.detailLabel}>Protein</Text>
-                <Text style={styles.detailValue}>
-                  {job.protein_pdb_id?.toUpperCase()}
-                </Text>
-              </View>
-              <View style={styles.detailRow}>
-                <Text style={styles.detailLabel}>Ligand</Text>
-                <Text style={styles.detailValue}>{job.ligand_name}</Text>
-              </View>
-              <View style={styles.detailRow}>
-                <Text style={styles.detailLabel}>Submitted</Text>
-                <Text style={styles.detailValue}>
-                  {new Date(job.created_at).toLocaleString()}
-                </Text>
-              </View>
-              {job.best_affinity != null && (
-                <View style={styles.detailRow}>
-                  <Text style={styles.detailLabel}>Best Affinity</Text>
-                  <Text style={styles.affinityValue}>
-                    {job.best_affinity} kcal/mol
+                {lines[0] ? <Text style={type.mono}>{lines[0]}</Text> : null}
+              </Panel>
+            )}
+            {running && lines.length > 1 && (
+              <View style={styles.logBox}>
+                {lines.slice(1).map((line, i) => (
+                  <Text key={i} style={[type.mono, { fontSize: 11, lineHeight: 17, color: palette.inkSecondary }]}>
+                    {line}
                   </Text>
-                </View>
-              )}
-            </View>
-
-            {job.status === "completed" && (
-              <Pressable
-                style={styles.viewBtn}
-                onPress={() =>
-                  router.push({
-                    pathname: "/results/[jobId]",
-                    params: { jobId },
-                  })
-                }
-              >
-                <Text style={styles.viewBtnText}>View Results</Text>
-              </Pressable>
+                ))}
+              </View>
             )}
 
-            {job.status === "failed" && job.error_message && (
-              <Text style={styles.error}>{job.error_message}</Text>
+            {/* Details */}
+            <Panel style={{ paddingVertical: 4 }}>
+              <KeyValue label="Protein" value={job.protein_pdb_id?.toUpperCase()} />
+              <KeyValue label="Ligand" value={job.ligand_name} />
+              <KeyValue label="Submitted" value={new Date(job.created_at).toLocaleString()} last={job.best_affinity == null} />
+              {job.best_affinity != null && <KeyValue label="Best affinity" value={`${job.best_affinity} kcal/mol`} last />}
+            </Panel>
+
+            {job.status === "completed" && (
+              <BarButton
+                title="View results"
+                icon="cube-outline"
+                kind="action"
+                onPress={() => router.push({ pathname: "/results/[jobId]", params: { jobId } })}
+              />
             )}
           </View>
         )}
-      </View>
+      </ScrollView>
     </SafeAreaView>
   );
 }
 
 const styles = StyleSheet.create({
-  safe: { flex: 1, backgroundColor: "#000" },
-  container: {
-    flex: 1,
-    paddingHorizontal: 24,
-    paddingTop: 8,
-    maxWidth: 600,
-    alignSelf: "center",
-    width: "100%",
-  },
-  heading: {
-    fontSize: 32,
-    fontWeight: "200",
-    color: "#fff",
-    textAlign: "center",
-    marginBottom: 4,
-  },
-  jobIdText: {
-    fontSize: 11,
-    color: "#6b7280",
-    textAlign: "center",
-    fontFamily: "monospace",
-    marginBottom: 32,
-  },
-  input: {
-    backgroundColor: "rgba(255,255,255,0.05)",
-    borderWidth: 1,
-    borderColor: "rgba(255,255,255,0.1)",
-    borderRadius: 12,
-    paddingHorizontal: 16,
-    paddingVertical: 14,
-    fontSize: 14,
-    color: "#fff",
-    marginTop: 24,
-  },
-  error: {
-    color: "#f87171",
-    fontSize: 12,
-    textAlign: "center",
-  },
-  cardStack: { gap: 12 },
-  card: {
-    borderWidth: 1,
-    borderColor: "rgba(255,255,255,0.1)",
-    borderRadius: 16,
-    padding: 20,
-  },
-  statusDone: {
-    color: "#4ade80",
-    fontSize: 18,
-    fontWeight: "300",
-    textAlign: "center",
-  },
-  statusFailed: {
-    color: "#f87171",
-    fontSize: 18,
-    fontWeight: "300",
-    textAlign: "center",
-  },
-  statusCurrent: {
-    color: "#fff",
-    fontSize: 11,
-    fontFamily: "monospace",
-    textAlign: "center",
-    marginBottom: 8,
-  },
-  logBox: {
-    backgroundColor: "rgba(255,255,255,0.05)",
-    borderRadius: 8,
-    padding: 10,
-    maxHeight: 120,
-  },
-  logLine: {
-    color: "#4b5563",
-    fontSize: 10,
-    fontFamily: "monospace",
-    lineHeight: 16,
-  },
-  detailRow: {
-    flexDirection: "row",
-    justifyContent: "space-between",
-    marginBottom: 10,
-  },
-  detailLabel: {
-    color: "#6b7280",
-    fontSize: 12,
-  },
-  detailValue: {
-    color: "#fff",
-    fontSize: 12,
-  },
-  affinityValue: {
-    color: "#4ade80",
-    fontSize: 12,
-    fontWeight: "500",
-  },
-  viewBtn: {
-    backgroundColor: "#fff",
-    paddingVertical: 14,
-    borderRadius: 50,
-    alignItems: "center",
-  },
-  viewBtnText: {
-    color: "#000",
-    fontSize: 14,
-    fontWeight: "500",
-  },
+  safe: { flex: 1, backgroundColor: palette.ground },
+  content: { padding: space.m, paddingBottom: space.xl, maxWidth: maxContent, alignSelf: "center", width: "100%" },
+  statusRow: { flexDirection: "row", alignItems: "center", gap: 12 },
+  statusText: { fontFamily: fonts.bold, fontSize: 20, color: palette.ink, textTransform: "uppercase", letterSpacing: 1 },
+  logBox: { backgroundColor: palette.groundSoft, padding: 10, borderWidth: rule.thin, borderColor: palette.ink, maxHeight: 160 },
 });

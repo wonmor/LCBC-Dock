@@ -1,10 +1,12 @@
 import { useEffect, useRef, useState } from "react";
-import { View, Text, Pressable, StyleSheet } from "react-native";
+import { View, StyleSheet } from "react-native";
 import { useRouter, useLocalSearchParams } from "expo-router";
 import { SafeAreaView } from "react-native-safe-area-context";
 import Spinner from "@/components/Spinner";
+import { Message, TextLink } from "@/components/Bauhaus";
 import { useAccount } from "@/lib/AccountContext";
 import { errorText, verifySignInLink } from "@/lib/account";
+import { palette, space } from "@/lib/theme";
 
 // dockit://auth?token=... (opened from the sign-in email via the web
 // verify page). The token is one-shot, so it is spent exactly once.
@@ -33,10 +35,8 @@ export default function AuthLink() {
       <View style={styles.container}>
         {error ? (
           <>
-            <Text style={styles.error}>{error}</Text>
-            <Pressable onPress={() => router.replace("/account")}>
-              <Text style={styles.link}>Request a new code</Text>
-            </Pressable>
+            <Message kind="error" text={error} />
+            <TextLink title="Request a new code" onPress={() => router.replace("/account")} />
           </>
         ) : (
           <Spinner label="Signing you in..." />
@@ -47,8 +47,6 @@ export default function AuthLink() {
 }
 
 const styles = StyleSheet.create({
-  safe: { flex: 1, backgroundColor: "#000" },
-  container: { flex: 1, alignItems: "center", justifyContent: "center", paddingHorizontal: 24, gap: 16 },
-  error: { color: "#f87171", fontSize: 13, textAlign: "center" },
-  link: { color: "#9ca3af", fontSize: 12 },
+  safe: { flex: 1, backgroundColor: palette.ground },
+  container: { flex: 1, justifyContent: "center", paddingHorizontal: space.m, gap: space.m },
 });

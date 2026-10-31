@@ -5,10 +5,12 @@ import { SafeAreaView } from "react-native-safe-area-context";
 import { Ionicons } from "@expo/vector-icons";
 import * as WebBrowser from "expo-web-browser";
 import Spinner from "@/components/Spinner";
+import { BarButton, GlyphTile, Message, Panel, SectionTitle, TextLink, type IconName } from "@/components/Bauhaus";
 import { backend } from "@/lib/api";
 import { useAccount } from "@/lib/AccountContext";
 import { isPaid, type PlanLimits } from "@/lib/account";
 import { loadOffers, manageSubscriptions, type Offer, type PlanKey } from "@/lib/purchases";
+import { palette, type, space, rule, fonts, maxContent } from "@/lib/theme";
 
 const PRIVACY_URL = "https://wonmor.github.io/LCBC-Dock/privacy.html";
 const APPLE_EULA_URL = "https://www.apple.com/legal/internet-services/itunes/dev/stdeula/";
@@ -30,17 +32,15 @@ const FALLBACK_PRO: Partial<PlanLimits> = {
   max_batch_ligands: 500,
 };
 
-type IconName = keyof typeof Ionicons.glyphMap;
-
 function features(pro: Partial<PlanLimits>, free: Partial<PlanLimits> | null): [IconName, string][] {
   return [
-    ["flash-outline", `${pro.jobs_per_day} dockings a day${free ? ` (Free: ${free.jobs_per_day})` : ""}`],
-    ["options-outline", `Exhaustiveness up to ${pro.max_exhaustiveness}${free ? ` (Free: ${free.max_exhaustiveness})` : ""}`],
-    ["layers-outline", `Up to ${pro.max_num_modes} poses and ${pro.max_box_edge} Å search boxes`],
-    ["list-outline", `Batch screening, up to ${pro.max_batch_ligands} ligands`],
-    ["lock-closed-outline", "Private jobs, kept until you delete them"],
-    ["speedometer-outline", "Priority queue"],
-    ["key-outline", "REST API keys and Pro on the web app"],
+    ["flash", `${pro.jobs_per_day} dockings a day${free ? ` (Free: ${free.jobs_per_day})` : ""}`],
+    ["options", `Exhaustiveness up to ${pro.max_exhaustiveness}${free ? ` (Free: ${free.max_exhaustiveness})` : ""}`],
+    ["layers", `Up to ${pro.max_num_modes} poses and ${pro.max_box_edge} Å search boxes`],
+    ["list", `Batch screening, up to ${pro.max_batch_ligands} ligands`],
+    ["lock-closed", "Private jobs, kept until you delete them"],
+    ["speedometer", "Priority queue"],
+    ["key", "REST API keys and Pro on the web app"],
   ];
 }
 
@@ -73,104 +73,105 @@ export default function Pro() {
   const open = (url: string) => WebBrowser.openBrowserAsync(url).catch(() => {});
 
   return (
-    <SafeAreaView style={styles.safe} edges={["bottom"]}>
+    <SafeAreaView style={styles.safe} edges={["bottom", "left", "right"]}>
       <ScrollView contentContainerStyle={styles.content}>
-        <Text style={styles.heading}>
-          MolDock <Text style={styles.headingBold}>Pro</Text>
-        </Text>
-        <Text style={styles.sub}>Serious docking from your phone. Free stays free.</Text>
+        {/* Masthead: red is Pro */}
+        <View style={styles.hero}>
+          <View style={styles.heroFill}>
+            <Ionicons name="star" size={28} color={palette.ground} />
+            <Text style={styles.heroTitle}>MolDock Pro</Text>
+          </View>
+          <Text style={[type.body, styles.heroSub]}>Serious docking from your phone. Free stays free.</Text>
+        </View>
 
-        <View style={styles.card}>
+        <SectionTitle title="What you get" />
+        <View style={styles.features}>
           {features(proLimits, freeLimits).map(([icon, text]) => (
             <View key={text} style={styles.featureRow}>
-              <Ionicons name={icon} size={16} color="#9ca3af" />
-              <Text style={styles.featureText}>{text}</Text>
+              <Ionicons name={icon} size={20} color={palette.ink} />
+              <Text style={[type.body, { flex: 1 }]}>{text}</Text>
             </View>
           ))}
         </View>
 
         {paid ? (
-          <View style={styles.card}>
-            <Text style={styles.activeTitle}>You're on MolDock Pro</Text>
-            <Text style={styles.meta}>
+          <Panel style={{ gap: 12 }}>
+            <View style={styles.activeRow}>
+              <GlyphTile icon="checkmark" fill={palette.blue} />
+              <Text style={type.headline}>You're on MolDock Pro</Text>
+            </View>
+            <Text style={type.caption}>
               {account?.sources.includes("stripe")
                 ? "Billed through the MolDock website."
                 : `Billed through your ${STORE_ACCOUNT}.`}
             </Text>
             {(account?.sources.includes("app_store") || account?.sources.includes("google_play")) && (
-              <Pressable style={styles.secondaryBtn} onPress={() => manageSubscriptions().catch(() => {})}>
-                <Text style={styles.secondaryText}>Manage subscription</Text>
-              </Pressable>
+              <BarButton title="Manage subscription" icon="settings-outline" kind="secondary" onPress={() => manageSubscriptions().catch(() => {})} />
             )}
-          </View>
+          </Panel>
         ) : offers === null ? (
           <Spinner label="Loading plans..." />
         ) : offers.length === 0 ? (
-          <Text style={styles.meta}>
-            Subscriptions aren't available right now. Check your connection and that you're signed
-            in to your {STORE_ACCOUNT}, then try again.
-          </Text>
+          <Message
+            kind="attention"
+            text={`Subscriptions aren't available right now. Check your connection and that you're signed in to your ${STORE_ACCOUNT}, then try again.`}
+          />
         ) : (
-          <>
+          <View style={{ gap: 12 }}>
+            <SectionTitle title="Choose a plan" />
             {offers.map((o) => {
               const active = o.plan === offer?.plan;
+              const fg = active ? palette.ground : palette.ink;
               return (
                 <Pressable
                   key={o.plan}
-                  style={[styles.planCard, active && styles.planCardActive]}
+                  style={[styles.planCard, active && { backgroundColor: palette.blue }]}
                   onPress={() => setSelected(o.plan)}
                   accessibilityRole="radio"
                   accessibilityState={{ selected: active }}
                 >
+                  <Ionicons name={active ? "radio-button-on" : "radio-button-off"} size={22} color={fg} />
                   <View style={{ flex: 1 }}>
-                    <Text style={styles.planName}>{o.plan === "annual" ? "Annual" : "Monthly"}</Text>
-                    <Text style={styles.planPrice}>
+                    <Text style={[styles.planName, { color: fg }]}>{o.plan === "annual" ? "Annual" : "Monthly"}</Text>
+                    <Text style={[type.body, { color: fg }]}>
                       {o.price} {o.plan === "annual" ? "per year" : "per month"}
                     </Text>
                   </View>
-                  {active && <Ionicons name="checkmark" size={20} color="#fff" />}
                 </Pressable>
               );
             })}
 
             {!account?.email && (
-              <Pressable onPress={() => router.push({ pathname: "/account", params: { next: "pro" } })}>
-                <Text style={styles.signInHint}>
-                  Sign in first so Pro also works on the web and your other devices.
-                </Text>
-              </Pressable>
+              <Message
+                kind="attention"
+                text="Sign in first so Pro also works on the web and your other devices."
+                onPress={() => router.push({ pathname: "/account", params: { next: "pro" } })}
+              />
             )}
 
-            <Pressable
-              style={[styles.primaryBtn, (busy || !offer) && styles.disabled]}
+            <BarButton
+              title={busy ? "Working..." : `Subscribe for ${offer?.price} / ${offer?.plan === "annual" ? "year" : "month"}`}
+              icon="star"
+              kind="pro"
               onPress={() => offer && purchase(offer)}
               disabled={busy || !offer}
-            >
-              <Text style={styles.primaryText}>
-                {busy ? "Working..." : `Subscribe for ${offer?.price} / ${offer?.plan === "annual" ? "year" : "month"}`}
-              </Text>
-            </Pressable>
-          </>
+            />
+          </View>
         )}
 
-        {notice && <Text style={styles.notice}>{notice}</Text>}
-        {error && <Text style={styles.error}>{error}</Text>}
-
-        <Pressable onPress={restore} disabled={busy} style={styles.restoreBtn}>
-          <Text style={styles.restoreText}>Restore purchases</Text>
-        </Pressable>
-
-        <View style={styles.labBox}>
-          <Text style={styles.labTitle}>For labs and classrooms</Text>
-          <Text style={styles.labBody}>
-            Shared seats for a whole lab, course or department, invoiced to your institution.
-          </Text>
-          <Pressable onPress={() => open(LAB_QUOTE_URL)}>
-            <Text style={styles.legalLink}>Request a quote</Text>
-          </Pressable>
+        <View style={{ gap: 12, marginTop: 12 }}>
+          {notice && <Message kind="notice" text={notice} />}
+          {error && <Message kind="error" text={error} />}
+          <BarButton title="Restore purchases" icon="refresh" kind="secondary" onPress={restore} disabled={busy} />
         </View>
 
-        <Text style={styles.terms}>
+        <Panel style={{ gap: 6, marginTop: space.l }}>
+          <Text style={type.headline}>For labs and classrooms</Text>
+          <Text style={type.caption}>Shared seats for a whole lab, course or department, invoiced to your institution.</Text>
+          <TextLink title="Request a quote" icon="mail-outline" align="left" onPress={() => open(LAB_QUOTE_URL)} />
+        </Panel>
+
+        <Text style={[type.caption, styles.terms]}>
           MolDock Pro is an auto-renewing subscription
           {monthly && annual ? ` (${monthly.price} per month or ${annual.price} per year)` : ""}.
           Payment is charged to your {STORE_ACCOUNT} when you confirm the purchase. The subscription
@@ -181,13 +182,8 @@ export default function Pro() {
         </Text>
 
         <View style={styles.legalRow}>
-          <Pressable onPress={() => open(PRIVACY_URL)}>
-            <Text style={styles.legalLink}>Privacy Policy</Text>
-          </Pressable>
-          <Text style={styles.legalSep}>|</Text>
-          <Pressable onPress={() => open(IS_IOS ? APPLE_EULA_URL : PLAY_TERMS_URL)}>
-            <Text style={styles.legalLink}>Terms of Use (EULA)</Text>
-          </Pressable>
+          <TextLink title="Privacy Policy" onPress={() => open(PRIVACY_URL)} />
+          <TextLink title="Terms of Use (EULA)" onPress={() => open(IS_IOS ? APPLE_EULA_URL : PLAY_TERMS_URL)} />
         </View>
       </ScrollView>
     </SafeAreaView>
@@ -195,69 +191,26 @@ export default function Pro() {
 }
 
 const styles = StyleSheet.create({
-  safe: { flex: 1, backgroundColor: "#000" },
-  content: {
-    paddingHorizontal: 24,
-    paddingTop: 8,
-    paddingBottom: 40,
-    gap: 12,
-    maxWidth: 600,
-    alignSelf: "center",
-    width: "100%",
-  },
-  heading: { fontSize: 32, fontWeight: "200", color: "#fff", textAlign: "center" },
-  headingBold: { fontWeight: "600" },
-  sub: { fontSize: 13, color: "#9ca3af", textAlign: "center", marginBottom: 12 },
-  card: {
-    borderWidth: 1,
-    borderColor: "rgba(255,255,255,0.1)",
-    borderRadius: 16,
-    padding: 20,
-    gap: 12,
-  },
+  safe: { flex: 1, backgroundColor: palette.ground },
+  content: { padding: space.m, paddingBottom: space.xl + space.m, maxWidth: maxContent, alignSelf: "center", width: "100%" },
+  hero: { borderWidth: rule.regular, borderColor: palette.ink, marginBottom: space.l },
+  heroFill: { backgroundColor: palette.red, flexDirection: "row", alignItems: "center", gap: 12, padding: space.m },
+  heroTitle: { fontFamily: fonts.bold, fontSize: 30, color: palette.ground },
+  heroSub: { padding: space.m, borderTopWidth: rule.regular, borderTopColor: palette.ink },
+  features: { gap: 12, marginBottom: space.l },
   featureRow: { flexDirection: "row", alignItems: "center", gap: 12 },
-  featureText: { color: "#e5e7eb", fontSize: 13, flex: 1 },
-  activeTitle: { color: "#fff", fontSize: 16, fontWeight: "500" },
-  meta: { color: "#6b7280", fontSize: 12, lineHeight: 18, textAlign: "center" },
+  activeRow: { flexDirection: "row", alignItems: "center", gap: 12 },
   planCard: {
     flexDirection: "row",
     alignItems: "center",
-    borderWidth: 1,
-    borderColor: "rgba(255,255,255,0.1)",
-    borderRadius: 16,
-    paddingVertical: 16,
-    paddingHorizontal: 20,
-  },
-  planCardActive: { borderColor: "#fff" },
-  planName: { color: "#fff", fontSize: 15, fontWeight: "500" },
-  planPrice: { color: "#9ca3af", fontSize: 13, marginTop: 2 },
-  signInHint: { color: "#9ca3af", fontSize: 12, textAlign: "center", textDecorationLine: "underline" },
-  primaryBtn: {
-    backgroundColor: "#fff",
+    gap: 12,
+    borderWidth: rule.regular,
+    borderColor: palette.ink,
     paddingVertical: 14,
-    borderRadius: 50,
-    alignItems: "center",
-    marginTop: 4,
+    paddingHorizontal: space.m,
+    backgroundColor: palette.ground,
   },
-  primaryText: { color: "#000", fontSize: 14, fontWeight: "500" },
-  secondaryBtn: {
-    borderWidth: 1,
-    borderColor: "rgba(255,255,255,0.2)",
-    paddingVertical: 12,
-    borderRadius: 50,
-    alignItems: "center",
-  },
-  secondaryText: { color: "#fff", fontSize: 13 },
-  disabled: { opacity: 0.3 },
-  notice: { color: "#86efac", fontSize: 12, textAlign: "center" },
-  error: { color: "#f87171", fontSize: 12, textAlign: "center" },
-  restoreBtn: { alignSelf: "center", paddingVertical: 8 },
-  labBox: { marginTop: 16, gap: 4 },
-  labTitle: { color: "#f3f4f6", fontSize: 15, fontWeight: "600" },
-  labBody: { color: "#9ca3af", fontSize: 13, lineHeight: 18 },
-  restoreText: { color: "#9ca3af", fontSize: 13 },
-  terms: { color: "#4b5563", fontSize: 10, lineHeight: 15, textAlign: "center" },
-  legalRow: { flexDirection: "row", justifyContent: "center", alignItems: "center", gap: 10 },
-  legalLink: { color: "#9ca3af", fontSize: 11, textDecorationLine: "underline" },
-  legalSep: { color: "#4b5563", fontSize: 11 },
+  planName: { fontFamily: fonts.bold, fontSize: 18 },
+  terms: { fontSize: 11, lineHeight: 16, marginTop: space.l, textAlign: "center" },
+  legalRow: { flexDirection: "row", justifyContent: "center", gap: space.l, marginTop: space.s },
 });

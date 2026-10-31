@@ -1,10 +1,12 @@
 import { useEffect, useState } from "react";
-import { View, Text, Pressable, StyleSheet } from "react-native";
+import { View, Text, ScrollView, StyleSheet } from "react-native";
 import { useRouter, useLocalSearchParams } from "expo-router";
 import { SafeAreaView } from "react-native-safe-area-context";
 import axios from "axios";
 import StepIndicator from "@/components/StepIndicator";
 import Spinner from "@/components/Spinner";
+import { BarButton, BottomBar, IconButton, GlyphTile, Message, Panel, ScreenHeading, Stat } from "@/components/Bauhaus";
+import { palette, type, space, maxContent } from "@/lib/theme";
 
 export default function Marinate() {
   const router = useRouter();
@@ -48,146 +50,50 @@ export default function Marinate() {
   }, [proteinState]);
 
   return (
-    <SafeAreaView style={styles.safe} edges={["bottom"]}>
-      <View style={styles.container}>
-        <Text style={styles.heading}>Prepare</Text>
-        <Text style={styles.sub}>{(proteinState ?? "").toUpperCase()}</Text>
+    <SafeAreaView style={styles.safe} edges={["left", "right"]}>
+      <ScrollView style={{ flex: 1 }} contentContainerStyle={styles.content}>
+        <ScreenHeading eyebrow="Step 2 of 4" title="Prepare the protein" subtitle={(proteinState ?? "").toUpperCase()} />
 
-        {loading && <Spinner label="Analyzing PDB structure..." />}
-        {error && <Text style={styles.error}>{error}</Text>}
+        {loading && <Spinner label="Analysing the PDB structure..." />}
+        {error && <Message kind="error" text={error} />}
 
         {done && (
-          <View style={styles.card}>
+          <View style={{ gap: 12 }}>
             <View style={styles.statsRow}>
-              <View style={styles.stat}>
-                <Text style={styles.statNum}>{waterCount}</Text>
-                <Text style={styles.statLabel}>Water molecules removed</Text>
-              </View>
-              <View style={styles.stat}>
-                <Text style={styles.statNum}>{hetCount}</Text>
-                <Text style={styles.statLabel}>Heteroatoms removed</Text>
-              </View>
+              <Stat value={waterCount} label="Water molecules removed" />
+              <Stat value={hetCount} label="Heteroatoms removed" />
             </View>
-            <View style={styles.divider} />
-            <Text style={styles.success}>
-              Protonated at pH 7.4 with partial charges added.
-            </Text>
+            <Panel style={styles.ready}>
+              <GlyphTile icon="checkmark" fill={palette.blue} />
+              <Text style={[type.body, { flex: 1 }]}>Protonated at pH 7.4 with partial charges added.</Text>
+            </Panel>
           </View>
         )}
-      </View>
+      </ScrollView>
 
-      <View style={styles.bottomBar}>
+      <BottomBar>
         <StepIndicator current={1} />
         <View style={styles.actions}>
-          <Pressable onPress={() => router.back()}>
-            <Text style={styles.backText}>Back</Text>
-          </Pressable>
+          <IconButton icon="arrow-back" label="Back" onPress={() => router.back()} />
           {done && (
-            <Pressable
-              style={styles.nextBtn}
-              onPress={() =>
-                router.push({
-                  pathname: "/docking/ligand",
-                  params: { proteinState },
-                })
-              }
-            >
-              <Text style={styles.nextText}>Next</Text>
-            </Pressable>
+            <BarButton
+              title="Next"
+              icon="arrow-forward"
+              kind="action"
+              style={{ flex: 1 }}
+              onPress={() => router.push({ pathname: "/docking/ligand", params: { proteinState } })}
+            />
           )}
         </View>
-      </View>
+      </BottomBar>
     </SafeAreaView>
   );
 }
 
 const styles = StyleSheet.create({
-  safe: { flex: 1, backgroundColor: "#000" },
-  container: {
-    flex: 1,
-    paddingHorizontal: 24,
-    paddingTop: 8,
-    maxWidth: 600,
-    alignSelf: "center",
-    width: "100%",
-  },
-  heading: {
-    fontSize: 32,
-    fontWeight: "200",
-    color: "#fff",
-    textAlign: "center",
-    marginBottom: 4,
-  },
-  sub: {
-    fontSize: 11,
-    color: "#6b7280",
-    textAlign: "center",
-    marginBottom: 32,
-  },
-  error: {
-    color: "#f87171",
-    fontSize: 12,
-    textAlign: "center",
-  },
-  card: {
-    borderWidth: 1,
-    borderColor: "rgba(255,255,255,0.1)",
-    borderRadius: 16,
-    padding: 24,
-  },
-  statsRow: {
-    flexDirection: "row",
-    gap: 16,
-  },
-  stat: {
-    flex: 1,
-  },
-  statNum: {
-    fontSize: 24,
-    fontWeight: "300",
-    color: "#fff",
-  },
-  statLabel: {
-    fontSize: 10,
-    color: "#6b7280",
-    marginTop: 4,
-  },
-  divider: {
-    height: 1,
-    backgroundColor: "rgba(255,255,255,0.05)",
-    marginVertical: 16,
-  },
-  success: {
-    color: "#4ade80",
-    fontSize: 12,
-  },
-  bottomBar: {
-    flexDirection: "row",
-    justifyContent: "space-between",
-    alignItems: "center",
-    paddingHorizontal: 24,
-    paddingVertical: 16,
-    borderTopWidth: 1,
-    borderTopColor: "rgba(255,255,255,0.05)",
-  },
-  actions: {
-    flexDirection: "row",
-    alignItems: "center",
-    gap: 12,
-  },
-  backText: {
-    color: "#6b7280",
-    fontSize: 12,
-  },
-  nextBtn: {
-    backgroundColor: "#fff",
-    paddingHorizontal: 20,
-    paddingVertical: 10,
-    borderRadius: 50,
-  },
-  nextText: {
-    color: "#000",
-    fontSize: 12,
-    fontWeight: "500",
-  },
+  safe: { flex: 1, backgroundColor: palette.ground },
+  content: { padding: space.m, paddingBottom: space.xl, maxWidth: maxContent, alignSelf: "center", width: "100%" },
+  statsRow: { flexDirection: "row", gap: space.s },
+  ready: { flexDirection: "row", alignItems: "center", gap: 12 },
+  actions: { flexDirection: "row", gap: space.s, flex: 1, maxWidth: 240, justifyContent: "flex-end" },
 });
