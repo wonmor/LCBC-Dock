@@ -1,8 +1,9 @@
 """Generate Google Play Store assets for MolDock from the app icon.
 
 Outputs:
-  assets/play-store-icon.png   — 512×512, exactly what Play Console asks for
-  assets/feature-graphic.png   — 1024×500, hero banner
+  assets/play-store-icon.png   512x512, exactly what Play Console asks for
+  assets/feature-graphic.png   1024x500 Bauhaus banner (white ground, black
+                               rules, blue/yellow/red fields, Jost type)
 
 Re-run after icon.png changes:
   python3 scripts/gen_play_assets.py
@@ -12,89 +13,46 @@ from PIL import Image, ImageDraw, ImageFont
 
 ROOT = Path(__file__).resolve().parents[1]
 ASSETS = ROOT / "assets"
+FONTS = ASSETS / "fonts"
 
-# Source = icon.png — the iOS App Store icon is the canonical brand
-# image; Play Store icon + Android adaptive-icon both mirror it. This
-# guarantees the iOS App Store, Google Play listing, Android home
-# screen, and macOS dock all render the same artwork.
-ICON_SRC = ASSETS / "icon.png"
-PLAY_ICON_OUT = ASSETS / "play-store-icon.png"
-FEATURE_OUT = ASSETS / "feature-graphic.png"
-
-BRAND = "MolDock"
-TAGLINE = "Protein–Ligand Docking"
-
-FONT_BOLD = "/Library/Fonts/SF-Pro-Display-Light.otf"
-FONT_REG = "/Library/Fonts/SF-Pro-Display-Medium.otf"
-
-# Background gradient — matches the icon's deep-navy → near-black.
-BG_TOP = (15, 30, 70)
-BG_BOTTOM = (4, 6, 14)
+BLUE = (0x0F, 0x3F, 0xA8)
+YELLOW = (0xF2, 0xC2, 0x30)
+RED = (0xD6, 0x28, 0x28)
 
 
-def vertical_gradient(size, top, bottom):
-    img = Image.new("RGB", size, top)
-    px = img.load()
-    w, h = size
-    for y in range(h):
-        t = y / max(1, h - 1)
-        r = int(top[0] + (bottom[0] - top[0]) * t)
-        g = int(top[1] + (bottom[1] - top[1]) * t)
-        b = int(top[2] + (bottom[2] - top[2]) * t)
-        for x in range(w):
-            px[x, y] = (r, g, b)
-    return img
+def play_store_icon(icon):
+    icon.resize((512, 512), Image.LANCZOS).save(ASSETS / "play-store-icon.png", optimize=True)
 
 
-def play_store_icon():
-    """Square icon at 512×512 — Play Console's exact requirement."""
-    src = Image.open(ICON_SRC).convert("RGBA")
-    out = src.resize((512, 512), Image.LANCZOS)
-    out.save(PLAY_ICON_OUT, "PNG", optimize=True)
-    print(f"✓ {PLAY_ICON_OUT.relative_to(ROOT)}  512×512")
-
-
-def feature_graphic():
-    """1024×500 banner: icon left, brand + tagline right."""
+def feature_graphic(icon):
     W, H = 1024, 500
-    bg = vertical_gradient((W, H), BG_TOP, BG_BOTTOM)
-
-    # Icon — extract the molecule "glyph" from the square icon. The source
-    # already has a dark background, so we layer it directly. Pad so it
-    # doesn't crowd the edge.
-    icon = Image.open(ICON_SRC).convert("RGBA")
-    icon_size = 360
-    icon = icon.resize((icon_size, icon_size), Image.LANCZOS)
-    icon_x = 50
-    icon_y = (H - icon_size) // 2
-    bg.paste(icon, (icon_x, icon_y), icon)
-
-    draw = ImageDraw.Draw(bg)
-    title_font = ImageFont.truetype(FONT_BOLD, 110)
-    tagline_font = ImageFont.truetype(FONT_REG, 32)
-
-    text_x = icon_x + icon_size + 50
-    title_bbox = draw.textbbox((0, 0), BRAND, font=title_font)
-    title_h = title_bbox[3] - title_bbox[1]
-    tagline_bbox = draw.textbbox((0, 0), TAGLINE, font=tagline_font)
-    tagline_h = tagline_bbox[3] - tagline_bbox[1]
-
-    title_gap = 56  # padding above the tagline
-    block_h = title_h + title_gap + tagline_h
-    y_start = (H - block_h) // 2 - 10
-
-    draw.text((text_x, y_start), BRAND, font=title_font, fill=(250, 250, 250))
-    draw.text(
-        (text_x, y_start + title_h + title_gap),
-        TAGLINE,
-        font=tagline_font,
-        fill=(170, 195, 230),
-    )
-
-    bg.save(FEATURE_OUT, "PNG", optimize=True)
-    print(f"✓ {FEATURE_OUT.relative_to(ROOT)}  {W}×{H}")
+    c = Image.new("RGB", (W, H), "white")
+    d = ImageDraw.Draw(c)
+    c.paste(icon.resize((H, H), Image.LANCZOS), (0, 0))
+    d.rectangle([H, 0, H + 7, H], fill="black")
+    x0 = H + 48
+    bold = ImageFont.truetype(str(FONTS / "Jost-Bold.ttf"), 104)
+    semi = ImageFont.truetype(str(FONTS / "Jost-SemiBold.ttf"), 30)
+    med = ImageFont.truetype(str(FONTS / "Jost-Medium.ttf"), 24)
+    d.text((x0, 40), "MolDock", font=bold, fill="black")
+    d.text((x0 + 4, 170), "PROTEIN-LIGAND DOCKING", font=semi, fill="black")
+    d.rectangle([x0, 215, W - 40, 222], fill="black")
+    rows = [
+        (BLUE, "white", "AutoDock Vina in the cloud"),
+        (YELLOW, "black", "Binding poses in 3D"),
+        (RED, "white", "Optional MolDock Pro"),
+    ]
+    y = 252
+    for bg, fg, text in rows:
+        d.rectangle([x0, y, W - 40, y + 60], fill=bg, outline="black", width=3)
+        d.text((x0 + 18, y + 14), text, font=med, fill=fg)
+        y += 72
+    d.rectangle([0, 0, W - 1, H - 1], outline="black", width=8)
+    c.save(ASSETS / "feature-graphic.png", optimize=True)
 
 
 if __name__ == "__main__":
-    play_store_icon()
-    feature_graphic()
+    src = Image.open(ASSETS / "icon.png").convert("RGB")
+    play_store_icon(src)
+    feature_graphic(src)
+    print("wrote play-store-icon.png and feature-graphic.png")
